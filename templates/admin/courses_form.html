@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Add Course</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='bootstrap.min.css') }}">
+</head>
+<body class="bg-light">
+  <div class="container py-5">
+    <h2 class="mb-4">Add Course</h2>
+    <form method="POST">
+      <div class="mb-3">
+        <label class="form-label">Course Name</label>
+        <input type="text" name="name" class="form-control" required>
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Cluster Number</label>
+        <input type="number" name="cluster" class="form-control" required>
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Cutoff Points</label>
+        <input type="number" name="cutoff" step="0.1" class="form-control" required>
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Program Code</label>
+        <input type="text" name="program_code" class="form-control" required>
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Institution</label>
+        <select name="institution_id" class="form-select" required>
+          {% for inst in institutions %}
+            <option value="{{ inst._id }}">{{ inst.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <button type="submit" class="btn btn-success">Add Course</button>
+    </form>
+  </div>
+</body>
+</html>

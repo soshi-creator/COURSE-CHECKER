@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Add Course</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="{{ url_for('static', filename='bootstrap.min.css') }}">
+
+  <style>
+    body {
+      background-color: #f4f6f8;
+      font-family: 'Segoe UI', sans-serif;
+    }
+    .container {
+      background: white;
+      padding: 2rem;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.05);
+      margin-top: 40px;
+    }
+    h2, h4 {
+      color: #2c3e50;
+    }
+    .btn-secondary {
+      background-color: #6c757d;
+      border: none;
+    }
+    .btn-secondary:hover {
+      background-color: #5a6268;
+    }
+  </style>
+
+  <script>
+    function addInstitutionField() {
+      const container = document.getElementById('institutions-container');
+      const div = document.createElement('div');
+      div.className = 'row mb-2';
+      div.innerHTML = `
+        <div class="col-md-4">
+          <select name="institution_names[]" class="form-select" required>
+            <option value="">Select Institution</option>
+            {% for inst in institutions %}
+              <option value="{{ inst.name }}">{{ inst.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-md-4">
+          <input name="program_codes[]" class="form-control" placeholder="Program Code" required>
+        </div>
+        <div class="col-md-4">
+          <input type="number" step="0.001" name="cutoffs[]" class="form-control" placeholder="Cutoff" required>
+        </div>
+      `;
+      container.appendChild(div);
+    }
+
+     function addRequirementField() {
+    const container = document.getElementById('requirements-container');
+    const div = document.createElement('div');
+    div.className = 'row mb-2';
+    div.innerHTML = `
+      <div class="col-md-6">
+        <input name="subjects[]" class="form-control" placeholder="e.g. Eng/Kisw" required>
+      </div>
+      <div class="col-md-6">
+        <select name="min_grades[]" class="form-select" required>
+          {% for grade in ['A','A-','B+','B','B-','C+','C','C-','D+','D','D-','E'] %}
+            <option value="{{ grade }}">{{ grade }}</option>
+          {% endfor %}
+        </select>
+      </div>
+    `;
+    container.appendChild(div);
+  }
+  </script>
+</head>
+
+<body>
+  <div class="container">
+    <h2 class="mb-4">Add New Course</h2>
+    <form method="POST">
+      <!-- Course Name -->
+      <div class="mb-3">
+        <label class="form-label">Course Name:</label>
+        <input type="text" name="name" class="form-control" required>
+      </div>
+
+      <!-- Cluster Dropdown -->
+      <div class="mb-3">
+        <label class="form-label">Cluster:</label>
+        <select name="cluster" class="form-select" required>
+          <option value="">Select Cluster</option>
+          {% for cl in clusters %}
+            <option value="{{ cl.number }}">Cluster {{ cl.number }} - {{ cl.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <!-- Institutions -->
+      <h4 class="mt-4">Institutions Offering This Course</h4>
+      <div id="institutions-container" class="mb-3"></div>
+      <button type="button" onclick="addInstitutionField()" class="btn btn-sm btn-secondary">+ Add Institution</button>
+
+      <h4>Subject Requirements</h4>
+<div id="requirements-container">
+  <div class="row mb-2">
+    <div class="col-md-6">
+      <input name="subjects[]" class="form-control" placeholder="e.g. Eng/Kisw" required>
+    </div>
+    <div class="col-md-6">
+      <select name="min_grades[]" class="form-select" required>
+        {% for grade in ['A','A-','B+','B','B-','C+','C','C-','D+','D','D-','E'] %}
+          <option value="{{ grade }}">{{ grade }}</option>
+        {% endfor %}
+      </select>
+    </div>
+  </div>
+</div>
+<button type="button" onclick="addRequirementField()" class="btn btn-sm btn-secondary mb-3">+ Add Requirement</button>
+
+
+      <!-- Submit -->
+      <div class="mt-4">
+        <button type="submit" class="btn btn-primary">Save Course</button>
+      </div>
+    </form>
+  </div>
+</body>
+</html>

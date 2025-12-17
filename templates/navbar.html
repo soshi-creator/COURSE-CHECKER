@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <link rel="stylesheet" href="{{ url_for('static', filename='navbar.css') }}">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+</head>
+<body>
+    <!-- templates/navbar.html -->
+    <nav class="navbar navbar-expand-lg navbar-dark main-navbar">
+      <div class="container">
+        <!-- Brand Logo -->
+        <a class="navbar-brand" href="{{ url_for('home') }}">
+          <i class="bi bi-mortarboard-fill logo-icon"></i>
+          <span class="brand-text">KUCCPS Course Checker</span>
+        </a>
+        
+        <!-- Desktop Navigation Menu -->
+        <div class="desktop-nav">
+          <a class="nav-link {% if request.endpoint == 'home' %}active{% endif %}" href="{{ url_for('home') }}">
+            <i class="bi bi-house-fill nav-icon"></i>
+            <span class="nav-text">Home</span>
+          </a>
+          <a class="nav-link {% if request.endpoint == 'input_form' %}active{% endif %}" href="{{ url_for('input_form') }}">
+            <i class="bi bi-search nav-icon"></i>
+            <span class="nav-text">Degree Programs</span>
+          </a>
+          <a class="nav-link {% if request.endpoint == 'diploma_form' %}active{% endif %}" href="{{ url_for('diploma_form') }}">
+            <i class="bi bi-file-earmark-text nav-icon"></i>
+            <span class="nav-text">Diploma Programs</span>
+          </a>
+          <a class="nav-link {% if request.endpoint == 'certificate_form' %}active{% endif %}" href="{{ url_for('certificate_form') }}">
+            <i class="bi bi-award-fill nav-icon"></i>
+            <span class="nav-text">Certificate Programs</span>
+          </a>
+          <a class="nav-link {% if request.endpoint == 'kmtc_form' %}active{% endif %}" href="{{ url_for('kmtc_form') }}">
+            <i class="bi bi-heart-pulse-fill nav-icon"></i>
+            <span class="nav-text">KMTC Programs</span>
+          </a>
+        </div>
+        
+        <!-- User Section -->
+        <div class="navbar-user">
+          <div class="user-info">
+            <i class="bi bi-person-circle user-icon"></i>
+            <div class="user-details">
+              <span class="user-greeting">Hello,</span>
+              <span class="user-name">Student</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Mobile Bottom Navigation -->
+    <nav class="mobile-bottom-nav">
+      <div class="mobile-nav-container">
+        <a class="mobile-nav-item {% if request.endpoint == 'home' %}active{% endif %}" href="{{ url_for('home') }}">
+          <i class="bi bi-house-fill mobile-nav-icon"></i>
+          <span class="mobile-nav-text">Home</span>
+        </a>
+        <a class="mobile-nav-item {% if request.endpoint == 'input_form' %}active{% endif %}" href="{{ url_for('input_form') }}">
+          <i class="bi bi-search mobile-nav-icon"></i>
+          <span class="mobile-nav-text">Degrees</span>
+        </a>
+        <a class="mobile-nav-item {% if request.endpoint == 'diploma_form' %}active{% endif %}" href="{{ url_for('diploma_form') }}">
+          <i class="bi bi-file-earmark-text mobile-nav-icon"></i>
+          <span class="mobile-nav-text">Diplomas</span>
+        </a>
+        <a class="mobile-nav-item {% if request.endpoint == 'certificate_form' %}active{% endif %}" href="{{ url_for('certificate_form') }}">
+          <i class="bi bi-award-fill mobile-nav-icon"></i>
+          <span class="mobile-nav-text">Certificates</span>
+        </a>
+        <a class="mobile-nav-item {% if request.endpoint == 'kmtc_form' %}active{% endif %}" href="{{ url_for('kmtc_form') }}">
+          <i class="bi bi-heart-pulse-fill mobile-nav-icon"></i>
+          <span class="mobile-nav-text">KMTC</span>
+        </a>
+      </div>
+    </nav>
+</body>
+</html>

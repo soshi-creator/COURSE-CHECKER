@@ -1,0 +1,161 @@
+
+    :root {
+      --primary-color: #0d6e6e;
+      --secondary-color: #2a9d8f;
+      --accent-color: #e76f51;
+      --light-bg: #f7fafc;
+      --input-border: #cbd5e0;
+    }
+    
+    body {
+      background-color: #edf2f7;
+      font-family: 'Segoe UI', Roboto, system-ui, sans-serif;
+      color: #2d3748;
+      line-height: 1.5;
+    }
+    
+    .navbar {
+      background-color: var(--primary-color) !important;
+      border-bottom: 4px solid var(--secondary-color);
+    }
+    
+    .main-card {
+      border: none;
+      border-top: 4px solid var(--secondary-color);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    }
+    
+    .form-section {
+      background: white;
+      border-radius: 6px;
+      padding: 1.75rem;
+      margin-bottom: 1.5rem;
+      border: 1px solid var(--input-border);
+    }
+    
+    .section-title {
+      font-weight: 600;
+      color: var(--primary-color);
+      margin-bottom: 1.25rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid var(--input-border);
+    }
+    
+    .form-label {
+      font-weight: 600;
+      color: #4a5568;
+      font-size: 0.9375rem;
+      margin-bottom: 0.5rem;
+    }
+    
+    .form-control, .form-select {
+      height: 2.75rem;
+      border-radius: 4px;
+      border: 1px solid var(--input-border);
+      padding: 0.5rem 0.75rem;
+      font-size: 0.9375rem;
+    }
+    
+    .form-select {
+      background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e");
+      background-repeat: no-repeat;
+      background-position: right 0.75rem center;
+      background-size: 16px 12px;
+    }
+    
+    .subject-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1rem;
+    }
+    
+    .btn-submit {
+      background-color: var(--secondary-color);
+      padding: 0.75rem 2.5rem;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      border: none;
+    }
+    
+    .btn-submit:hover {
+      background-color: #21867a;
+    }
+    
+    .required-asterisk {
+      color: var(--accent-color);
+    }
+    
+    .optional-badge {
+      background-color: #e2e8f0;
+      color: #4a5568;
+      font-size: 0.75rem;
+      padding: 0.25rem 0.5rem;
+      border-radius: 4px;
+      margin-left: 0.5rem;
+    }
+    
+    @media (max-width: 992px) {
+      .subject-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+    
+    @media (max-width: 768px) {
+      .subject-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+       /* Additional styles for header buttons */
+    .header-buttons {
+      display: flex;
+      gap: 10px;
+      margin-left: auto;
+    }
+    
+    .btn-home, .btn-paid {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      padding: 8px 16px;
+      border-radius: 6px;
+      text-decoration: none;
+      font-weight: 500;
+      transition: all 0.3s ease;
+    }
+    
+    .btn-home {
+      background: rgba(255, 255, 255, 0.2);
+      color: white;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+    }
+    
+    .btn-home:hover {
+      background: rgba(255, 255, 255, 0.3);
+      color: white;
+      text-decoration: none;
+    }
+    
+    .btn-paid {
+      background: #28a745;
+      color: white;
+      border: 1px solid #28a745;
+    }
+    
+    .btn-paid:hover {
+      background: #218838;
+      color: white;
+      text-decoration: none;
+      transform: translateY(-1px);
+    }
+    
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+      .header-buttons {
+        gap: 8px;
+      }
+      
+      .btn-home, .btn-paid {
+        padding: 6px 12px;
+        font-size: 14px;
+      }
+    }

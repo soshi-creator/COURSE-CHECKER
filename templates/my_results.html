@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Results - KUCCPS Course Checker</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #3498db;
+            --success-color: #27ae60;
+            --warning-color: #f39c12;
+            --diploma-color: #0d6e6e;
+            --certificate-color: #2a9d8f;
+        }
+        
+        .results-card {
+            border: none;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+            border-radius: 16px;
+            overflow: hidden;
+        }
+        
+        .results-header {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            padding: 2rem;
+        }
+        
+        .user-info {
+            background-color: #f8f9fa;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .payment-card {
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            transition: all 0.3s ease;
+        }
+        
+        .payment-card:hover {
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            transform: translateY(-2px);
+        }
+        
+        .payment-card.expired {
+            opacity: 0.7;
+            background-color: #f8f9fa;
+        }
+        
+        .program-badge {
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+        
+        .badge-degree { background-color: var(--secondary-color); color: white; }
+        .badge-diploma { background-color: var(--diploma-color); color: white; }
+        .badge-certificate { background-color: var(--certificate-color); color: white; }
+        
+        .status-badge {
+            padding: 0.4rem 0.8rem;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        
+        .btn-restore {
+            background: linear-gradient(135deg, var(--success-color), #229954);
+            border: none;
+            padding: 0.5rem 1.5rem;
+            border-radius: 8px;
+            color: white;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-restore:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(39, 174, 96, 0.3);
+            color: white;
+        }
+        
+        .btn-restore:disabled {
+            background: #6c757d;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 3rem 2rem;
+            color: #6c757d;
+        }
+        
+        .empty-state-icon {
+            font-size: 4rem;
+            margin-bottom: 1.5rem;
+            opacity: 0.5;
+        }
+    </style>
+</head>
+<body class="bg-light">
+    {% include 'navbar.html' %}
+
+    <div class="container py-5">
+        <div class="results-card card">
+            <div class="results-header">
+                <div class="row align-items-center">
+                    <div class="col">
+                        <h2 class="mb-2"><i class="bi bi-clock-history me-2"></i>My Payment History</h2>
+                        <p class="mb-0">View and manage your course eligibility access</p>
+                    </div>
+                    <div class="col-auto">
+                        <a href="{{ url_for('payment_page') }}" class="btn btn-light">
+                            <i class="bi bi-plus-circle me-2"></i>New Payment
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card-body p-4">
+                <!-- User Information -->
+                <div class="user-info">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <strong><i class="bi bi-envelope me-2"></i>Email:</strong>
+                            <span class="ms-2">{{ session.get('user_email', 'Not set') }}</span>
+                        </div>
+                        <div class="col-md-6">
+                            <strong><i class="bi bi-person-badge me-2"></i>Index Number:</strong>
+                            <span class="ms-2">{{ session.get('index_number', 'Not set') }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                {% if payments %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Date Paid</th>
+                                    <th>Program Type</th>
+                                    <th>Amount</th>
+                                    <th>Status</th>
+                                    <th>Expires In</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for payment in payments %}
+                                <tr class="{{ 'table-active' if payment.expires_at <= datetime.utcnow() }}">
+                                    <td>
+                                        <strong>{{ payment.verified_at.strftime('%d/%m/%Y') }}</strong><br>
+                                        <small class="text-muted">{{ payment.verified_at.strftime('%I:%M %p') }}</small>
+                                    </td>
+                                    <td>
+                                        <span class="program-badge badge-{{ payment.program_type }}">
+                                            <i class="bi bi-{{ 'mortarboard' if payment.program_type == 'degree' else 'file-earmark-text' if payment.program_type == 'diploma' else 'award' }} me-1"></i>
+                                            {{ payment.program_type|title }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <strong>KES {{ payment.amount }}</strong>
+                                    </td>
+                                    <td>
+                                        <span class="status-badge bg-success text-white">
+                                            <i class="bi bi-check-circle me-1"></i>Verified
+                                        </span>
+                                    </td>
+                                    <td>
+                                        {% if payment.expires_at > datetime.utcnow() %}
+                                            {% set days_left = (payment.expires_at - datetime.utcnow()).days %}
+                                            {% if days_left > 7 %}
+                                                <span class="status-badge bg-success text-white">
+                                                    {{ days_left }} days left
+                                                </span>
+                                            {% elif days_left > 3 %}
+                                                <span class="status-badge bg-warning text-dark">
+                                                    {{ days_left }} days left
+                                                </span>
+                                            {% else %}
+                                                <span class="status-badge bg-danger text-white">
+                                                    {{ days_left }} days left
+                                                </span>
+                                            {% endif %}
+                                        {% else %}
+                                            <span class="status-badge bg-secondary text-white">
+                                                <i class="bi bi-clock me-1"></i>Expired
+                                            </span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if payment.expires_at > datetime.utcnow() %}
+                                            <a href="{{ url_for('restore_session', payment_id=payment._id) }}" 
+                                               class="btn btn-restore btn-sm">
+                                                <i class="bi bi-arrow-repeat me-1"></i>Access
+                                            </a>
+                                        {% else %}
+                                            <button class="btn btn-secondary btn-sm" disabled>
+                                                <i class="bi bi-clock me-1"></i>Expired
+                                            </button>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="row mt-4">
+                        <div class="col-md-8">
+                            <div class="alert alert-info">
+                                <i class="bi bi-info-circle me-2"></i>
+                                <strong>Note:</strong> Each payment gives you 30 days of access to the selected program type. 
+                                You can restore access anytime within the validity period.
+                            </div>
+                        </div>
+                        <div class="col-md-4 text-end">
+                            <div class="text-muted">
+                                <small>
+                                    <i class="bi bi-receipt me-1"></i>
+                                    {{ payments|length }} payment{{ 's' if payments|length != 1 }} total
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                {% else %}
+                    <div class="empty-state">
+                        <i class="bi bi-receipt empty-state-icon"></i>
+                        <h4 class="text-muted">No Payment History</h4>
+                        <p class="text-muted mb-4">You haven't made any payments yet. Start by making your first payment to access course eligibility checking.</p>
+                        <a href="{{ url_for('payment_page') }}" class="btn btn-primary btn-lg">
+                            <i class="bi bi-credit-card me-2"></i>Make Your First Payment
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

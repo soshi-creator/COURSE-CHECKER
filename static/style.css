@@ -1,0 +1,425 @@
+    /* style.css - KCSE Course Checker Landing Page (Consistent Theme) */
+
+    :root {
+      --primary-color: #2c3e50;
+      --secondary-color: #3498db;
+      --accent-color: #e74c3c;
+      --success-color: #27ae60;
+      --warning-color: #f39c12;
+      --certificate-color: #0d6e6e;
+      --whatsapp-color: #25D366;
+      --call-color: #128C7E;
+      --payment-color: #4CAF50;
+      --light-bg: #f8f9fa;
+      --card-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+      --gradient-primary: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+      --gradient-secondary: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+      --gradient-certificate: linear-gradient(135deg, #0d6e6e 0%, #2a9d8f 100%);
+      --gradient-bg: linear-gradient(135deg, #f5f7fa 0%, #e4efe9 100%);
+    }
+
+    /* Base Styles */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background: var(--gradient-bg);
+      font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      color: #2d3748;
+      line-height: 1.6;
+      min-height: 100vh;
+      overflow-x: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Navigation */
+    .navbar {
+      background: var(--gradient-primary) !important;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      padding: 1rem 0;
+      border: none;
+    }
+
+    .navbar-brand {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: white !important;
+      display: flex;
+      align-items: center;
+      text-decoration: none;
+    }
+
+    .logo-icon {
+      font-size: 1.8rem;
+      margin-right: 0.75rem;
+      color: white;
+    }
+
+    /* Action Buttons Section */
+    .action-buttons-section {
+      padding: 1.5rem 1rem;
+      background: white;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+      border-bottom: 1px solid #e2e8f0;
+    }
+
+    .action-buttons-container {
+      display: flex;
+      justify-content: center;
+      gap: 1rem;
+      max-width: 800px;
+      margin: 0 auto;
+      flex-wrap: wrap;
+    }
+
+    .action-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem 0.75rem;
+      border-radius: 12px;
+      text-decoration: none;
+      color: white;
+      font-weight: 600;
+      font-size: 0.9rem;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      min-width: 100px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+      flex: 1;
+      max-width: 120px;
+    }
+
+    .action-btn:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
+      color: white;
+      text-decoration: none;
+    }
+
+    .action-btn:active {
+      transform: translateY(-1px);
+    }
+
+    .action-btn i {
+      font-size: 1.5rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .btn-whatsapp {
+      background: var(--whatsapp-color);
+    }
+
+    .btn-call {
+      background: var(--call-color);
+    }
+
+    .btn-payment {
+      background: var(--payment-color);
+    }
+
+    /* Hero Section */
+    .hero-section {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 3rem 1rem;
+      position: relative;
+      min-height: 80vh;
+    }
+
+    .hero-card {
+      background: white;
+      border-radius: 16px;
+      padding: 3rem 2.5rem;
+      box-shadow: var(--card-shadow);
+      border: 1px solid #e2e8f0;
+      max-width: 500px;
+      width: 100%;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .hero-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: var(--gradient-primary);
+      border-radius: 2px 2px 0 0;
+    }
+
+    .hero-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Logo & Typography */
+    .logo-container {
+      margin-bottom: 2.5rem;
+    }
+
+    .logo-main {
+      font-size: 3.5rem;
+      color: var(--primary-color);
+      margin-bottom: 1.5rem;
+      display: inline-block;
+    }
+
+    .app-name {
+      font-size: 2.2rem;
+      font-weight: 800;
+      background: var(--gradient-primary);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 1rem;
+      line-height: 1.2;
+    }
+
+    .app-tagline {
+      color: #718096;
+      font-size: 1.1rem;
+      margin-bottom: 2.5rem;
+      line-height: 1.5;
+      font-weight: 400;
+    }
+
+    /* Buttons */
+    .button-group {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      margin-bottom: 2.5rem;
+    }
+
+    .btn-hero {
+      background: var(--gradient-secondary);
+      border: none;
+      padding: 1.1rem 1.5rem;
+      font-size: 1.1rem;
+      font-weight: 700;
+      border-radius: 12px;
+      letter-spacing: 0.5px;
+      transition: all 0.3s ease;
+      color: white;
+      position: relative;
+      overflow: hidden;
+      width: 100%;
+      box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.75rem;
+      min-height: 60px;
+      text-decoration: none;
+    }
+
+    .btn-hero:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 20px rgba(52, 152, 219, 0.4);
+      color: white;
+      text-decoration: none;
+    }
+
+    .btn-hero:active {
+      transform: translateY(-1px);
+    }
+
+    .btn-diploma {
+      background: var(--primary-color);
+      box-shadow: 0 4px 15px rgba(44, 62, 80, 0.3);
+    }
+
+    .btn-diploma:hover {
+      box-shadow: 0 8px 20px rgba(44, 62, 80, 0.4);
+      background: #34495e;
+    }
+
+    .btn-certificate {
+      background: var(--gradient-certificate);
+      box-shadow: 0 4px 15px rgba(13, 110, 110, 0.3);
+    }
+
+    .btn-certificate:hover {
+      box-shadow: 0 8px 20px rgba(13, 110, 110, 0.4);
+      background: #0d5e5e;
+    }
+
+    .btn-hero i {
+      font-size: 1.3rem;
+    }
+
+    /* Feature List */
+    .feature-list {
+      list-style: none;
+      padding: 0;
+      margin: 2rem 0 0 0;
+      text-align: left;
+    }
+
+    .feature-list li {
+      padding: 0.75rem 0;
+      display: flex;
+      align-items: center;
+      color: #4a5568;
+      font-size: 1rem;
+      font-weight: 500;
+      border-bottom: 1px solid #edf2f7;
+    }
+
+    .feature-list li:last-child {
+      border-bottom: none;
+    }
+
+    .feature-list li i {
+      color: var(--success-color);
+      margin-right: 1rem;
+      font-size: 1.2rem;
+      min-width: 20px;
+    }
+
+    /* Footer */
+    .footer {
+      background: var(--primary-color);
+      padding: 1.5rem;
+      text-align: center;
+      color: rgba(255, 255, 255, 0.9);
+      font-size: 0.9rem;
+      width: 100%;
+      margin-top: auto;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+      .action-buttons-container {
+        flex-direction: row;
+        gap: 0.75rem;
+      }
+      
+      .action-btn {
+        padding: 0.9rem 0.5rem;
+        font-size: 0.85rem;
+        min-width: 90px;
+        max-width: 110px;
+      }
+      
+      .action-btn i {
+        font-size: 1.3rem;
+        margin-bottom: 0.4rem;
+      }
+      
+      .hero-card {
+        padding: 2.5rem 2rem;
+        margin: 1rem;
+        border-radius: 12px;
+      }
+      
+      .app-name {
+        font-size: 1.8rem;
+      }
+      
+      .logo-main {
+        font-size: 3rem;
+      }
+      
+      .btn-hero {
+        padding: 1rem 1.25rem;
+        font-size: 1rem;
+        min-height: 55px;
+      }
+      
+      .feature-list li {
+        font-size: 0.95rem;
+        padding: 0.6rem 0;
+      }
+      
+      .footer {
+        padding: 1rem;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .action-buttons-container {
+        gap: 0.5rem;
+      }
+      
+      .action-btn {
+        padding: 0.8rem 0.4rem;
+        font-size: 0.8rem;
+        min-width: 80px;
+        max-width: 100px;
+      }
+      
+      .action-btn i {
+        font-size: 1.2rem;
+        margin-bottom: 0.3rem;
+      }
+      
+      .hero-card {
+        padding: 2rem 1.5rem;
+      }
+      
+      .app-name {
+        font-size: 1.6rem;
+      }
+      
+      .logo-main {
+        font-size: 2.5rem;
+      }
+      
+      .app-tagline {
+        font-size: 1rem;
+        margin-bottom: 2rem;
+      }
+      
+      .btn-hero {
+        padding: 0.9rem 1rem;
+        font-size: 0.95rem;
+        min-height: 50px;
+      }
+      
+      .button-group {
+        gap: 0.75rem;
+        margin-bottom: 2rem;
+      }
+    }
+
+    /* High-resolution displays */
+    @media (min-width: 1400px) {
+      .hero-card {
+        max-width: 520px;
+        padding: 3.5rem 3rem;
+      }
+    }
+
+    /* Reduced motion for accessibility */
+    @media (prefers-reduced-motion: reduce) {
+      .hero-card,
+      .btn-hero,
+      .action-btn {
+        transition: none;
+      }
+      
+      .hero-card:hover {
+        transform: none;
+      }
+      
+      .btn-hero:hover,
+      .action-btn:hover {
+        transform: none;
+      }
+    }
+ 

@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verify Payment - KCSE Course Checker</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #3498db;
+            --success-color: #27ae60;
+        }
+        
+        .verification-card {
+            max-width: 500px;
+            margin: 2rem auto;
+            border: none;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+            border-radius: 16px;
+            overflow: hidden;
+        }
+        
+        .verification-header {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            padding: 2rem;
+            text-align: center;
+        }
+        
+        .verification-body {
+            padding: 2.5rem;
+        }
+        
+        .form-label {
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 0.5rem;
+        }
+        
+        .form-control, .form-select {
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 0.75rem 1rem;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+        
+        .form-control:focus, .form-select:focus {
+            border-color: var(--secondary-color);
+            box-shadow: 0 0 0 0.2rem rgba(52, 152, 219, 0.1);
+        }
+        
+        .btn-verify {
+            background: linear-gradient(135deg, var(--success-color), #229954);
+            border: none;
+            padding: 1rem 2rem;
+            font-size: 1.1rem;
+            font-weight: 700;
+            border-radius: 12px;
+            letter-spacing: 0.5px;
+            transition: all 0.3s ease;
+            color: white;
+            width: 100%;
+            box-shadow: 0 4px 15px rgba(39, 174, 96, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+            margin-top: 1rem;
+        }
+        
+        .btn-verify:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(39, 174, 96, 0.4);
+            color: white;
+        }
+        
+        .info-box {
+            background-color: #f8f9fa;
+            border-left: 4px solid var(--secondary-color);
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin: 1.5rem 0;
+        }
+        
+        .reference-example {
+            background-color: #e8f4fd;
+            border: 1px solid #b6e0fe;
+            border-radius: 6px;
+            padding: 1rem;
+            margin-top: 0.5rem;
+        }
+        
+        .back-link {
+            color: var(--secondary-color);
+            text-decoration: none;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .back-link:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body class="bg-light">
+    {% include 'navbar.html' %}
+
+    <div class="container py-5">
+        <div class="verification-card card">
+            <div class="verification-header">
+                <h3><i class="bi bi-check-circle me-2"></i>Verify Payment</h3>
+                <p class="mb-0">Complete your payment verification to access your results</p>
+            </div>
+            
+            <div class="verification-body">
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                            <div class="alert alert-{{ 'danger' if category == 'error' else 'success' }} alert-dismissible fade show">
+                                <i class="bi bi-{{ 'exclamation-triangle' if category == 'error' else 'check-circle' }} me-2"></i>
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+
+                <p class="text-muted mb-4">
+                    Enter your payment reference number to verify your payment and access your course eligibility results.
+                </p>
+
+                <form method="POST" id="verificationForm">
+                    <div class="mb-3">
+                        <label for="reference_type" class="form-label">Reference Type</label>
+                        <select class="form-select" id="reference_type" name="reference_type">
+                            <option value="paystack">Paystack Reference</option>
+                            <option value="mpesa">M-Pesa Transaction Code</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="reference" class="form-label">Reference Number</label>
+                        <input type="text" class="form-control" id="reference" name="reference" 
+                               placeholder="Enter your reference number" required>
+                        
+                        <div class="info-box">
+                            <h6 class="mb-2"><i class="bi bi-info-circle me-2"></i>Where to find your reference:</h6>
+                            <div class="reference-example">
+                                <strong>For Paystack:</strong><br>
+                                • Check your email for payment confirmation<br>
+                                • Reference starts with "KCSE_"<br>
+                                • Example: <code>KCSE_1234567890abcdef</code>
+                            </div>
+                            <div class="reference-example mt-2">
+                                <strong>For M-Pesa:</strong><br>
+                                • Check your M-Pesa message<br>
+                                • 10-digit transaction code<br>
+                                • Example: <code>RF12ABC456</code>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-verify">
+                        <i class="bi bi-search me-2"></i>Verify Payment
+                    </button>
+                </form>
+
+                <div class="text-center mt-4">
+                    <a href="{{ url_for('payment_page') }}" class="back-link">
+                        <i class="bi bi-arrow-left"></i>Back to Payment Page
+                    </a>
+                </div>
+
+                <div class="mt-4 p-3 bg-light rounded">
+                    <h6 class="mb-2"><i class="bi bi-question-circle me-2"></i>Need Help?</h6>
+                    <p class="mb-1 small text-muted">• Ensure you enter the correct reference number</p>
+                    <p class="mb-1 small text-muted">• Check your email and phone messages</p>
+                    <p class="mb-0 small text-muted">• Contact support if you continue having issues</p>
+                </div>
+            </div>
+        </div>
+    </div>
+{% if program_type == 'kmtc' %}
+  <h3>KMTC Eligible Programs</h3>
+  <ul>
+    {% for course in programs %}
+      <li>{{ course.name }} ({{ course.program_code }}) - {{ course.institution }}</li>
+    {% endfor %}
+  </ul>
+{% else %}
+  <h3>{{ program_type|capitalize }} Results</h3>
+  {% for cluster in clusters %}
+    <h4>{{ cluster.label }}</h4>
+    <ul>
+      {% for course in cluster.courses %}
+        <li>{{ course.name }} ({{ course.program_code }}) - {{ course.institution }}</li>
+      {% endfor %}
+    </ul>
+  {% endfor %}
+{% endif %}
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const referenceType = document.getElementById('reference_type');
+            const referenceInput = document.getElementById('reference');
+            
+            referenceType.addEventListener('change', function() {
+                if (this.value === 'mpesa') {
+                    referenceInput.placeholder = "Enter your M-Pesa transaction code";
+                } else {
+                    referenceInput.placeholder = "Enter your Paystack reference";
+                }
+            });
+            
+            // Form validation
+            const form = document.getElementById('verificationForm');
+            form.addEventListener('submit', function(e) {
+                const reference = referenceInput.value.trim();
+                if (!reference) {
+                    e.preventDefault();
+                    alert('Please enter your reference number');
+                    return false;
+                }
+            });
+        });
+    </script>
+</body>
+</html>

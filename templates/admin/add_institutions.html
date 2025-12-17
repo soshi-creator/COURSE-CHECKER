@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Add Institutions</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='bootstrap.min.css') }}">
+</head>
+<body class="p-4">
+  <div class="container">
+    <h2 class="mb-4">Add Institutions in Bulk</h2>
+
+    {% if success %}
+    <div class="alert alert-success">
+      {{ count }} institutions added successfully.
+    </div>
+    {% endif %}
+
+    <form method="POST">
+      <div class="mb-3">
+        <label for="institutions" class="form-label">Enter institution names (one per line):</label>
+        <textarea class="form-control" id="institutions" name="institutions" rows="10" required></textarea>
+      </div>
+      <button type="submit" class="btn btn-primary">Add Institutions</button>
+    </form>
+  </div>
+</body>
+</html>

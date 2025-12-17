@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='input.css') }}">
+  <!-- Add this line in the head section -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <title>KUCCPS Course Eligibility Checker</title>
+ 
+</head>
+<body class="bg-light">
+  <nav class="navbar navbar-expand-lg navbar-dark">
+    <div class="container">
+      <a class="navbar-brand fw-bold" href="{{ url_for('home') }}">
+        <i class="bi bi-mortarboard-fill me-2"></i>KUCCPS Course Checker
+      </a>
+      
+      <!-- Home and Already Paid Buttons -->
+      <div class="header-buttons">
+        <a href="{{ url_for('home') }}" class="btn-home">
+          <i class="bi bi-house-fill"></i>
+          <span>Home</span>
+        </a>
+        <a href="{{ url_for('already_paid_form') }}" class="btn-paid">
+          <i class="bi bi-check-circle-fill"></i>
+          <span>Already Paid</span>
+        </a>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container py-5">
+    <div class="row justify-content-center">
+      <div class="col-xxl-10">
+        <div class="card">
+          <div class="card-body p-4 p-md-5">
+            <h3 class="card-title">KUCCPS Course Eligibility Checker</h3>
+            <p class="text-center text-muted mb-5 fs-5">Enter your KCSE examination details to discover eligible university courses and programs</p>
+            
+            <!-- Progress Indicator -->
+            <div class="progress-container">
+              <div class="progress-info">
+                <span>Form Completion</span>
+                <span id="completion-percentage">0%</span>
+              </div>
+              <div class="progress">
+                <div class="progress-bar" id="completion-bar" style="width: 0%"></div>
+              </div>
+            </div>
+
+            <!-- Subject Counter -->
+            <div class="subject-counter">
+              <div class="counter-info">
+                <span class="counter-text">Subjects Selected</span>
+                <span class="counter-value" id="subject-count">0</span>
+              </div>
+              <p class="counter-message" id="subject-message">
+                Minimum 7 subjects required for course eligibility
+              </p>
+            </div>
+            
+            <form method="POST" action="{{ url_for('start_check') }}">
+              <!-- Core Subjects (Mandatory) -->
+              <div class="form-section">
+                <div class="form-section-header">
+                  <h5 class="section-title">
+                    <i class="bi bi-star-fill"></i>Core Subjects
+                  </h5>
+                  <span class="mandatory-badge">Mandatory</span>
+                </div>
+                <p class="section-description">These subjects are required for most university programs. Please select your grades for all core subjects.</p>
+                <div class="row subject-row">
+                  {% for subject in ['Mathematics','English','Kiswahili'] %}
+                  <div class="col-md-4 subject-col mb-4">
+                    <div class="subject-card">
+                      <label for="{{ subject }}" class="form-label">
+                        {{ subject }}<span class="required-asterisk">*</span>
+                      </label>
+                      <select class="form-select core-subject" id="{{ subject }}" name="grades[{{ subject }}]" required>
+                        <option value="" disabled selected>Select grade</option>
+                        {% for grade in ['A','A-','B+','B','B-','C+','C','C-','D+','D','D-','E'] %}
+                        <option value="{{ grade }}">{{ grade }}</option>
+                        {% endfor %}
+                      </select>
+                    </div>
+                  </div>
+                  {% endfor %}
+                </div>
+              </div>
+
+              <!-- Optional Subjects -->
+              {% for section, subjects in {
+                'Sciences': ['Chemistry','Biology','Physics'],
+                'Humanities': ['Geography','History','CRE','IRE','HRE'],
+                'Technical Subjects': ['Agriculture','Computer Studies','Art and Design','Woodwork','HomeScience','Business Studies','Music'],
+                'Other Subjects': ['Building and Construction','Electricity and Electronics','Metalwork','French','German','Aviation']
+              }.items() %}
+              <div class="form-section">
+                <div class="form-section-header">
+                  <h5 class="section-title">
+                    <i class="bi bi-{{ 'biotech' if section == 'Sciences' else 'book' if section == 'Humanities' else 'tools' if section == 'Technical Subjects' else 'grid-3x3' }}"></i>
+                    {{ section }}
+                  </h5>
+                  <span class="optional-badge">Optional</span>
+                </div>
+                <p class="section-description">Select your grades for these subjects to expand your course options. You can skip any subjects you didn't take.</p>
+                <div class="row subject-row">
+                  {% for subject in subjects %}
+                  <div class="col-md-4 subject-col mb-4">
+                    <div class="subject-card">
+                      <label for="{{ subject }}" class="form-label">
+                        {{ subject }}
+                      </label>
+                      <select class="form-select optional-subject" id="{{ subject }}" name="grades[{{ subject }}]">
+                        <option value="" selected>Select Grade</option>
+                        {% for grade in ['A','A-','B+','B','B-','C+','C','C-','D+','D','D-','E'] %}
+                        <option value="{{ grade }}">{{ grade }}</option>
+                        {% endfor %}
+                      </select>
+                    </div>
+                  </div>
+                  {% endfor %}
+                </div>
+              </div>
+              {% endfor %}
+
+              <!-- Cluster Points (Mandatory) -->
+              <div class="form-section">
+                <div class="form-section-header">
+                  <h5 class="section-title">
+                    <i class="bi bi-graph-up"></i>Cluster Cut-off Points
+                  </h5>
+                  <span class="mandatory-badge">Mandatory</span>
+                </div>
+                <p class="section-description">Enter the minimum cluster points for each program cluster (1-20). Use up to 3 decimal places (e.g., 42.123)</p>
+                <div class="grid-container">
+                  {% for i in range(1, 21) %}
+                  <div class="mb-4">
+                    <div class="cluster-input-group">
+                      <label for="cluster{{ i }}" class="form-label">
+                        Cluster {{ i }}<span class="required-asterisk">*</span>
+                      </label>
+                      <input type="number" step="0.001" min="0" max="100" class="form-control cluster-point" 
+                             id="cluster{{ i }}" name="clusters[{{ i }}]" 
+                             placeholder="42.000" required 
+                             oninput="validateDecimal(this)" />
+                      <div class="cluster-number">{{ i }}</div>
+                    </div>
+                  </div>
+                  {% endfor %}
+                </div>
+              </div>
+<!-- Hidden field to specify program type -->
+              <input type="hidden" name="program_type" value="degree">
+              <div class="text-center mt-5">
+                <button type="submit" class="btn btn-submit">
+                  <i class="bi bi-check-circle-fill me-2"></i>Check Eligibility
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+{% include 'footer.html' %}
+  <script>
+    // Decimal validation for cluster points
+    function validateDecimal(input) {
+      const value = input.value;
+      if (value.includes('.')) {
+        const decimalPart = value.split('.')[1];
+        if (decimalPart && decimalPart.length > 3) {
+          input.value = parseFloat(value).toFixed(3);
+        }
+      }
+    }
+
+    // Count selected subjects
+    function countSelectedSubjects() {
+      const coreSubjects = document.querySelectorAll('.core-subject');
+      const optionalSubjects = document.querySelectorAll('.optional-subject');
+      
+      let count = 0;
+      
+      // Count core subjects (they are required, so count if they have a value)
+      coreSubjects.forEach(select => {
+        if (select.value && select.value !== '') count++;
+      });
+      
+      // Count optional subjects (only if they have a grade selected)
+      optionalSubjects.forEach(select => {
+        if (select.value && select.value !== '') count++;
+      });
+      
+      return count;
+    }
+
+    // Update subject counter
+    function updateSubjectCounter() {
+      const count = countSelectedSubjects();
+      const counterElement = document.getElementById('subject-count');
+      const messageElement = document.getElementById('subject-message');
+      
+      counterElement.textContent = count;
+      
+      // Update message based on count
+      if (count >= 7) {
+        counterElement.className = 'counter-value counter-success';
+        messageElement.className = 'counter-message counter-success';
+        messageElement.textContent = '✓ Minimum requirement met! You have selected ' + count + ' subjects.';
+      } else if (count >= 5) {
+        counterElement.className = 'counter-value counter-warning';
+        messageElement.className = 'counter-message counter-warning';
+        messageElement.textContent = `You have selected ${count} subjects. Minimum 7 subjects required for course eligibility.`;
+      } else {
+        counterElement.className = 'counter-value counter-error';
+        messageElement.className = 'counter-message counter-error';
+        messageElement.textContent = `You have selected only ${count} subjects. Minimum 7 subjects required for course eligibility.`;
+      }
+    }
+
+    // Form completion progress
+    function updateProgress() {
+      const coreSubjects = document.querySelectorAll('.core-subject');
+      const clusterPoints = document.querySelectorAll('.cluster-point');
+      
+      let completed = 0;
+      let total = coreSubjects.length + clusterPoints.length;
+      
+      // Check core subjects
+      coreSubjects.forEach(select => {
+        if (select.value && select.value !== '') completed++;
+      });
+      
+      // Check cluster points
+      clusterPoints.forEach(input => {
+        if (input.value && input.value !== '') completed++;
+      });
+      
+      const percentage = Math.round((completed / total) * 100);
+      document.getElementById('completion-percentage').textContent = percentage + '%';
+      document.getElementById('completion-bar').style.width = percentage + '%';
+      
+      // Update subject counter
+      updateSubjectCounter();
+    }
+    
+    // Add event listeners
+    document.addEventListener('DOMContentLoaded', function() {
+      const formElements = document.querySelectorAll('.core-subject, .cluster-point, .optional-subject');
+      
+      formElements.forEach(element => {
+        element.addEventListener('change', updateProgress);
+        element.addEventListener('input', updateProgress);
+      });
+      
+      // Initialize progress and counter
+      updateProgress();
+      updateSubjectCounter();
+      
+      // Form validation
+      document.getElementById('eligibility-form').addEventListener('submit', function(e) {
+        let valid = true;
+        const subjectCount = countSelectedSubjects();
+        
+        // Validate minimum subjects
+        if (subjectCount < 7) {
+          alert(`You must select at least 7 subjects. Currently you have selected ${subjectCount} subjects.`);
+          valid = false;
+        }
+        
+        // Validate cluster points decimal places
+        const clusterInputs = document.querySelectorAll('.cluster-point');
+        clusterInputs.forEach(input => {
+          if (input.value.includes('.')) {
+            const decimalPart = input.value.split('.')[1];
+            if (decimalPart && decimalPart.length > 3) {
+              alert('Cluster points can have maximum 3 decimal places');
+              input.focus();
+              valid = false;
+              return false;
+            }
+          }
+        });
+        
+        if (!valid) {
+          e.preventDefault();
+        }
+      });
+    });
+  </script>
+</body>
+</html>

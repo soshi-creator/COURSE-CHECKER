@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="{{ url_for('static', filename='bootstrap.min.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <title>Qualified Courses</title>
+  <style>
+    :root {
+      --primary-color: #3498db;
+      --secondary-color: #2c3e50;
+      --success-color: #27ae60;
+      --warning-color: #f39c12;
+      --light-bg: #f8f9fa;
+      --card-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+      --card-hover-shadow: 0 4px 8px rgba(0, 0, 0, 0.12);
+    }
+    
+    body {
+      background-color: #f5f7fa;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      line-height: 1.4;
+    }
+    
+    .page-header {
+      background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+      color: white;
+      padding: 1.5rem 0;
+      margin-bottom: 1.5rem;
+      border-radius: 0 0 10px 10px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+    
+    .header-actions {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 1rem;
+    }
+    
+    .cluster-section {
+      margin-bottom: 1rem;
+    }
+    
+    .cluster-header {
+      background-color: white;
+      padding: 0.8rem 1.2rem;
+      border-radius: 6px;
+      box-shadow: var(--card-shadow);
+      margin-bottom: 0.5rem;
+      border-left: 4px solid var(--success-color);
+      display: flex;
+      align-items: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    
+    .cluster-header:hover {
+      box-shadow: var(--card-hover-shadow);
+    }
+    
+    .cluster-header.expanded {
+      margin-bottom: 1rem;
+    }
+    
+    .cluster-icon {
+      font-size: 1.2rem;
+      margin-right: 0.8rem;
+      color: var(--success-color);
+    }
+    
+    .cluster-header h3 {
+      font-size: 1.3rem;
+      margin-bottom: 0.2rem;
+      flex-grow: 1;
+    }
+    
+    .cluster-toggle {
+      color: var(--primary-color);
+      font-size: 1.1rem;
+      transition: transform 0.3s ease;
+    }
+    
+    .cluster-toggle.expanded {
+      transform: rotate(180deg);
+    }
+    
+    .cluster-content {
+      display: none;
+    }
+    
+    .cluster-content.expanded {
+      display: block;
+    }
+    
+    .course-card {
+      background-color: white;
+      border-radius: 6px;
+      padding: 1rem;
+      margin-bottom: 1rem;
+      box-shadow: var(--card-shadow);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      border-top: 3px solid var(--primary-color);
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .course-card:hover {
+      transform: translateY(-3px);
+      box-shadow: var(--card-hover-shadow);
+    }
+    
+    .course-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 0.8rem;
+    }
+    
+    .course-title {
+      color: var(--secondary-color);
+      font-weight: 600;
+      font-size: 1rem;
+      margin-bottom: 0.3rem;
+      line-height: 1.3;
+      word-wrap: break-word;
+      overflow-wrap: break-word;
+    }
+    
+    .cutoff-badge {
+      background-color: var(--primary-color);
+      color: white;
+      padding: 0.3rem 0.6rem;
+      border-radius: 12px;
+      font-size: 0.75rem;
+      font-weight: 500;
+      white-space: nowrap;
+      flex-shrink: 0;
+      margin-left: 0.5rem;
+    }
+    
+    .course-details {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 0.5rem;
+      margin-bottom: 0.8rem;
+    }
+    
+    .detail-item {
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .detail-label {
+      font-size: 0.75rem;
+      color: #6c757d;
+      font-weight: 500;
+    }
+    
+    .detail-value {
+      font-weight: 500;
+      color: var(--secondary-color);
+      font-size: 0.85rem;
+      word-wrap: break-word;
+    }
+    
+    .requirements-section {
+      background-color: var(--light-bg);
+      border-radius: 4px;
+      padding: 0.6rem;
+      font-size: 0.85rem;
+      flex-grow: 1;
+      min-height: 0; /* Important for flex children */
+    }
+    
+    .requirements-title {
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+      color: var(--secondary-color);
+      display: flex;
+      align-items: center;
+      font-size: 0.85rem;
+    }
+    
+    .requirements-title i {
+      margin-right: 0.4rem;
+      color: var(--primary-color);
+      font-size: 0.8rem;
+    }
+    
+    .requirements-list {
+      list-style-type: none;
+      padding: 0;
+      margin: 0;
+      max-height: 150px; /* Limit height and enable scrolling if needed */
+      overflow-y: auto;
+    }
+    
+    .requirement-item {
+      padding: 0.3rem 0;
+      border-bottom: 1px solid #dee2e6;
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.8rem;
+      align-items: center;
+    }
+    
+    .requirement-item:last-child {
+      border-bottom: none;
+    }
+    
+    .subject-name {
+      font-weight: 500;
+      flex: 1;
+      word-break: break-word;
+      padding-right: 0.5rem;
+    }
+    
+    .min-grade {
+      background-color: var(--warning-color);
+      color: white;
+      padding: 0.15rem 0.4rem;
+      border-radius: 8px;
+      font-size: 0.7rem;
+      font-weight: 500;
+      flex-shrink: 0;
+    }
+    
+    .no-courses-card {
+      background-color: white;
+      border-radius: 6px;
+      padding: 2rem 1.5rem;
+      text-align: center;
+      box-shadow: var(--card-shadow);
+      margin-bottom: 1.5rem;
+    }
+    
+    .no-courses-icon {
+      font-size: 3rem;
+      color: #dee2e6;
+      margin-bottom: 1rem;
+    }
+    
+    .action-buttons {
+      display: flex;
+      justify-content: center;
+      margin-top: 1.5rem;
+    }
+    
+    .btn-primary-custom {
+      background-color: var(--primary-color);
+      border-color: var(--primary-color);
+      padding: 0.5rem 1.2rem;
+      font-weight: 500;
+      border-radius: 4px;
+      font-size: 0.9rem;
+    }
+    
+    .btn-primary-custom:hover {
+      background-color: #2980b9;
+      border-color: #2980b9;
+    }
+    
+    .btn-pdf {
+      background-color: #e74c3c;
+      border-color: #e74c3c;
+      color: white;
+      padding: 0.5rem 1.2rem;
+      font-weight: 500;
+      border-radius: 4px;
+      font-size: 0.9rem;
+    }
+    
+    .btn-pdf:hover {
+      background-color: #c0392b;
+      border-color: #c0392b;
+      color: white;
+    }
+    
+    .results-summary {
+      background-color: white;
+      border-radius: 6px;
+      padding: 0.8rem 1.2rem;
+      margin-bottom: 1.5rem;
+      box-shadow: var(--card-shadow);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .summary-text {
+      font-weight: 500;
+      color: var(--secondary-color);
+      font-size: 0.9rem;
+    }
+    
+    .summary-count {
+      background-color: var(--success-color);
+      color: white;
+      padding: 0.2rem 0.6rem;
+      border-radius: 12px;
+      font-weight: 500;
+      font-size: 0.8rem;
+    }
+    
+    @media (max-width: 768px) {
+      .course-header {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      
+      .cutoff-badge {
+        margin-left: 0;
+        margin-top: 0.3rem;
+        align-self: flex-start;
+      }
+      
+      .requirements-list {
+        max-height: 120px;
+      }
+      
+      .header-actions {
+        flex-direction: column;
+        gap: 1rem;
+      }
+    }
+    
+    /* Custom scrollbar for requirements list */
+    .requirements-list::-webkit-scrollbar {
+      width: 4px;
+    }
+    
+    .requirements-list::-webkit-scrollbar-track {
+      background: #f1f1f1;
+      border-radius: 2px;
+    }
+    
+    .requirements-list::-webkit-scrollbar-thumb {
+      background: #c1c1c1;
+      border-radius: 2px;
+    }
+    
+    .requirements-list::-webkit-scrollbar-thumb:hover {
+      background: #a8a8a8;
+    }
+  </style>
+</head>
+<body>
+   <div class="page-header">
+    <div class="container">
+      <h1 class="text-center mb-2" style="font-size: 1.8rem;">Courses You Qualify For</h1>
+      <p class="text-center mb-0" style="font-size: 0.9rem;">Based on your academic qualifications and preferences</p>
+      
+      <div class="header-actions">
+        <a href="{{ url_for('input_form') }}" class="btn btn-primary-custom">
+          <i class="fas fa-redo-alt mr-1"></i> Try Again
+        </a>
+        {% if session['degree_pdf_id'] %}
+  <a href="{{ url_for('download_pdf', data_id=session['degree_pdf_id']) }}" class="btn btn-primary">
+    Download Degree PDF
+  </a>
+{% endif %}
+
+      </div>
+    </div>
+  </div>
+
+  <div class="container py-3">
+    {% if clusters %}
+      <div class="results-summary">
+        <div class="summary-text">
+          Courses matching your qualifications
+        </div>
+        <div class="summary-count">
+          {% set total_courses = [] %}
+          {% for cluster in clusters %}
+            {% for course in cluster.courses %}
+              {% if total_courses.append(1) %}{% endif %}
+            {% endfor %}
+          {% endfor %}
+          {{ total_courses|length }} course{{ 's' if total_courses|length != 1 else '' }} found
+        </div>
+      </div>
+      
+      {% for cluster in clusters %}
+        <div class="cluster-section">
+          <div class="cluster-header" onclick="toggleCluster({{ loop.index }})">
+            <div class="cluster-icon">
+              <i class="fas fa-graduation-cap"></i>
+            </div>
+            <div>
+              <h3 class="mb-1">{{ cluster.label }}</h3>
+              <p class="mb-0 text-muted" style="font-size: 0.85rem;">{{ cluster.courses|length }} course{{ 's' if cluster.courses|length != 1 else '' }} available</p>
+            </div>
+            <div class="cluster-toggle" id="toggle-{{ loop.index }}">
+              <i class="fas fa-chevron-down"></i>
+            </div>
+          </div>
+          
+          <div class="cluster-content" id="content-{{ loop.index }}">
+            <div class="row">
+              {% for course in cluster.courses %}
+                <div class="col-lg-4 col-md-6 mb-3">
+                  <div class="course-card">
+                    <div class="course-header">
+                      <h5 class="course-title">{{ course.name }}</h5>
+                      <div class="cutoff-badge">
+                        {% if course.cutoff is not none %}
+                          <p>Cutoff: {{ course.cutoff | round(3) }}</p>
+                        {% else %}
+                          No cutoff
+                        {% endif %}
+                      </div>
+                    </div>
+                    
+                    <div class="course-details">
+                      <div class="detail-item">
+                        <span class="detail-label">Institution</span>
+                        <span class="detail-value">{{ course.institution }}</span>
+                      </div>
+                      <div class="detail-item">
+                        <span class="detail-label">Program Code</span>
+                        <span class="detail-value">{{ course.program_code }}</span>
+                      </div>
+                    </div>
+                    
+                    <div class="requirements-section">
+                      <div class="requirements-title">
+                        <i class="fas fa-book"></i> Requirements
+                      </div>
+                      <ul class="requirements-list">
+                        {% for req in course.requirements %}
+                        <li class="requirement-item">
+                         {% if req.type == 'multi' %}
+        <span class="subject-name">Any {{ req.requiredCount or 2 }} of:</span>
+        <span class="subject-name">{{ req.subject_pool | join(', ') }}</span>
+        <span class="min-grade">Min Grade: {{ req.minGrade }}</span>
+                          {% else %}
+                          
+                            <span class="subject-name">{{ req.subject }}</span>
+                            <span class="min-grade">{{ req.minGrade }}</span>
+                          
+                          {% endif %}
+                          </li>
+                        {% endfor %}
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    {% else %}
+      <div class="no-courses-card">
+        <div class="no-courses-icon">
+          <i class="fas fa-search"></i>
+        </div>
+        <h3 class="text-muted mb-2" style="font-size: 1.3rem;">No Courses Matched Your Qualifications</h3>
+        <p class="text-muted mb-3" style="font-size: 0.9rem;">We couldn't find any courses that match your current qualifications. Try adjusting your search criteria or subject grades.</p>
+      </div>
+    {% endif %}
+  </div>
+
+  <!-- Font Awesome for icons -->
+  <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+  
+  <script>
+    function toggleCluster(clusterIndex) {
+      const content = document.getElementById(`content-${clusterIndex}`);
+      const toggle = document.getElementById(`toggle-${clusterIndex}`);
+      const header = content.parentElement.querySelector('.cluster-header');
+      
+      content.classList.toggle('expanded');
+      toggle.classList.toggle('expanded');
+      header.classList.toggle('expanded');
+    }
+  </script>
+</body>
+</html>

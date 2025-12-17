@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Edit Institution</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='bootstrap.min.css') }}">
+</head>
+<body class="p-4">
+  <div class="container">
+    <h2 class="mb-4">Edit Institution</h2>
+
+    <form method="POST">
+      <div class="mb-3">
+        <label for="name" class="form-label">Institution Name</label>
+        <input type="text" class="form-control" id="name" name="name" value="{{ institution.name }}" required>
+      </div>
+      <button type="submit" class="btn btn-primary">Update</button>
+      <a href="{{ url_for('list_institutions') }}" class="btn btn-secondary">Cancel</a>
+    </form>
+  </div>
+</body>
+</html>
