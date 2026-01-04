@@ -228,7 +228,7 @@ def run_degree_eligibility(grades, cluster_points):
 def download_pdf(data_id):
     # Ensure data exists
     if data_id not in qualified_courses_data:
-        return "Data not found. Please generate the courses list again.", 404
+        return "Reload page. Data not found. Please generate the courses list again.", 404
     
     data = qualified_courses_data[data_id]
     qualified_courses = data['qualified_courses']
@@ -784,7 +784,7 @@ def payment_page():
 
         # Determine amount
         already_paid_for = existing.get('program_type') if existing else None
-        amount = 1 if not already_paid_for else 1
+        amount = 199 if not already_paid_for else 99
         session['amount'] = amount
 
         # Initiate Paystack
