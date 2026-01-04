@@ -126,32 +126,74 @@
               </div>
               {% endfor %}
 
-              <!-- Cluster Points (Mandatory) -->
-              <div class="form-section">
-                <div class="form-section-header">
-                  <h5 class="section-title">
-                    <i class="bi bi-graph-up"></i>Cluster Cut-off Points
-                  </h5>
-                  <span class="mandatory-badge">Mandatory</span>
-                </div>
-                <p class="section-description">Enter the minimum cluster points for each program cluster (1-20). Use up to 3 decimal places (e.g., 42.123)</p>
-                <div class="grid-container">
-                  {% for i in range(1, 21) %}
-                  <div class="mb-4">
-                    <div class="cluster-input-group">
-                      <label for="cluster{{ i }}" class="form-label">
-                        Cluster {{ i }}<span class="required-asterisk">*</span>
-                      </label>
-                      <input type="number" step="0.001" min="0" max="100" class="form-control cluster-point" 
-                             id="cluster{{ i }}" name="clusters[{{ i }}]" 
-                             placeholder="42.000" required 
-                             oninput="validateDecimal(this)" />
-                      <div class="cluster-number">{{ i }}</div>
-                    </div>
-                  </div>
-                  {% endfor %}
-                </div>
-              </div>
+<!-- Cluster Points (Mandatory) -->
+<div class="form-section">
+  <div class="form-section-header">
+    <h5 class="section-title">
+      <i class="bi bi-graph-up"></i>Cluster Cut-off Points
+    </h5>
+    <span class="mandatory-badge">Mandatory</span>
+  </div>
+  
+  <!-- Instructions Section -->
+  <div class="alert alert-info mb-4">
+    <h6 class="alert-heading"><i class="bi bi-info-circle"></i> How to Find Cluster Points</h6>
+    <p class="mb-2">Follow these steps to get the correct cluster points:</p>
+    <ol class="mb-1">
+      <li>Log into the <strong>KUCCPS Student Portal</strong> at <a href="https://students.kuccps.net/login/" target="_blank">students.kuccps.net</a> using your credentials.</li>
+      <li>Navigate to <strong>First page/ page right after successful login.</strong></li>
+      <li>After scrolling you will see the cluster points table.</li>
+      <li>It will show the cluster points from cluster 1 to 20.</li>
+      <li>Enter the values exactly as shown (e.g., 42.123)</li>
+    </ol>
+  </div>
+  
+  <!-- Image Reference -->
+  <div class="card mb-4">
+    <div class="card-body">
+      <h6 class="card-title"><i class="bi bi-card-image"></i> Example from KUCCPS Portal</h6>
+      <div class="text-center mb-3">
+        
+          
+          
+        </div>
+        <!-- Uncomment and replace with actual image -->
+        
+        <img src="/static/images/image.png" 
+             alt="KUCCPS Portal Cluster Points Example" 
+             class="img-fluid rounded border" 
+             style="max-height: 400px;">
+      </div>
+      <div class="row text-muted small">
+        <div class="col-md-6">
+          <i class="bi bi-1-circle"></i> <strong>Cluster Number</strong> - Matches the numbers 1-20 below
+        </div>
+        <div class="col-md-6">
+          <i class="bi bi-123"></i> <strong>Cut-off Points</strong> - Enter the exact value shown
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <p class="section-description">Enter the minimum cluster points for each program cluster (1-20). Use up to 3 decimal places (e.g., 42.123)</p>
+  
+  <div class="grid-container">
+    {% for i in range(1, 21) %}
+    <div class="mb-4">
+      <div class="cluster-input-group">
+        <label for="cluster{{ i }}" class="form-label">
+          Cluster {{ i }}<span class="required-asterisk">*</span>
+        </label>
+        <input type="number" step="0.001" min="0" max="100" class="form-control cluster-point" 
+               id="cluster{{ i }}" name="clusters[{{ i }}]" 
+               placeholder="42.000" required 
+               oninput="validateDecimal(this)" />
+        <div class="cluster-number">{{ i }}</div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
 <!-- Hidden field to specify program type -->
               <input type="hidden" name="program_type" value="degree">
               <div class="text-center mt-5">

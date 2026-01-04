@@ -409,3 +409,31 @@
         font-size: 14px;
       }
     }
+    .image-placeholder {
+  background-color: #f8f9fa;
+  border: 2px dashed #dee2e6;
+  border-radius: 8px;
+  padding: 40px 20px;
+  margin: 15px 0;
+  text-align: center;
+}
+
+.cluster-input-group {
+  position: relative;
+}
+
+.cluster-number {
+  position: absolute;
+  right: 10px;
+  top: 35px;
+  background: #0d6efd;
+  color: white;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: bold;
+}
