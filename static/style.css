@@ -1,4 +1,221 @@
-    /* style.css - KCSE Course Checker Landing Page (Consistent Theme) */
+
+    /* Additional styles for buttons */
+    .btn-kmtc {
+      background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+      box-shadow: 0 4px 15px rgba(220, 53, 69, 0.3);
+    }
+    
+    .btn-kmtc:hover {
+      box-shadow: 0 8px 20px rgba(220, 53, 69, 0.4);
+      background: #c82333;
+    }
+    
+    .btn-portal {
+      background: linear-gradient(135deg, #9c27b0 0%, #7b1fa2 100%);
+      box-shadow: 0 4px 15px rgba(156, 39, 176, 0.3);
+    }
+    
+    .btn-portal:hover {
+      box-shadow: 0 8px 20px rgba(156, 39, 176, 0.4);
+      background: #7b1fa2;
+    }
+    
+    /* Email button style */
+    .btn-email {
+      background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
+      box-shadow: 0 4px 15px rgba(33, 150, 243, 0.3);
+    }
+    
+    .btn-email:hover {
+      box-shadow: 0 8px 20px rgba(33, 150, 243, 0.4);
+      background: #1976D2;
+    }
+    
+    /* Animated background shapes */
+    .bg-shape-1, .bg-shape-2 {
+      position: absolute;
+      border-radius: 50%;
+      opacity: 0.1;
+      z-index: 0;
+    }
+    
+    .bg-shape-1 {
+      width: 300px;
+      height: 300px;
+      background: linear-gradient(135deg, #3498db 0%, #2c3e50 100%);
+      top: 10%;
+      right: 10%;
+      animation: float 6s ease-in-out infinite;
+    }
+    
+    .bg-shape-2 {
+      width: 250px;
+      height: 250px;
+      background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+      bottom: 15%;
+      left: 8%;
+      animation: float 8s ease-in-out infinite reverse;
+    }
+    
+    @keyframes float {
+      0%, 100% {
+        transform: translateY(0);
+      }
+      50% {
+        transform: translateY(-20px);
+      }
+    }
+    
+    /* Enhanced hero card */
+    .hero-card {
+      position: relative;
+      z-index: 1;
+      backdrop-filter: blur(10px);
+      background: rgba(255, 255, 255, 0.95) !important;
+      border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    }
+    
+    .hero-card::before {
+      background: linear-gradient(90deg, #2c3e50, #3498db, #2c3e50) !important;
+      background-size: 200% 100% !important;
+      animation: gradient 3s ease infinite;
+    }
+    
+    @keyframes gradient {
+      0% {
+        background-position: 0% 50%;
+      }
+      50% {
+        background-position: 100% 50%;
+      }
+      100% {
+        background-position: 0% 50%;
+      }
+    }
+    
+    /* Modal styles */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.7);
+      z-index: 9999;
+      justify-content: center;
+      align-items: center;
+    }
+    
+    .modal-content {
+      background: white;
+      border-radius: 16px;
+      padding: 2.5rem;
+      max-width: 500px;
+      width: 90%;
+      text-align: center;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+      animation: modalSlideIn 0.3s ease-out;
+    }
+    
+    @keyframes modalSlideIn {
+      from {
+        opacity: 0;
+        transform: translateY(-50px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    
+    .modal-icon {
+      font-size: 4rem;
+      color: #e74c3c;
+      margin-bottom: 1.5rem;
+    }
+    
+    .modal-title {
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: #2c3e50;
+      margin-bottom: 1rem;
+    }
+    
+    .modal-message {
+      color: #718096;
+      font-size: 1.1rem;
+      line-height: 1.6;
+      margin-bottom: 2rem;
+    }
+    
+    .modal-buttons {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    
+    .modal-btn {
+      padding: 0.9rem 1.5rem;
+      border-radius: 10px;
+      font-weight: 600;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      border: none;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+    }
+    
+    .modal-btn-primary {
+      background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+      color: white;
+      box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
+    }
+    
+    .modal-btn-secondary {
+      background: #f8f9fa;
+      color: #495057;
+      border: 2px solid #e9ecef;
+    }
+    
+    .modal-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+      text-decoration: none;
+    }
+    
+    /* Responsive modal */
+    @media (max-width: 576px) {
+      .modal-content {
+        padding: 2rem 1.5rem;
+      }
+      
+      .modal-icon {
+        font-size: 3.5rem;
+      }
+      
+      .modal-title {
+        font-size: 1.6rem;
+      }
+      
+      .modal-message {
+        font-size: 1rem;
+      }
+      
+      .modal-buttons {
+        flex-direction: column;
+      }
+      
+      .modal-btn {
+        width: 100%;
+      }
+    }
+        /* style.css - KCSE Course Checker Landing Page (Consistent Theme) */
 
     :root {
       --primary-color: #2c3e50;
@@ -9,7 +226,9 @@
       --certificate-color: #0d6e6e;
       --whatsapp-color: #25D366;
       --call-color: #128C7E;
+      --email-color: #2196F3;
       --payment-color: #4CAF50;
+      --portal-color: #9c27b0;
       --light-bg: #f8f9fa;
       --card-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
       --gradient-primary: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
@@ -34,6 +253,7 @@
       overflow-x: hidden;
       display: flex;
       flex-direction: column;
+      position: relative;
     }
 
     /* Navigation */
@@ -42,6 +262,8 @@
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
       padding: 1rem 0;
       border: none;
+      position: relative;
+      z-index: 100;
     }
 
     .navbar-brand {
@@ -65,13 +287,15 @@
       background: white;
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
       border-bottom: 1px solid #e2e8f0;
+      position: relative;
+      z-index: 100;
     }
 
     .action-buttons-container {
       display: flex;
       justify-content: center;
       gap: 1rem;
-      max-width: 800px;
+      max-width: 1000px;
       margin: 0 auto;
       flex-wrap: wrap;
     }
@@ -121,6 +345,10 @@
       background: var(--call-color);
     }
 
+    .btn-email {
+      background: var(--email-color);
+    }
+
     .btn-payment {
       background: var(--payment-color);
     }
@@ -142,7 +370,7 @@
       padding: 3rem 2.5rem;
       box-shadow: var(--card-shadow);
       border: 1px solid #e2e8f0;
-      max-width: 500px;
+      max-width: 550px;
       width: 100%;
       text-align: center;
       position: relative;
@@ -163,7 +391,7 @@
 
     .hero-card:hover {
       transform: translateY(-5px);
-      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+      box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15);
     }
 
     /* Logo & Typography */
@@ -172,14 +400,27 @@
     }
 
     .logo-main {
-      font-size: 3.5rem;
+      font-size: 4rem;
       color: var(--primary-color);
       margin-bottom: 1.5rem;
       display: inline-block;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0% {
+        transform: scale(1);
+      }
+      50% {
+        transform: scale(1.05);
+      }
+      100% {
+        transform: scale(1);
+      }
     }
 
     .app-name {
-      font-size: 2.2rem;
+      font-size: 2.4rem;
       font-weight: 800;
       background: var(--gradient-primary);
       -webkit-background-clip: text;
@@ -187,20 +428,36 @@
       background-clip: text;
       margin-bottom: 1rem;
       line-height: 1.2;
+      position: relative;
+    }
+
+    .app-name::after {
+      content: '';
+      position: absolute;
+      bottom: -10px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 60px;
+      height: 4px;
+      background: var(--gradient-primary);
+      border-radius: 2px;
     }
 
     .app-tagline {
       color: #718096;
-      font-size: 1.1rem;
+      font-size: 1.2rem;
       margin-bottom: 2.5rem;
-      line-height: 1.5;
+      line-height: 1.6;
       font-weight: 400;
+      max-width: 400px;
+      margin-left: auto;
+      margin-right: auto;
     }
 
     /* Buttons */
     .button-group {
-      display: flex;
-      flex-direction: column;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
       gap: 1rem;
       margin-bottom: 2.5rem;
     }
@@ -217,7 +474,6 @@
       color: white;
       position: relative;
       overflow: hidden;
-      width: 100%;
       box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
       display: flex;
       align-items: center;
@@ -225,6 +481,7 @@
       gap: 0.75rem;
       min-height: 60px;
       text-decoration: none;
+      cursor: pointer;
     }
 
     .btn-hero:hover {
@@ -236,6 +493,21 @@
 
     .btn-hero:active {
       transform: translateY(-1px);
+    }
+
+    .btn-hero::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+      transition: 0.5s;
+    }
+
+    .btn-hero:hover::before {
+      left: 100%;
     }
 
     .btn-diploma {
@@ -258,6 +530,16 @@
       background: #0d5e5e;
     }
 
+    .btn-portal {
+      background: var(--portal-color);
+      box-shadow: 0 4px 15px rgba(156, 39, 176, 0.3);
+    }
+
+    .btn-portal:hover {
+      box-shadow: 0 8px 20px rgba(156, 39, 176, 0.4);
+      background: #7b1fa2;
+    }
+
     .btn-hero i {
       font-size: 1.3rem;
     }
@@ -278,6 +560,12 @@
       font-size: 1rem;
       font-weight: 500;
       border-bottom: 1px solid #edf2f7;
+      transition: all 0.3s ease;
+    }
+
+    .feature-list li:hover {
+      color: var(--primary-color);
+      transform: translateX(5px);
     }
 
     .feature-list li:last-child {
@@ -300,10 +588,16 @@
       font-size: 0.9rem;
       width: 100%;
       margin-top: auto;
+      position: relative;
+      z-index: 100;
     }
 
     /* Responsive Design */
     @media (max-width: 768px) {
+      .button-group {
+        grid-template-columns: 1fr;
+      }
+      
       .action-buttons-container {
         flex-direction: row;
         gap: 0.75rem;
@@ -325,6 +619,7 @@
         padding: 2.5rem 2rem;
         margin: 1rem;
         border-radius: 12px;
+        max-width: 500px;
       }
       
       .app-name {
@@ -348,6 +643,10 @@
       
       .footer {
         padding: 1rem;
+      }
+      
+      .bg-shape-1, .bg-shape-2 {
+        display: none;
       }
     }
 
@@ -400,7 +699,7 @@
     /* High-resolution displays */
     @media (min-width: 1400px) {
       .hero-card {
-        max-width: 520px;
+        max-width: 600px;
         padding: 3.5rem 3rem;
       }
     }
@@ -409,7 +708,8 @@
     @media (prefers-reduced-motion: reduce) {
       .hero-card,
       .btn-hero,
-      .action-btn {
+      .action-btn,
+      .feature-list li {
         transition: none;
       }
       
@@ -418,8 +718,22 @@
       }
       
       .btn-hero:hover,
-      .action-btn:hover {
+      .action-btn:hover,
+      .feature-list li:hover {
         transform: none;
+      }
+      
+      .logo-main {
+        animation: none;
+      }
+      
+      .bg-shape-1, .bg-shape-2 {
+        animation: none;
+      }
+      
+      .btn-hero::before {
+        display: none;
       }
     }
  
+  

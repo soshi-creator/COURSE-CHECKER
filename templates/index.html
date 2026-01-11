@@ -33,164 +33,60 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
   <title>KUCCPS Course Eligibility Checker</title>
   <style>
-    /* Additional styles for buttons */
-    .btn-kmtc {
-      background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
-      box-shadow: 0 4px 15px rgba(220, 53, 69, 0.3);
-    }
-    
-    .btn-kmtc:hover {
-      box-shadow: 0 8px 20px rgba(220, 53, 69, 0.4);
-      background: #c82333;
-    }
-    
-    .btn-portal {
-      background: linear-gradient(135deg, #9c27b0 0%, #7b1fa2 100%);
-      box-shadow: 0 4px 15px rgba(156, 39, 176, 0.3);
-    }
-    
-    .btn-portal:hover {
-      box-shadow: 0 8px 20px rgba(156, 39, 176, 0.4);
-      background: #7b1fa2;
-    }
-    
-    /* Email button style */
-    .btn-email {
-      background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
-      box-shadow: 0 4px 15px rgba(33, 150, 243, 0.3);
-    }
-    
-    .btn-email:hover {
-      box-shadow: 0 8px 20px rgba(33, 150, 243, 0.4);
-      background: #1976D2;
-    }
-    
-    /* Animated background shapes */
-    .bg-shape-1, .bg-shape-2 {
-      position: absolute;
-      border-radius: 50%;
-      opacity: 0.1;
-      z-index: 0;
-    }
-    
-    .bg-shape-1 {
-      width: 300px;
-      height: 300px;
-      background: linear-gradient(135deg, #3498db 0%, #2c3e50 100%);
-      top: 10%;
-      right: 10%;
-      animation: float 6s ease-in-out infinite;
-    }
-    
-    .bg-shape-2 {
-      width: 250px;
-      height: 250px;
-      background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
-      bottom: 15%;
-      left: 8%;
-      animation: float 8s ease-in-out infinite reverse;
-    }
-    
-    @keyframes float {
-      0%, 100% {
-        transform: translateY(0);
-      }
-      50% {
-        transform: translateY(-20px);
-      }
-    }
-    
-    /* Enhanced hero card */
-    .hero-card {
-      position: relative;
-      z-index: 1;
-      backdrop-filter: blur(10px);
-      background: rgba(255, 255, 255, 0.95) !important;
-      border: 1px solid rgba(255, 255, 255, 0.2) !important;
-    }
-    
-    .hero-card::before {
-      background: linear-gradient(90deg, #2c3e50, #3498db, #2c3e50) !important;
-      background-size: 200% 100% !important;
-      animation: gradient 3s ease infinite;
-    }
-    
-    @keyframes gradient {
-      0% {
-        background-position: 0% 50%;
-      }
-      50% {
-        background-position: 100% 50%;
-      }
-      100% {
-        background-position: 0% 50%;
-      }
-    }
-    
-    /* Modal styles */
-    .modal-overlay {
+    /* Install Modal Styles */
+    .pwa-install-modal {
       display: none;
       position: fixed;
       top: 0;
       left: 0;
       width: 100%;
       height: 100%;
-      background-color: rgba(0, 0, 0, 0.7);
-      z-index: 9999;
+      background: rgba(0,0,0,0.7);
       justify-content: center;
       align-items: center;
+      z-index: 2000;
+      animation: fadeIn 0.3s ease-out;
     }
     
-    .modal-content {
+    .pwa-install-content {
       background: white;
+      padding: 30px;
       border-radius: 16px;
-      padding: 2.5rem;
-      max-width: 500px;
-      width: 90%;
       text-align: center;
+      max-width: 400px;
+      width: 90%;
+      margin: 20px;
       box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-      animation: modalSlideIn 0.3s ease-out;
+      animation: slideUp 0.3s ease-out;
     }
     
-    @keyframes modalSlideIn {
-      from {
-        opacity: 0;
-        transform: translateY(-50px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-    
-    .modal-icon {
+    .pwa-install-icon {
       font-size: 4rem;
-      color: #e74c3c;
-      margin-bottom: 1.5rem;
+      color: #2c3e50;
+      margin-bottom: 1rem;
     }
     
-    .modal-title {
+    .pwa-install-title {
       font-size: 1.8rem;
       font-weight: 700;
       color: #2c3e50;
       margin-bottom: 1rem;
     }
     
-    .modal-message {
+    .pwa-install-message {
       color: #718096;
       font-size: 1.1rem;
       line-height: 1.6;
       margin-bottom: 2rem;
     }
     
-    .modal-buttons {
+    .pwa-install-buttons {
       display: flex;
       gap: 1rem;
       justify-content: center;
-      flex-wrap: wrap;
     }
     
-    .modal-btn {
+    .pwa-install-btn {
       padding: 0.9rem 1.5rem;
       border-radius: 10px;
       font-weight: 600;
@@ -203,573 +99,77 @@
       align-items: center;
       justify-content: center;
       gap: 0.5rem;
+      min-width: 140px;
     }
     
-    .modal-btn-primary {
-      background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+    .pwa-install-btn-primary {
+      background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
       color: white;
-      box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
+      box-shadow: 0 4px 15px rgba(44, 62, 80, 0.3);
     }
     
-    .modal-btn-secondary {
+    .pwa-install-btn-secondary {
       background: #f8f9fa;
       color: #495057;
       border: 2px solid #e9ecef;
     }
     
-    .modal-btn:hover {
+    .pwa-install-btn:hover {
       transform: translateY(-2px);
       box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
-      text-decoration: none;
     }
     
-    /* Responsive modal */
+    .pwa-install-btn:active {
+      transform: translateY(0);
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    
+    @keyframes slideUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    
+    /* Responsive install modal */
     @media (max-width: 576px) {
-      .modal-content {
-        padding: 2rem 1.5rem;
+      .pwa-install-content {
+        padding: 25px 20px;
       }
       
-      .modal-icon {
+      .pwa-install-icon {
         font-size: 3.5rem;
       }
       
-      .modal-title {
+      .pwa-install-title {
         font-size: 1.6rem;
       }
       
-      .modal-message {
+      .pwa-install-message {
         font-size: 1rem;
       }
       
-      .modal-buttons {
+      .pwa-install-buttons {
         flex-direction: column;
       }
       
-      .modal-btn {
+      .pwa-install-btn {
         width: 100%;
       }
     }
-        /* style.css - KCSE Course Checker Landing Page (Consistent Theme) */
-
-    :root {
-      --primary-color: #2c3e50;
-      --secondary-color: #3498db;
-      --accent-color: #e74c3c;
-      --success-color: #27ae60;
-      --warning-color: #f39c12;
-      --certificate-color: #0d6e6e;
-      --whatsapp-color: #25D366;
-      --call-color: #128C7E;
-      --email-color: #2196F3;
-      --payment-color: #4CAF50;
-      --portal-color: #9c27b0;
-      --light-bg: #f8f9fa;
-      --card-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-      --gradient-primary: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
-      --gradient-secondary: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
-      --gradient-certificate: linear-gradient(135deg, #0d6e6e 0%, #2a9d8f 100%);
-      --gradient-bg: linear-gradient(135deg, #f5f7fa 0%, #e4efe9 100%);
+    
+    /* Hide the old install modal */
+    #installModal {
+      display: none !important;
     }
-
-    /* Base Styles */
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-
-    body {
-      background: var(--gradient-bg);
-      font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-      color: #2d3748;
-      line-height: 1.6;
-      min-height: 100vh;
-      overflow-x: hidden;
-      display: flex;
-      flex-direction: column;
-      position: relative;
-    }
-
-    /* Navigation */
-    .navbar {
-      background: var(--gradient-primary) !important;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-      padding: 1rem 0;
-      border: none;
-      position: relative;
-      z-index: 100;
-    }
-
-    .navbar-brand {
-      font-size: 1.5rem;
-      font-weight: 700;
-      color: white !important;
-      display: flex;
-      align-items: center;
-      text-decoration: none;
-    }
-
-    .logo-icon {
-      font-size: 1.8rem;
-      margin-right: 0.75rem;
-      color: white;
-    }
-
-    /* Action Buttons Section */
-    .action-buttons-section {
-      padding: 1.5rem 1rem;
-      background: white;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-      border-bottom: 1px solid #e2e8f0;
-      position: relative;
-      z-index: 100;
-    }
-
-    .action-buttons-container {
-      display: flex;
-      justify-content: center;
-      gap: 1rem;
-      max-width: 1000px;
-      margin: 0 auto;
-      flex-wrap: wrap;
-    }
-
-    .action-btn {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 1rem 0.75rem;
-      border-radius: 12px;
-      text-decoration: none;
-      color: white;
-      font-weight: 600;
-      font-size: 0.9rem;
-      transition: all 0.3s ease;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-      min-width: 100px;
-      text-align: center;
-      position: relative;
-      overflow: hidden;
-      flex: 1;
-      max-width: 120px;
-    }
-
-    .action-btn:hover {
-      transform: translateY(-3px);
-      box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
-      color: white;
-      text-decoration: none;
-    }
-
-    .action-btn:active {
-      transform: translateY(-1px);
-    }
-
-    .action-btn i {
-      font-size: 1.5rem;
-      margin-bottom: 0.5rem;
-    }
-
-    .btn-whatsapp {
-      background: var(--whatsapp-color);
-    }
-
-    .btn-call {
-      background: var(--call-color);
-    }
-
-    .btn-email {
-      background: var(--email-color);
-    }
-
-    .btn-payment {
-      background: var(--payment-color);
-    }
-
-    /* Hero Section */
-    .hero-section {
-      flex: 1;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 3rem 1rem;
-      position: relative;
-      min-height: 80vh;
-    }
-
-    .hero-card {
-      background: white;
-      border-radius: 16px;
-      padding: 3rem 2.5rem;
-      box-shadow: var(--card-shadow);
-      border: 1px solid #e2e8f0;
-      max-width: 550px;
-      width: 100%;
-      text-align: center;
-      position: relative;
-      overflow: hidden;
-      transition: transform 0.3s ease, box-shadow 0.3s ease;
-    }
-
-    .hero-card::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      height: 4px;
-      background: var(--gradient-primary);
-      border-radius: 2px 2px 0 0;
-    }
-
-    .hero-card:hover {
-      transform: translateY(-5px);
-      box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15);
-    }
-
-    /* Logo & Typography */
-    .logo-container {
-      margin-bottom: 2.5rem;
-    }
-
-    .logo-main {
-      font-size: 4rem;
-      color: var(--primary-color);
-      margin-bottom: 1.5rem;
-      display: inline-block;
-      animation: pulse 2s infinite;
-    }
-
-    @keyframes pulse {
-      0% {
-        transform: scale(1);
-      }
-      50% {
-        transform: scale(1.05);
-      }
-      100% {
-        transform: scale(1);
-      }
-    }
-
-    .app-name {
-      font-size: 2.4rem;
-      font-weight: 800;
-      background: var(--gradient-primary);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-      margin-bottom: 1rem;
-      line-height: 1.2;
-      position: relative;
-    }
-
-    .app-name::after {
-      content: '';
-      position: absolute;
-      bottom: -10px;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 60px;
-      height: 4px;
-      background: var(--gradient-primary);
-      border-radius: 2px;
-    }
-
-    .app-tagline {
-      color: #718096;
-      font-size: 1.2rem;
-      margin-bottom: 2.5rem;
-      line-height: 1.6;
-      font-weight: 400;
-      max-width: 400px;
-      margin-left: auto;
-      margin-right: auto;
-    }
-
-    /* Buttons */
-    .button-group {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 1rem;
-      margin-bottom: 2.5rem;
-    }
-
-    .btn-hero {
-      background: var(--gradient-secondary);
-      border: none;
-      padding: 1.1rem 1.5rem;
-      font-size: 1.1rem;
-      font-weight: 700;
-      border-radius: 12px;
-      letter-spacing: 0.5px;
-      transition: all 0.3s ease;
-      color: white;
-      position: relative;
-      overflow: hidden;
-      box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 0.75rem;
-      min-height: 60px;
-      text-decoration: none;
-      cursor: pointer;
-    }
-
-    .btn-hero:hover {
-      transform: translateY(-3px);
-      box-shadow: 0 8px 20px rgba(52, 152, 219, 0.4);
-      color: white;
-      text-decoration: none;
-    }
-
-    .btn-hero:active {
-      transform: translateY(-1px);
-    }
-
-    .btn-hero::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: -100%;
-      width: 100%;
-      height: 100%;
-      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-      transition: 0.5s;
-    }
-
-    .btn-hero:hover::before {
-      left: 100%;
-    }
-
-    .btn-diploma {
-      background: var(--primary-color);
-      box-shadow: 0 4px 15px rgba(44, 62, 80, 0.3);
-    }
-
-    .btn-diploma:hover {
-      box-shadow: 0 8px 20px rgba(44, 62, 80, 0.4);
-      background: #34495e;
-    }
-
-    .btn-certificate {
-      background: var(--gradient-certificate);
-      box-shadow: 0 4px 15px rgba(13, 110, 110, 0.3);
-    }
-
-    .btn-certificate:hover {
-      box-shadow: 0 8px 20px rgba(13, 110, 110, 0.4);
-      background: #0d5e5e;
-    }
-
-    .btn-portal {
-      background: var(--portal-color);
-      box-shadow: 0 4px 15px rgba(156, 39, 176, 0.3);
-    }
-
-    .btn-portal:hover {
-      box-shadow: 0 8px 20px rgba(156, 39, 176, 0.4);
-      background: #7b1fa2;
-    }
-
-    .btn-hero i {
-      font-size: 1.3rem;
-    }
-
-    /* Feature List */
-    .feature-list {
-      list-style: none;
-      padding: 0;
-      margin: 2rem 0 0 0;
-      text-align: left;
-    }
-
-    .feature-list li {
-      padding: 0.75rem 0;
-      display: flex;
-      align-items: center;
-      color: #4a5568;
-      font-size: 1rem;
-      font-weight: 500;
-      border-bottom: 1px solid #edf2f7;
-      transition: all 0.3s ease;
-    }
-
-    .feature-list li:hover {
-      color: var(--primary-color);
-      transform: translateX(5px);
-    }
-
-    .feature-list li:last-child {
-      border-bottom: none;
-    }
-
-    .feature-list li i {
-      color: var(--success-color);
-      margin-right: 1rem;
-      font-size: 1.2rem;
-      min-width: 20px;
-    }
-
-    /* Footer */
-    .footer {
-      background: var(--primary-color);
-      padding: 1.5rem;
-      text-align: center;
-      color: rgba(255, 255, 255, 0.9);
-      font-size: 0.9rem;
-      width: 100%;
-      margin-top: auto;
-      position: relative;
-      z-index: 100;
-    }
-
-    /* Responsive Design */
-    @media (max-width: 768px) {
-      .button-group {
-        grid-template-columns: 1fr;
-      }
-      
-      .action-buttons-container {
-        flex-direction: row;
-        gap: 0.75rem;
-      }
-      
-      .action-btn {
-        padding: 0.9rem 0.5rem;
-        font-size: 0.85rem;
-        min-width: 90px;
-        max-width: 110px;
-      }
-      
-      .action-btn i {
-        font-size: 1.3rem;
-        margin-bottom: 0.4rem;
-      }
-      
-      .hero-card {
-        padding: 2.5rem 2rem;
-        margin: 1rem;
-        border-radius: 12px;
-        max-width: 500px;
-      }
-      
-      .app-name {
-        font-size: 1.8rem;
-      }
-      
-      .logo-main {
-        font-size: 3rem;
-      }
-      
-      .btn-hero {
-        padding: 1rem 1.25rem;
-        font-size: 1rem;
-        min-height: 55px;
-      }
-      
-      .feature-list li {
-        font-size: 0.95rem;
-        padding: 0.6rem 0;
-      }
-      
-      .footer {
-        padding: 1rem;
-      }
-      
-      .bg-shape-1, .bg-shape-2 {
-        display: none;
-      }
-    }
-
-    @media (max-width: 480px) {
-      .action-buttons-container {
-        gap: 0.5rem;
-      }
-      
-      .action-btn {
-        padding: 0.8rem 0.4rem;
-        font-size: 0.8rem;
-        min-width: 80px;
-        max-width: 100px;
-      }
-      
-      .action-btn i {
-        font-size: 1.2rem;
-        margin-bottom: 0.3rem;
-      }
-      
-      .hero-card {
-        padding: 2rem 1.5rem;
-      }
-      
-      .app-name {
-        font-size: 1.6rem;
-      }
-      
-      .logo-main {
-        font-size: 2.5rem;
-      }
-      
-      .app-tagline {
-        font-size: 1rem;
-        margin-bottom: 2rem;
-      }
-      
-      .btn-hero {
-        padding: 0.9rem 1rem;
-        font-size: 0.95rem;
-        min-height: 50px;
-      }
-      
-      .button-group {
-        gap: 0.75rem;
-        margin-bottom: 2rem;
-      }
-    }
-
-    /* High-resolution displays */
-    @media (min-width: 1400px) {
-      .hero-card {
-        max-width: 600px;
-        padding: 3.5rem 3rem;
-      }
-    }
-
-    /* Reduced motion for accessibility */
-    @media (prefers-reduced-motion: reduce) {
-      .hero-card,
-      .btn-hero,
-      .action-btn,
-      .feature-list li {
-        transition: none;
-      }
-      
-      .hero-card:hover {
-        transform: none;
-      }
-      
-      .btn-hero:hover,
-      .action-btn:hover,
-      .feature-list li:hover {
-        transform: none;
-      }
-      
-      .logo-main {
-        animation: none;
-      }
-      
-      .bg-shape-1, .bg-shape-2 {
-        animation: none;
-      }
-      
-      .btn-hero::before {
-        display: none;
-      }
-    }
- 
   </style>
 </head>
 <body>
@@ -819,6 +219,30 @@
         <button onclick="closeModal()" class="modal-btn modal-btn-secondary">
           <i class="bi bi-x-circle"></i>
           Close
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- New PWA Install Modal -->
+  <div id="pwaInstallModal" class="pwa-install-modal">
+    <div class="pwa-install-content">
+      <div class="pwa-install-icon">
+        <i class="bi bi-download"></i>
+      </div>
+      <h2 class="pwa-install-title">Install KUCCPS App</h2>
+      <p class="pwa-install-message">
+        Install this app on your device for quick access. Get instant course recommendations, 
+        save your searches, and access your results offline.
+      </p>
+      <div class="pwa-install-buttons">
+        <button id="pwaInstallBtn" class="pwa-install-btn pwa-install-btn-primary">
+          <i class="bi bi-download"></i>
+          Install App
+        </button>
+        <button id="pwaDismissBtn" class="pwa-install-btn pwa-install-btn-secondary">
+          <i class="bi bi-clock"></i>
+          Maybe Later
         </button>
       </div>
     </div>
@@ -987,46 +411,73 @@
       .then(() => console.log("Service Worker registered"))
       .catch((err) => console.log("Service Worker registration failed:", err));
   }
-</script>
-<!-- Install App Modal -->
-<div id="installModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; 
-    background: rgba(0,0,0,0.5); justify-content:center; align-items:center; z-index:1000;">
-    <div style="background:#fff; padding:20px; border-radius:10px; text-align:center; max-width:300px; margin:auto;">
-        <h2>Install KUCCPS App</h2>
-        <p>Install this app on your device for quick access.</p>
-        <button id="installBtn">Install</button>
-        <button id="dismissBtn" style="margin-left:10px;">Maybe Later</button>
-    </div>
-</div>
-<script>
-let deferredPrompt;
-const installBtn = document.getElementById("installBtn");
-const dismissBtn = document.getElementById("dismissBtn");
-const installModal = document.getElementById("installModal");
-
-window.addEventListener("beforeinstallprompt", (e) => {
-    e.preventDefault();          // stop default Chrome mini-infobar
+  
+  // PWA Install Prompt - Shows on every visit
+  let deferredPrompt;
+  const pwaInstallModal = document.getElementById('pwaInstallModal');
+  const pwaInstallBtn = document.getElementById('pwaInstallBtn');
+  const pwaDismissBtn = document.getElementById('pwaDismissBtn');
+  
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
     deferredPrompt = e;
-
-    if (!localStorage.getItem("pwaInstallPrompt")) {
-        installModal.style.display = "flex"; // show modal now
-    }
-});
-
-installBtn.addEventListener("click", async () => {
-    if (!deferredPrompt) return; // nothing to trigger
+    
+    // Show modal immediately (no localStorage check)
+    setTimeout(() => {
+      pwaInstallModal.style.display = 'flex';
+      document.body.style.overflow = 'hidden';
+    }, 2000); // Show after 2 seconds delay
+  });
+  
+  pwaInstallBtn.addEventListener('click', async () => {
+    if (!deferredPrompt) return;
+    
+    // Show install prompt
     deferredPrompt.prompt();
+    
+    // Wait for the user to respond to the prompt
     const { outcome } = await deferredPrompt.userChoice;
-    localStorage.setItem("pwaInstallPrompt", outcome === "accepted" ? "installed" : "dismissed");
-    installModal.style.display = "none";
+    
+    // Optionally, send analytics event with outcome of user choice
+    console.log(`User response to the install prompt: ${outcome}`);
+    
+    // Hide modal
+    pwaInstallModal.style.display = 'none';
+    document.body.style.overflow = 'auto';
+    
+    // Clear the saved prompt since it can't be used again
     deferredPrompt = null;
-});
-
-dismissBtn.addEventListener("click", () => {
-    localStorage.setItem("pwaInstallPrompt", "dismissed");
-    installModal.style.display = "none";
-});
-
+  });
+  
+  pwaDismissBtn.addEventListener('click', () => {
+    // Simply hide modal without saving to localStorage
+    pwaInstallModal.style.display = 'none';
+    document.body.style.overflow = 'auto';
+  });
+  
+  // Close modal when clicking outside
+  pwaInstallModal.addEventListener('click', (e) => {
+    if (e.target === pwaInstallModal) {
+      pwaInstallModal.style.display = 'none';
+      document.body.style.overflow = 'auto';
+    }
+  });
+  
+  // Also close with Escape key
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && pwaInstallModal.style.display === 'flex') {
+      pwaInstallModal.style.display = 'none';
+      document.body.style.overflow = 'auto';
+    }
+  });
+  
+  // Check if app is already installed
+  window.addEventListener('appinstalled', () => {
+    console.log('PWA was installed');
+    pwaInstallModal.style.display = 'none';
+    document.body.style.overflow = 'auto';
+    deferredPrompt = null;
+  });
 </script>
 
 </body>
