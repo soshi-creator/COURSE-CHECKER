@@ -981,7 +981,6 @@ def view_paid_results():
         'index_number': index_number,
         'email': email,
         'program_type': program_type,
-        'amount': 1
     })
 
     if not paid:
