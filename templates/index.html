@@ -1,39 +1,675 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <!-- PWA Meta Tags -->
-<meta name="application-name" content="KCSE Course Checker">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="apple-mobile-web-app-title" content="KCSE Checker">
-<meta name="description" content="Discover your educational path based on KCSE results">
-<meta name="format-detection" content="telephone=no">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="msapplication-config" content="/static/icons/browserconfig.xml">
-<meta name="msapplication-TileColor" content="#2c3e50">
-<meta name="msapplication-tap-highlight" content="no">
-<meta name="theme-color" content="#2c3e50">
+  <!-- Enhanced PWA Meta Tags -->
+  <meta name="application-name" content="KUCCPS Course Checker">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Course Checker">
+  <meta name="description" content="Official KUCCPS Course Eligibility Checker - Your Reliable Partner in Educational Path Discovery Based on KCSE Results">
+  <meta name="format-detection" content="telephone=no">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="msapplication-TileColor" content="#2c3e50">
+  <meta name="msapplication-tap-highlight" content="no">
+  <meta name="theme-color" content="#2c3e50">
+  <meta name="keywords" content="KUCCPS, KCSE, University Courses, Diploma, Certificate, KMTC, Career Guidance, Kenya, Official">
+  <meta name="author" content="KUCCPS Course Checker Team">
+  <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
 
-
-<link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
-
-
-
-<!-- Theme Color -->
-<meta name="theme-color" content="#2c3e50" />
-<meta name="msapplication-navbutton-color" content="#2c3e50">
-<meta name="apple-mobile-web-app-status-bar-style" content="#2c3e50">
-
-
+  <!-- Theme Colors -->
+  <meta name="theme-color" content="#2c3e50" />
+  <meta name="msapplication-navbutton-color" content="#2c3e50">
+  <meta name="apple-mobile-web-app-status-bar-style" content="#2c3e50">
 
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
   <link rel="stylesheet" href="{{ url_for('static', filename='bootstrap.min.css') }}" />
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
-  <title>KUCCPS Course Eligibility Checker</title>
-  <style>
-    /* Install Modal Styles */
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <title>KUCCPS Course Checker - Find Your Course</title>
+  
+<style>
+    :root {
+      --primary-dark: #2c3e50;
+      --primary-light: #3498db;
+      --accent-teal: #1abc9c;
+      --accent-green: #27ae60;
+      --accent-orange: #e67e22;
+      --accent-purple: #9b59b6;
+      --accent-red: #e74c3c;
+      --accent-yellow: #f1c40f;
+      --card-shadow: 0 5px 20px rgba(44, 62, 80, 0.1);
+      --gradient-primary: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+      --gradient-success: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
+      --gradient-warning: linear-gradient(135deg, #e67e22 0%, #f39c12 100%);
+      --gradient-teal: linear-gradient(135deg, #1abc9c 0%, #16a085 100%);
+      --gradient-purple: linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%);
+      --gradient-red: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+      --gradient-yellow: linear-gradient(135deg, #f1c40f 0%, #f39c12 100%);
+    }
+
+    * {
+      font-family: 'Inter', sans-serif;
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    h1, h2, h3, h4, h5, h6 {
+      font-family: 'Poppins', sans-serif;
+      font-weight: 600;
+    }
+
+    body {
+      background: #f8f9fa;
+      min-height: 100vh;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    /* Main Action Buttons Container - Moved to Top */
+    .main-action-container {
+      background: white;
+      padding: 25px;
+      margin-bottom: 30px;
+      border-radius: 15px;
+      box-shadow: var(--card-shadow);
+      max-width: 1200px;
+      margin: 30px auto;
+      border: 2px solid #e9ecef;
+    }
+
+    .action-header {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    .action-header h2 {
+      color: var(--primary-dark);
+      font-size: 1.8rem;
+      margin-bottom: 10px;
+    }
+
+    .action-header p {
+      color: #666;
+      font-size: 1rem;
+    }
+
+    .main-buttons-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 25px;
+      margin-bottom: 20px;
+    }
+
+    /* New Card Structure with Internal Button */
+.main-btn-card {
+  background: white;
+  border: 2px solid #e9ecef;
+  border-radius: 12px;
+  text-decoration: none;
+  color: var(--primary-dark);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px;
+  transition: all 0.3s ease;
+  text-align: center;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
+  height: 100%;
+  position: relative;
+}
+
+    /* Card Hover Effects */
+    .main-btn-card:hover {
+      transform: translateY(-8px);
+      box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15);
+      border-color: transparent;
+    }
+
+    /* Card Content Area */
+    .card-content {
+      padding: 25px 20px 20px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 15px;
+      position: relative;
+    }
+
+    /* Click Indicator */
+    .click-indicator {
+      position: absolute;
+      top: 15px;
+      right: 15px;
+      width: 10px;
+      height: 10px;
+      background: var(--accent-green);
+      border-radius: 50%;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .main-btn-card:hover .click-indicator {
+      opacity: 1;
+      animation: pulse 1.5s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.3); }
+    }
+
+    /* Card Icon */
+    .main-btn-card i {
+      font-size: 2.8rem;
+      transition: transform 0.3s ease;
+      display: block;
+      margin-bottom: 10px;
+    }
+
+    .main-btn-card:hover i {
+      transform: scale(1.15);
+    }
+
+    /* Card Content */
+    .btn-content {
+      text-align: center;
+      width: 100%;
+    }
+
+    .btn-title {
+      font-size: 1.25rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+      display: block;
+      color: var(--primary-dark);
+      line-height: 1.3;
+    }
+
+    .btn-subtitle {
+      font-size: 0.95rem;
+      color: #666;
+      display: block;
+      line-height: 1.5;
+      opacity: 0.9;
+    }
+
+    /* Small Action Button Inside Card */
+.card-action-btn {
+  background: var(--primary-light);
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 0.85rem;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  margin-top: 12px;
+  align-self: center;
+  box-shadow: 0 2px 5px rgba(52, 152, 219, 0.2);
+}
+
+.card-action-btn:hover {
+  background: #2980b9;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(52, 152, 219, 0.3);
+}
+
+.card-action-btn:active {
+  transform: translateY(0);
+}
+
+    /* Specific card colors */
+    .main-btn-degree { 
+      border-top: 8px solid var(--primary-light);
+      border-bottom: 3px solid var(--primary-light);
+    }
+    .main-btn-degree:hover { 
+      background: linear-gradient(135deg, #f8fafc 0%, #e3f2fd 100%);
+      box-shadow: 0 15px 30px rgba(52, 152, 219, 0.2);
+    }
+    .main-btn-degree i { color: var(--primary-light); }
+    .main-btn-degree .card-action-btn { 
+      background: var(--primary-light);
+      color: white;
+    }
+    .main-btn-degree .card-action-btn:hover { 
+      background: #2980b9;
+    }
+
+    .main-btn-diploma { 
+      border-top: 8px solid var(--accent-green);
+      border-bottom: 3px solid var(--accent-green);
+    }
+    .main-btn-diploma:hover { 
+      background: linear-gradient(135deg, #f1f8e9 0%, #e8f5e9 100%);
+      box-shadow: 0 15px 30px rgba(39, 174, 96, 0.2);
+    }
+    .main-btn-diploma i { color: var(--accent-green); }
+    .main-btn-diploma .card-action-btn { 
+      background: var(--accent-green);
+      color: white;
+    }
+    .main-btn-diploma .card-action-btn:hover { 
+      background: #219653;
+    }
+
+    .main-btn-certificate { 
+      border-top: 8px solid var(--accent-orange);
+      border-bottom: 3px solid var(--accent-orange);
+    }
+    .main-btn-certificate:hover { 
+      background: linear-gradient(135deg, #fff3e0 0%, #ffecb3 100%);
+      box-shadow: 0 15px 30px rgba(230, 126, 34, 0.2);
+    }
+    .main-btn-certificate i { color: var(--accent-orange); }
+    .main-btn-certificate .card-action-btn { 
+      background: var(--accent-orange);
+      color: white;
+    }
+    .main-btn-certificate .card-action-btn:hover { 
+      background: #d35400;
+    }
+
+    .main-btn-kmtc { 
+      border-top: 8px solid var(--accent-teal);
+      border-bottom: 3px solid var(--accent-teal);
+    }
+    .main-btn-kmtc:hover { 
+      background: linear-gradient(135deg, #e0f2f1 0%, #b2dfdb 100%);
+      box-shadow: 0 15px 30px rgba(26, 188, 156, 0.2);
+    }
+    .main-btn-kmtc i { color: var(--accent-teal); }
+    .main-btn-kmtc .card-action-btn { 
+      background: var(--accent-teal);
+      color: white;
+    }
+    .main-btn-kmtc .card-action-btn:hover { 
+      background: #16a085;
+    }
+
+    .main-btn-short { 
+      border-top: 8px solid var(--accent-yellow);
+      border-bottom: 3px solid var(--accent-yellow);
+    }
+    .main-btn-short:hover { 
+      background: linear-gradient(135deg, #fff8e1 0%, #fff3cd 100%);
+      box-shadow: 0 15px 30px rgba(241, 196, 15, 0.2);
+    }
+    .main-btn-short i { color: var(--accent-yellow); }
+    .main-btn-short .card-action-btn { 
+      background: var(--accent-yellow);
+      color: #2c3e50;
+    }
+    .main-btn-short .card-action-btn:hover { 
+      background: #f39c12;
+      color: white;
+    }
+
+    .main-btn-portal { 
+      border-top: 8px solid var(--accent-purple);
+      border-bottom: 3px solid var(--accent-purple);
+    }
+    .main-btn-portal:hover { 
+      background: linear-gradient(135deg, #f3e5f5 0%, #e1bee7 100%);
+      box-shadow: 0 15px 30px rgba(155, 89, 182, 0.2);
+    }
+    .main-btn-portal i { color: var(--accent-purple); }
+    .main-btn-portal .card-action-btn { 
+      background: var(--accent-purple);
+      color: white;
+    }
+    .main-btn-portal .card-action-btn:hover { 
+      background: #8e44ad;
+    }
+
+    .main-btn-helb { 
+      border-top: 8px solid #f39c12;
+      border-bottom: 3px solid #f39c12;
+    }
+    .main-btn-helb:hover { 
+      background: linear-gradient(135deg, #fff8e1 0%, #ffecb3 100%);
+      box-shadow: 0 15px 30px rgba(243, 156, 18, 0.2);
+    }
+    .main-btn-helb i { color: #f39c12; }
+    .main-btn-helb .card-action-btn { 
+      background: #f39c12;
+      color: white;
+    }
+    .main-btn-helb .card-action-btn:hover { 
+      background: #e67e22;
+    }
+
+    /* Already Paid Button - Made More Visible */
+    .payment-section {
+      background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
+      padding: 25px;
+      border-radius: 12px;
+      margin-top: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 15px;
+      border: 2px solid #27ae60;
+      box-shadow: 0 5px 15px rgba(39, 174, 96, 0.2);
+    }
+
+    .payment-content {
+      flex: 1;
+      min-width: 250px;
+    }
+
+    .payment-title {
+      color: white;
+      font-size: 1.4rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.1);
+    }
+
+    .payment-description {
+      color: rgba(255, 255, 255, 0.95);
+      font-size: 1rem;
+      line-height: 1.5;
+    }
+
+    .payment-btn {
+      background: white;
+      color: var(--accent-green);
+      border: none;
+      padding: 15px 30px;
+      border-radius: 10px;
+      font-weight: 700;
+      font-size: 1.1rem;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      transition: all 0.3s ease;
+      white-space: nowrap;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+      border: 2px solid transparent;
+    }
+
+    .payment-btn:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+      color: var(--accent-green);
+      border-color: var(--accent-green);
+    }
+
+    .payment-btn:active {
+      transform: translateY(-1px);
+    }
+
+    /* Hero Section Simplified */
+    .hero-section {
+      background: var(--gradient-primary);
+      color: white;
+      padding: 40px 20px;
+      text-align: center;
+      border-radius: 0 0 30px 30px;
+      margin-bottom: 20px;
+      border-bottom: 5px solid var(--primary-light);
+    }
+
+    .hero-content {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    .logo-container {
+      margin-bottom: 25px;
+    }
+
+    .logo-main {
+      width: 80px;
+      height: 80px;
+      background: white;
+      border-radius: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 20px;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+      border: 3px solid var(--primary-light);
+    }
+
+    .logo-main i {
+      font-size: 2.5rem;
+      background: var(--gradient-primary);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .app-name {
+      font-size: 2.2rem;
+      font-weight: 700;
+      margin-bottom: 15px;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .app-tagline {
+      font-size: 1.1rem;
+      opacity: 0.95;
+      line-height: 1.6;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    /* Stats Section */
+    .stats-section {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 15px;
+      margin: 40px auto;
+      max-width: 1000px;
+    }
+
+    .stat-card {
+      background: rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(10px);
+      padding: 20px;
+      border-radius: 12px;
+      text-align: center;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .stat-number {
+      font-size: 1.8rem;
+      font-weight: 700;
+      margin-bottom: 5px;
+    }
+
+    .stat-label {
+      font-size: 0.9rem;
+      opacity: 0.95;
+    }
+
+    /* Features Section */
+    .features-section {
+      padding: 40px 20px;
+      background: white;
+      border-radius: 20px;
+      margin: 30px auto;
+      max-width: 1200px;
+      box-shadow: var(--card-shadow);
+      border: 2px solid #e9ecef;
+    }
+
+    .section-title {
+      text-align: center;
+      font-size: 1.8rem;
+      color: var(--primary-dark);
+      margin-bottom: 40px;
+      position: relative;
+    }
+
+    .section-title::after {
+      content: '';
+      display: block;
+      width: 60px;
+      height: 4px;
+      background: var(--accent-teal);
+      margin: 10px auto;
+      border-radius: 2px;
+    }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 25px;
+    }
+
+    .feature-card {
+      padding: 25px;
+      border-radius: 12px;
+      border-left: 5px solid var(--primary-light);
+      background: #f8f9fa;
+      border: 1px solid #e9ecef;
+      transition: all 0.3s ease;
+    }
+
+    .feature-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+    }
+
+    .feature-icon {
+      font-size: 2rem;
+      color: var(--primary-light);
+      margin-bottom: 20px;
+    }
+
+    .feature-title {
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: var(--primary-dark);
+      margin-bottom: 12px;
+    }
+
+    .feature-desc {
+      color: #666;
+      font-size: 0.95rem;
+      line-height: 1.6;
+    }
+
+    /* Fixed Modal Positioning */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.7);
+      z-index: 2000;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+
+    .modal-content {
+      background: white;
+      padding: 35px;
+      border-radius: 15px;
+      max-width: 500px;
+      width: 100%;
+      text-align: center;
+      position: relative;
+      animation: modalSlideUp 0.3s ease;
+      border: 3px solid var(--primary-light);
+      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+    }
+
+    @keyframes modalSlideUp {
+      from {
+        opacity: 0;
+        transform: translateY(50px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .modal-icon {
+      font-size: 3.5rem;
+      color: #e74c3c;
+      margin-bottom: 25px;
+    }
+
+    .modal-title {
+      color: var(--primary-dark);
+      font-size: 1.6rem;
+      margin-bottom: 20px;
+      font-weight: 700;
+    }
+
+    .modal-message {
+      color: #666;
+      line-height: 1.6;
+      margin-bottom: 30px;
+      font-size: 1.05rem;
+    }
+
+    .modal-buttons {
+      display: flex;
+      gap: 15px;
+      justify-content: center;
+    }
+
+    .modal-btn {
+      padding: 14px 28px;
+      border-radius: 10px;
+      border: 2px solid transparent;
+      font-weight: 700;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      transition: all 0.3s ease;
+      font-size: 1rem;
+    }
+
+    .modal-btn-primary {
+      background: var(--gradient-primary);
+      color: white;
+      box-shadow: 0 4px 10px rgba(52, 152, 219, 0.3);
+    }
+
+    .modal-btn-primary:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 20px rgba(52, 152, 219, 0.4);
+    }
+
+    .modal-btn-secondary {
+      background: #f8f9fa;
+      color: #666;
+      border: 2px solid #dee2e6;
+    }
+
+    .modal-btn-secondary:hover {
+      background: #e9ecef;
+      transform: translateY(-3px);
+    }
+
+    /* Fixed PWA Install Modal */
     .pwa-install-modal {
       display: none;
       position: fixed;
@@ -50,157 +686,472 @@
     
     .pwa-install-content {
       background: white;
-      padding: 30px;
+      padding: 35px;
       border-radius: 16px;
       text-align: center;
       max-width: 400px;
       width: 90%;
       margin: 20px;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
       animation: slideUp 0.3s ease-out;
+      border: 3px solid var(--primary-light);
     }
-    
-    .pwa-install-icon {
-      font-size: 4rem;
-      color: #2c3e50;
-      margin-bottom: 1rem;
-    }
-    
-    .pwa-install-title {
-      font-size: 1.8rem;
-      font-weight: 700;
-      color: #2c3e50;
-      margin-bottom: 1rem;
-    }
-    
-    .pwa-install-message {
-      color: #718096;
-      font-size: 1.1rem;
-      line-height: 1.6;
-      margin-bottom: 2rem;
-    }
-    
-    .pwa-install-buttons {
+
+    /* Floating Action Buttons - Moved to Top Right */
+    .floating-action-container {
+      position: fixed;
+      top: 100px;
+      right: 20px;
+      z-index: 1000;
       display: flex;
-      gap: 1rem;
-      justify-content: center;
+      flex-direction: column;
+      gap: 10px;
     }
-    
-    .pwa-install-btn {
-      padding: 0.9rem 1.5rem;
-      border-radius: 10px;
-      font-weight: 600;
-      font-size: 1rem;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      border: none;
-      text-decoration: none;
-      display: inline-flex;
+
+    .floating-action-btn {
+      width: 55px;
+      height: 55px;
+      border-radius: 50%;
+      display: flex;
       align-items: center;
       justify-content: center;
-      gap: 0.5rem;
-      min-width: 140px;
-    }
-    
-    .pwa-install-btn-primary {
-      background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
       color: white;
-      box-shadow: 0 4px 15px rgba(44, 62, 80, 0.3);
+      font-size: 1.3rem;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+      transition: all 0.3s ease;
+      text-decoration: none;
+      position: relative;
+      border: 2px solid white;
     }
-    
-    .pwa-install-btn-secondary {
-      background: #f8f9fa;
-      color: #495057;
+
+    .floating-action-btn:hover {
+      transform: scale(1.15) translateY(-3px);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+    }
+
+    .floating-action-btn span {
+      position: absolute;
+      right: 65px;
+      background: white;
+      color: var(--primary-dark);
+      padding: 10px 15px;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      white-space: nowrap;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      opacity: 0;
+      transform: translateX(10px);
+      transition: all 0.3s ease;
+      pointer-events: none;
+      font-weight: 600;
       border: 2px solid #e9ecef;
     }
-    
-    .pwa-install-btn:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+
+    .floating-action-btn:hover span {
+      opacity: 1;
+      transform: translateX(0);
     }
-    
-    .pwa-install-btn:active {
-      transform: translateY(0);
+
+    .btn-whatsapp { 
+      background: linear-gradient(135deg, #25D366 0%, #128C7E 100%);
     }
-    
-    @keyframes fadeIn {
-      from { opacity: 0; }
-      to { opacity: 1; }
+    .btn-call { 
+      background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
     }
-    
-    @keyframes slideUp {
-      from {
-        opacity: 0;
-        transform: translateY(30px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
+    .btn-email { 
+      background: linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%);
     }
-    
-    /* Responsive install modal */
-    @media (max-width: 576px) {
-      .pwa-install-content {
-        padding: 25px 20px;
+    .btn-payment { 
+      background: linear-gradient(135deg, #27ae60 0%, #219653 100%);
+    }
+
+    /* Footer */
+    .footer {
+      background: linear-gradient(135deg, var(--primary-dark) 0%, #1a252f 100%);
+      color: white;
+      padding: 40px 20px;
+      text-align: center;
+      margin-top: 60px;
+      border-top: 5px solid var(--primary-light);
+    }
+
+    .footer-links {
+      display: flex;
+      justify-content: center;
+      gap: 25px;
+      flex-wrap: wrap;
+      margin: 25px 0;
+    }
+
+    .footer-link {
+      color: rgba(255, 255, 255, 0.9);
+      text-decoration: none;
+      font-size: 0.95rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 15px;
+      border-radius: 8px;
+      transition: all 0.3s ease;
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .footer-link:hover {
+      color: white;
+      background: rgba(255, 255, 255, 0.1);
+      transform: translateY(-3px);
+    }
+
+    .copyright {
+      font-size: 0.9rem;
+      color: rgba(255, 255, 255, 0.7);
+      margin-top: 25px;
+      line-height: 1.6;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+      .main-action-container {
+        margin: 20px;
+        padding: 20px;
       }
-      
-      .pwa-install-icon {
-        font-size: 3.5rem;
+
+      .main-buttons-grid {
+        grid-template-columns: 1fr;
       }
-      
-      .pwa-install-title {
-        font-size: 1.6rem;
+
+      .app-name {
+        font-size: 1.8rem;
       }
-      
-      .pwa-install-message {
+
+      .app-tagline {
         font-size: 1rem;
       }
-      
-      .pwa-install-buttons {
+
+      .floating-action-container {
+        top: 85px;
+        right: 15px;
+      }
+
+      .floating-action-btn {
+        width: 50px;
+        height: 50px;
+        font-size: 1.2rem;
+      }
+
+      .floating-action-btn span {
+        right: 60px;
+        font-size: 0.85rem;
+      }
+
+      .payment-section {
+        flex-direction: column;
+        text-align: center;
+        padding: 20px;
+      }
+
+      .payment-btn {
+        width: 100%;
+        justify-content: center;
+        padding: 14px 20px;
+      }
+
+      .modal-content {
+        padding: 25px;
+      }
+
+      .modal-title {
+        font-size: 1.4rem;
+      }
+
+      .card-content {
+        padding: 20px 15px 15px;
+      }
+
+      .card-action-btn {
+        padding: 14px;
+        font-size: 0.95rem;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .hero-section {
+        padding: 30px 15px;
+      }
+
+      .features-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .modal-buttons {
         flex-direction: column;
       }
-      
-      .pwa-install-btn {
+
+      .modal-btn {
         width: 100%;
+        justify-content: center;
+      }
+
+      .footer-links {
+        flex-direction: column;
+        gap: 15px;
+      }
+
+      .footer-link {
+        justify-content: center;
+      }
+
+      .floating-action-container {
+        top: 80px;
+        right: 10px;
+      }
+
+      .btn-title {
+        font-size: 1.15rem;
+      }
+
+      .btn-subtitle {
+        font-size: 0.9rem;
       }
     }
-    
-    /* Hide the old install modal */
-    #installModal {
-      display: none !important;
-    }
-  </style>
+</style>
 </head>
 <body>
    {% include 'navbar.html' %}
 
-  <!-- Action Buttons Section -->
-  <div class="action-buttons-section">
-    <div class="action-buttons-container">
-      <a href="https://wa.me/254708188840" target="_blank" class="action-btn btn-whatsapp">
-        <i class="bi bi-whatsapp"></i>
-        <span>WhatsApp Us</span>
+  <!-- Floating Action Buttons - Moved to Top Right -->
+  <div class="floating-action-container">
+    <a href="https://wa.me/254708188840" target="_blank" class="floating-action-btn btn-whatsapp">
+      <i class="bi bi-whatsapp"></i>
+      <span>WhatsApp Support</span>
+    </a>
+    
+    <a href="tel:+254708188840" class="floating-action-btn btn-call">
+      <i class="bi bi-telephone-fill"></i>
+      <span>Call Helpline</span>
+    </a>
+    
+    <a href="mailto:kuccpshelpdesk.ke@gmail.com" class="floating-action-btn btn-email">
+      <i class="bi bi-envelope-fill"></i>
+      <span>Email Support</span>
+    </a>
+  </div>
+
+  <!-- Hero Section -->
+  <div class="hero-section">
+    <div class="hero-content">
+      <div class="logo-container">
+        <div class="logo-main">
+          <i class="bi bi-mortarboard-fill"></i>
+        </div>
+        <h1 class="app-name">KUCCPS Course Checker</h1>
+        <p class="app-tagline">
+          Find courses that match your KCSE grades instantly. Official data, accurate results.
+        </p>
+      </div>
+
+      <!-- Stats Section -->
+      <div class="stats-section">
+        <div class="stat-card">
+          <div class="stat-number">50K+</div>
+          <div class="stat-label">Students Helped</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number">100+</div>
+          <div class="stat-label">Institutions</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number">5K+</div>
+          <div class="stat-label">Courses</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number">98%</div>
+          <div class="stat-label">Accuracy</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+ <!-- Main Action Buttons - Now at Top -->
+<div class="main-action-container">
+  <div class="action-header">
+    <h2>Find Your Perfect Course</h2>
+    <p>Select your program type to get started</p>
+  </div>
+
+  <div class="main-buttons-grid">
+    <!-- Degree Card -->
+    <div class="main-btn-card main-btn-degree">
+      <div class="card-content">
+        <span class="click-indicator"></span>
+        <i class="bi bi-search"></i>
+        <div class="btn-content">
+          <span class="btn-title">Find Degree Programs</span>
+          <span class="btn-subtitle">University courses matching your KCSE</span>
+        </div>
+      </div>
+      <button onclick="openModal()" class="card-action-btn">
+        Get Started
+      </button>
+    </div>
+    
+    <!-- Diploma Card -->
+    <div class="main-btn-card main-btn-diploma">
+      <div class="card-content">
+        <span class="click-indicator"></span>
+        <i class="bi bi-file-earmark-text"></i>
+        <div class="btn-content">
+          <span class="btn-title">Find Diploma Programs</span>
+          <span class="btn-subtitle">Technical & professional courses</span>
+        </div>
+      </div>
+      <a href="{{ url_for('diploma_form') }}" class="card-action-btn">
+        Get Started
       </a>
-      
-      <a href="tel:+254708188840" class="action-btn btn-call">
-        <i class="bi bi-telephone-fill"></i>
-        <span>Call Us</span>
+    </div>
+
+    <!-- Certificate Card -->
+    <div class="main-btn-card main-btn-certificate">
+      <div class="card-content">
+        <span class="click-indicator"></span>
+        <i class="bi bi-award-fill"></i>
+        <div class="btn-content">
+          <span class="btn-title">Find Certificate Programs</span>
+          <span class="btn-subtitle">Short-term skill-based courses</span>
+        </div>
+      </div>
+      <a href="{{ url_for('certificate_form') }}" class="card-action-btn">
+        Get Started
       </a>
-      
-      <a href="mailto:kuccpshelpdesk.ke@gmail.com" class="action-btn btn-email">
-        <i class="bi bi-envelope-fill"></i>
-        <span>Email Us</span>
+    </div>
+
+    <!-- KMTC Card -->
+    <div class="main-btn-card main-btn-kmtc">
+      <div class="card-content">
+        <span class="click-indicator"></span>
+        <i class="bi bi-heart-pulse-fill"></i>
+        <div class="btn-content">
+          <span class="btn-title">KMTC Programs</span>
+          <span class="btn-subtitle">Medical & health sciences</span>
+        </div>
+      </div>
+      <a href="{{ url_for('kmtc_form') }}" class="card-action-btn">
+        Get Started
       </a>
-      
-      <a href="{{ url_for('already_paid_form') }}" class="action-btn btn-payment">
-        <i class="bi bi-check-circle-fill"></i>
-        <span>Already Paid</span>
+    </div>
+
+    <!-- Short Courses Card -->
+    <div class="main-btn-card main-btn-short">
+      <div class="card-content">
+        <span class="click-indicator"></span>
+        <i class="bi bi-lightning-fill"></i>
+        <div class="btn-content">
+          <span class="btn-title">Short Courses</span>
+          <span class="btn-subtitle">Free online courses & certifications</span>
+        </div>
+      </div>
+      <a href="https://www.coursera.org/courses?query=free" target="_blank" class="card-action-btn">
+        
+        Browse Courses
+      </a>
+    </div>
+
+    <!-- KUCCPS Portal Card -->
+    <div class="main-btn-card main-btn-portal">
+      <div class="card-content">
+        <span class="click-indicator"></span>
+        <i class="bi bi-door-open-fill"></i>
+        <div class="btn-content">
+          <span class="btn-title">KUCCPS Portal</span>
+          <span class="btn-subtitle">Official application portal</span>
+        </div>
+      </div>
+      <a href="https://students.kuccps.net/" target="_blank" class="card-action-btn">
+    
+        Visit Portal
+      </a>
+    </div>
+
+    <!-- HELB Portal Card -->
+    <div class="main-btn-card main-btn-helb">
+      <div class="card-content">
+        <span class="click-indicator"></span>
+        <i class="bi bi-cash-stack"></i>
+        <div class="btn-content">
+          <span class="btn-title">HELB Portal</span>
+          <span class="btn-subtitle">Financial aid & loans</span>
+        </div>
+      </div>
+      <a href="https://www.hef.co.ke/" target="_blank" class="card-action-btn">
+        Visit Portal
       </a>
     </div>
   </div>
 
-  <!-- Degree Modal -->
+  <!-- Already Paid Section - Made Highly Visible -->
+  <div class="payment-section">
+    <div class="payment-content">
+      <div class="payment-title">Already Made Payment?</div>
+      <div class="payment-description">
+        Confirm your payment status and get immediate assistance with your application
+      </div>
+    </div>
+    <a href="{{ url_for('already_paid_form') }}" class="payment-btn">
+      <i class="bi bi-check-circle-fill"></i>
+      Confirm Payment Status
+    </a>
+  </div>
+</div>
+
+   
+
+  <!-- Features Section -->
+  <div class="features-section">
+    <h2 class="section-title">Why Choose KUCCPS Course Checker</h2>
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon">
+          <i class="bi bi-shield-check"></i>
+        </div>
+        <h3 class="feature-title">Official Data Source</h3>
+        <p class="feature-desc">
+          All information comes from KUCCPS official databases, ensuring 100% accuracy.
+        </p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">
+          <i class="bi bi-lightning-charge"></i>
+        </div>
+        <h3 class="feature-title">Instant Results</h3>
+        <p class="feature-desc">
+          Get course matches in seconds. No waiting, no delays.
+        </p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">
+          <i class="bi bi-phone"></i>
+        </div>
+        <h3 class="feature-title">Mobile Optimized</h3>
+        <p class="feature-desc">
+          Works perfectly on all devices, especially mobile phones.
+        </p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">
+          <i class="bi bi-chat-dots"></i>
+        </div>
+        <h3 class="feature-title">24/7 Support</h3>
+        <p class="feature-desc">
+          Get help anytime via WhatsApp, call, or email.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Fixed Modals -->
   <div id="degreeModal" class="modal-overlay">
     <div class="modal-content">
       <div class="modal-icon">
@@ -224,7 +1175,7 @@
     </div>
   </div>
 
-  <!-- New PWA Install Modal -->
+  <!-- PWA Install Modal -->
   <div id="pwaInstallModal" class="pwa-install-modal">
     <div class="pwa-install-content">
       <div class="pwa-install-icon">
@@ -236,11 +1187,11 @@
         save your searches, and access your results offline.
       </p>
       <div class="pwa-install-buttons">
-        <button id="pwaInstallBtn" class="pwa-install-btn pwa-install-btn-primary">
+        <button id="pwaInstallBtn" class="modal-btn modal-btn-primary">
           <i class="bi bi-download"></i>
           Install App
         </button>
-        <button id="pwaDismissBtn" class="pwa-install-btn pwa-install-btn-secondary">
+        <button id="pwaDismissBtn" class="modal-btn modal-btn-secondary">
           <i class="bi bi-clock"></i>
           Maybe Later
         </button>
@@ -248,237 +1199,172 @@
     </div>
   </div>
 
-  <div class="hero-section">
-    <!-- Animated background shapes -->
-    <div class="bg-shape-1"></div>
-    <div class="bg-shape-2"></div>
-    
-    <div class="hero-card">
-      <div class="logo-container">
-        <div class="logo-main">
-          <i class="bi bi-mortarboard-fill"></i>
-        </div>
-        <h1 class="app-name">KUCCPS Course Checker</h1>
-        <p class="app-tagline">
-          Discover your perfect educational path based on your KCSE results and preferences
-        </p>
-      </div>
-      
-      <div class="button-group">
-        <!-- Degree button now triggers modal -->
-        <button onclick="openModal()" class="btn btn-hero">
-          <i class="bi bi-search"></i>
-          <span>Find Degree Programs</span>
-        </button>
-        
-        <a href="{{ url_for('diploma_form') }}" class="btn btn-hero btn-diploma">
-          <i class="bi bi-file-earmark-text"></i>
-          <span>Find Diploma Programs</span>
-        </a>
-
-        <a href="{{ url_for('certificate_form') }}" class="btn btn-hero btn-certificate">
-          <i class="bi bi-award-fill"></i>
-          <span>Find Certificate Programs</span>
-        </a>
-
-        <!-- New KMTC Button -->
-        <a href="{{ url_for('kmtc_form') }}" class="btn btn-hero btn-kmtc">
-          <i class="bi bi-heart-pulse-fill"></i>
-          <span>KMTC Programs</span>
-        </a>
-
-        <!-- KUCCPS Portal Button -->
-        <a href="https://students.kuccps.net/" target="_blank" class="btn btn-hero btn-portal">
-          <i class="bi bi-door-open-fill"></i>
-          <span>KUCCPS Portal</span>
-        </a>
-
-        <!-- Additional Portal Button -->
-        <a href="https://www.hef.co.ke/" target="_blank" class="btn btn-hero" style="background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%); box-shadow: 0 4px 15px rgba(255, 152, 0, 0.3);">
-          <i class="bi bi-globe"></i>
-          <span>HELB Portal</span>
-        </a>
-      </div>
-      
-      <ul class="feature-list">
-        <li>
-          <i class="bi bi-check-circle-fill"></i>
-          Personalized course recommendations
-        </li>
-        <li>
-          <i class="bi bi-check-circle-fill"></i>
-          Based on your KCSE grades and cluster points
-        </li>
-        <li>
-          <i class="bi bi-check-circle-fill"></i>
-          Comprehensive university & college program database
-        </li>
-        <li>
-          <i class="bi bi-check-circle-fill"></i>
-          Degree, diploma, and certificate options available
-        </li>
-        <li>
-          <i class="bi bi-check-circle-fill"></i>
-          KMTC medical programs included
-        </li>
-        <li>
-          <i class="bi bi-check-circle-fill"></i>
-          Direct links to official KUCCPS portals
-        </li>
-      </ul>
-    </div>
-  </div>
-
+  <!-- Footer -->
   <div class="footer">
-    &copy; 2026 KUCCPS Course Eligibility Checker. All rights reserved.
-    <div style="margin-top: 0.5rem; font-size: 0.8rem; color: rgba(255, 255, 255, 0.7);">
-      Official KUCCPS Website: <a href="https://students.kuccps.net/" target="_blank" style="color: #3498db; text-decoration: none;">kuccps.net</a>
-      | Email: <a href="mailto:kuccpshelpdesk.ke@gmail.com" style="color: #3498db; text-decoration: none;">info@kuccpscoursechecker.com</a>
+    <h3 style="margin-bottom: 15px; font-size: 1.3rem;">
+      <i class="bi bi-mortarboard-fill" style="margin-right: 10px;"></i>
+      KUCCPS Course Checker
+    </h3>
+    
+    <div class="footer-links">
+      <a href="https://students.kuccps.net/" target="_blank" class="footer-link">
+        <i class="bi bi-link"></i>
+        Official Portal
+      </a>
+      <a href="mailto:kuccpshelpdesk.ke@gmail.com" class="footer-link">
+        <i class="bi bi-envelope"></i>
+        Email Support
+      </a>
+      <a href="#" onclick="openModal()" class="footer-link">
+        <i class="bi bi-info-circle"></i>
+        Degree Info
+      </a>
+      <a href="https://www.coursera.org/courses?query=free" target="_blank" class="footer-link">
+        <i class="bi bi-lightning"></i>
+        Short Courses
+      </a>
+    </div>
+    
+    <div class="copyright">
+      &copy; 2026 KUCCPS Course Checker. All rights reserved.<br>
+      <small>Independent service provider using official KUCCPS data</small>
     </div>
   </div>
 
-  <!-- Modal JavaScript -->
+  <!-- JavaScript -->
   <script>
+    // Fixed Modal Functions
     function openModal() {
-      document.getElementById('degreeModal').style.display = 'flex';
+      const modal = document.getElementById('degreeModal');
+      modal.style.display = 'flex';
       document.body.style.overflow = 'hidden';
     }
     
     function closeModal() {
-      document.getElementById('degreeModal').style.display = 'none';
+      const modal = document.getElementById('degreeModal');
+      modal.style.display = 'none';
       document.body.style.overflow = 'auto';
     }
     
-    // Close modal when clicking outside the content
+    // Close modal when clicking outside
     document.getElementById('degreeModal').addEventListener('click', function(e) {
       if (e.target === this) {
         closeModal();
       }
     });
     
-    // Close modal with Escape key
+    // Close with Escape key
     document.addEventListener('keydown', function(e) {
       if (e.key === 'Escape') {
         closeModal();
+        closePWAInstallModal();
       }
     });
     
-    // Add ripple effect to buttons
-    document.querySelectorAll('.btn-hero').forEach(button => {
-      button.addEventListener('click', function(e) {
-        let ripple = document.createElement('span');
-        let rect = this.getBoundingClientRect();
-        let size = Math.max(rect.width, rect.height);
-        let x = e.clientX - rect.left - size / 2;
-        let y = e.clientY - rect.top - size / 2;
-        
-        ripple.style.cssText = `
-          position: absolute;
-          border-radius: 50%;
-          background: rgba(255, 255, 255, 0.7);
-          transform: scale(0);
-          animation: ripple 0.6s linear;
-          width: ${size}px;
-          height: ${size}px;
-          left: ${x}px;
-          top: ${y}px;
-        `;
-        
-        this.appendChild(ripple);
-        
-        setTimeout(() => {
-          ripple.remove();
-        }, 600);
+    // PWA Install Modal Functions
+    function closePWAInstallModal() {
+      const modal = document.getElementById('pwaInstallModal');
+      modal.style.display = 'none';
+      document.body.style.overflow = 'auto';
+    }
+    
+    // Service Worker Registration
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register("{{ url_for('static', filename='service-worker.js') }}")
+        .then(() => console.log("Service Worker registered"))
+        .catch((err) => console.log("Service Worker registration failed:", err));
+    }
+    
+    // PWA Install Prompt
+    let deferredPrompt;
+    const pwaInstallModal = document.getElementById('pwaInstallModal');
+    const pwaInstallBtn = document.getElementById('pwaInstallBtn');
+    const pwaDismissBtn = document.getElementById('pwaDismissBtn');
+    
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      
+      setTimeout(() => {
+        pwaInstallModal.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+      }, 3000);
+    });
+    
+    pwaInstallBtn.addEventListener('click', async () => {
+      if (!deferredPrompt) return;
+      
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      console.log(`User response: ${outcome}`);
+      
+      closePWAInstallModal();
+      deferredPrompt = null;
+    });
+    
+    pwaDismissBtn.addEventListener('click', () => {
+      closePWAInstallModal();
+    });
+    
+    pwaInstallModal.addEventListener('click', (e) => {
+      if (e.target === pwaInstallModal) {
+        closePWAInstallModal();
+      }
+    });
+    
+    window.addEventListener('appinstalled', () => {
+      console.log('PWA was installed');
+      closePWAInstallModal();
+      deferredPrompt = null;
+    });
+    
+    // Enhanced button hover effects with sound simulation
+    document.querySelectorAll('.main-btn').forEach(btn => {
+      btn.addEventListener('mouseenter', function() {
+        this.style.transform = 'translateY(-5px)';
+        // Add subtle animation to click indicator
+        const indicator = this.querySelector('.click-indicator');
+        if (indicator) {
+          indicator.style.animation = 'pulse 0.6s ease';
+        }
+      });
+      
+      btn.addEventListener('mouseleave', function() {
+        this.style.transform = 'translateY(0)';
+      });
+      
+      btn.addEventListener('mousedown', function() {
+        this.style.transform = 'translateY(2px) scale(0.98)';
+      });
+      
+      btn.addEventListener('mouseup', function() {
+        this.style.transform = 'translateY(-5px)';
+      });
+      
+      // For touch devices
+      btn.addEventListener('touchstart', function() {
+        this.style.transform = 'translateY(2px) scale(0.98)';
+      });
+      
+      btn.addEventListener('touchend', function() {
+        this.style.transform = 'translateY(0)';
       });
     });
     
-    // Add CSS for ripple animation
-    const style = document.createElement('style');
-    style.textContent = `
-      @keyframes ripple {
-        to {
-          transform: scale(4);
-          opacity: 0;
+    // Add click animation to all interactive elements
+    document.querySelectorAll('.payment-btn, .modal-btn, .floating-action-btn').forEach(btn => {
+      btn.addEventListener('mousedown', function() {
+        this.style.transform = 'translateY(2px)';
+      });
+      
+      btn.addEventListener('mouseup', function() {
+        if (this.classList.contains('payment-btn') || this.classList.contains('modal-btn-primary')) {
+          this.style.transform = 'translateY(-3px)';
+        } else {
+          this.style.transform = 'translateY(0)';
         }
-      }
-    `;
-    document.head.appendChild(style);
+      });
+    });
   </script>
-
-<script>
-  if ("serviceWorker" in navigator) {
-    navigator.serviceWorker.register("{{ url_for('static', filename='service-worker.js') }}")
-      .then(() => console.log("Service Worker registered"))
-      .catch((err) => console.log("Service Worker registration failed:", err));
-  }
-  
-  // PWA Install Prompt - Shows on every visit
-  let deferredPrompt;
-  const pwaInstallModal = document.getElementById('pwaInstallModal');
-  const pwaInstallBtn = document.getElementById('pwaInstallBtn');
-  const pwaDismissBtn = document.getElementById('pwaDismissBtn');
-  
-  window.addEventListener('beforeinstallprompt', (e) => {
-    e.preventDefault();
-    deferredPrompt = e;
-    
-    // Show modal immediately (no localStorage check)
-    setTimeout(() => {
-      pwaInstallModal.style.display = 'flex';
-      document.body.style.overflow = 'hidden';
-    }, 2000); // Show after 2 seconds delay
-  });
-  
-  pwaInstallBtn.addEventListener('click', async () => {
-    if (!deferredPrompt) return;
-    
-    // Show install prompt
-    deferredPrompt.prompt();
-    
-    // Wait for the user to respond to the prompt
-    const { outcome } = await deferredPrompt.userChoice;
-    
-    // Optionally, send analytics event with outcome of user choice
-    console.log(`User response to the install prompt: ${outcome}`);
-    
-    // Hide modal
-    pwaInstallModal.style.display = 'none';
-    document.body.style.overflow = 'auto';
-    
-    // Clear the saved prompt since it can't be used again
-    deferredPrompt = null;
-  });
-  
-  pwaDismissBtn.addEventListener('click', () => {
-    // Simply hide modal without saving to localStorage
-    pwaInstallModal.style.display = 'none';
-    document.body.style.overflow = 'auto';
-  });
-  
-  // Close modal when clicking outside
-  pwaInstallModal.addEventListener('click', (e) => {
-    if (e.target === pwaInstallModal) {
-      pwaInstallModal.style.display = 'none';
-      document.body.style.overflow = 'auto';
-    }
-  });
-  
-  // Also close with Escape key
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && pwaInstallModal.style.display === 'flex') {
-      pwaInstallModal.style.display = 'none';
-      document.body.style.overflow = 'auto';
-    }
-  });
-  
-  // Check if app is already installed
-  window.addEventListener('appinstalled', () => {
-    console.log('PWA was installed');
-    pwaInstallModal.style.display = 'none';
-    document.body.style.overflow = 'auto';
-    deferredPrompt = null;
-  });
-</script>
-
 </body>
 </html>

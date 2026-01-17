@@ -1,0 +1,1330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Complete User Guide - KUCCPS Course Checker</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='bootstrap.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-dark: #2c3e50;
+            --primary-light: #3498db;
+            --accent-teal: #1abc9c;
+            --accent-green: #27ae60;
+            --accent-orange: #e67e22;
+            --accent-purple: #9b59b6;
+            --accent-red: #e74c3c;
+            --gradient-primary: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+            --gradient-success: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
+            --gradient-warning: linear-gradient(135deg, #e67e22 0%, #f39c12 100%);
+            --card-shadow: 0 5px 20px rgba(44, 62, 80, 0.1);
+        }
+
+        * {
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        h1, h2, h3, h4, h5, h6 {
+            font-family: 'Poppins', sans-serif;
+            font-weight: 600;
+        }
+
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #e3e9f7 100%);
+            min-height: 100vh;
+            padding-bottom: 70px;
+        }
+        /* Footer Styles - KUCCPS Course Checker */
+
+:root {
+  --footer-bg: linear-gradient(135deg, #2c3e50 0%, #1a252f 100%);
+  --footer-text: #ecf0f1;
+  --footer-link: #3498db;
+  --footer-hover: #1abc9c;
+  --footer-border: rgba(255, 255, 255, 0.1);
+}
+
+.footer {
+  background: var(--footer-bg);
+  color: var(--footer-text);
+  padding: 3rem 1.5rem 2rem;
+  position: relative;
+  margin-top: auto;
+}
+
+.footer::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #3498db, #1abc9c, #27ae60);
+}
+
+.footer-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 2.5rem;
+  padding-bottom: 2rem;
+  border-bottom: 1px solid var(--footer-border);
+}
+
+.footer-brand {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.footer-logo {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: white;
+  text-decoration: none;
+  margin-bottom: 0.5rem;
+}
+
+.footer-logo i {
+  font-size: 1.8rem;
+  color: #3498db;
+}
+
+.footer-tagline {
+  font-size: 0.95rem;
+  line-height: 1.6;
+  opacity: 0.9;
+  max-width: 300px;
+}
+
+.footer-links {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.footer-links h4 {
+  color: white;
+  font-size: 1.2rem;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+  position: relative;
+  padding-bottom: 0.5rem;
+}
+
+.footer-links h4::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 40px;
+  height: 2px;
+  background: #3498db;
+}
+
+.footer-links ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.footer-links li a {
+  color: rgba(255, 255, 255, 0.8);
+  text-decoration: none;
+  font-size: 0.95rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.3s ease;
+  padding: 0.25rem 0;
+}
+
+.footer-links li a:hover {
+  color: var(--footer-hover);
+  transform: translateX(5px);
+}
+
+.footer-links li a i {
+  font-size: 0.9rem;
+  width: 20px;
+}
+
+.footer-contact {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.contact-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+
+.contact-item i {
+  font-size: 1.2rem;
+  color: #3498db;
+  margin-top: 0.25rem;
+  flex-shrink: 0;
+}
+
+.contact-details {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.contact-label {
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.6);
+  font-weight: 500;
+}
+
+.contact-value {
+  color: white;
+  font-size: 0.95rem;
+  font-weight: 500;
+}
+
+.social-links {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.social-link {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  text-decoration: none;
+  transition: all 0.3s ease;
+}
+
+.social-link:hover {
+  background: #3498db;
+  transform: translateY(-3px);
+}
+
+.footer-bottom {
+  max-width: 1200px;
+  margin: 2rem auto 0;
+  padding-top: 1.5rem;
+  text-align: center;
+  border-top: 1px solid var(--footer-border);
+}
+
+.copyright {
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.7);
+  margin-bottom: 1rem;
+}
+
+.legal-links {
+  display: flex;
+  justify-content: center;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.legal-links a {
+  color: rgba(255, 255, 255, 0.7);
+  text-decoration: none;
+  font-size: 0.85rem;
+  transition: color 0.3s ease;
+}
+
+.legal-links a:hover {
+  color: var(--footer-hover);
+}
+
+.disclaimer {
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.5);
+  margin-top: 1rem;
+  line-height: 1.5;
+  max-width: 800px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* Scroll to Top Button */
+.scroll-top {
+  position: fixed;
+  bottom: 100px;
+  right: 30px;
+  width: 50px;
+  height: 50px;
+  background: #3498db;
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  font-size: 1.5rem;
+  box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
+  transition: all 0.3s ease;
+  z-index: 100;
+  opacity: 0;
+  transform: translateY(20px);
+}
+
+.scroll-top.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.scroll-top:hover {
+  background: #2980b9;
+  transform: translateY(-5px);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .footer {
+    padding: 2.5rem 1rem 1.5rem;
+  }
+  
+  .footer-content {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+  
+  .footer-brand {
+    text-align: center;
+    align-items: center;
+  }
+  
+  .footer-tagline {
+    text-align: center;
+  }
+  
+  .footer-links h4::after {
+    left: 50%;
+    transform: translateX(-50%);
+  }
+  
+  .social-links {
+    justify-content: center;
+  }
+  
+  .scroll-top {
+    bottom: 80px;
+    right: 20px;
+    width: 45px;
+    height: 45px;
+  }
+}
+
+@media (max-width: 576px) {
+  .legal-links {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+  
+  .scroll-top {
+    bottom: 70px;
+    right: 15px;
+    width: 40px;
+    height: 40px;
+    font-size: 1.2rem;
+  }
+}
+
+/* Animation */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.footer-content > * {
+  animation: fadeInUp 0.6s ease forwards;
+}
+
+.footer-content > *:nth-child(1) { animation-delay: 0.1s; }
+.footer-content > *:nth-child(2) { animation-delay: 0.2s; }
+.footer-content > *:nth-child(3) { animation-delay: 0.3s; }
+
+        /* Guide Hero Section */
+        .guide-hero {
+            background: var(--gradient-primary);
+            color: white;
+            padding: 60px 20px;
+            text-align: center;
+            border-radius: 0 0 30px 30px;
+            margin-bottom: 40px;
+        }
+
+        .guide-hero h1 {
+            font-size: 2.5rem;
+            margin-bottom: 15px;
+            font-weight: 700;
+        }
+
+        .guide-hero p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            max-width: 800px;
+            margin: 0 auto 25px;
+            line-height: 1.6;
+        }
+
+        .guide-tagline {
+            display: inline-block;
+            background: rgba(255, 255, 255, 0.15);
+            padding: 8px 25px;
+            border-radius: 25px;
+            font-style: italic;
+            font-size: 1.1rem;
+        }
+
+        /* Guide Container */
+        .guide-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px 60px;
+        }
+
+        /* Section Styles */
+        .guide-section {
+            background: white;
+            border-radius: 15px;
+            padding: 35px;
+            margin-bottom: 30px;
+            box-shadow: var(--card-shadow);
+            border-left: 5px solid var(--primary-light);
+        }
+
+        .guide-section.payment {
+            border-left-color: var(--accent-green);
+        }
+
+        .guide-section.results {
+            border-left-color: var(--accent-teal);
+        }
+
+        .guide-section.faq {
+            border-left-color: var(--accent-orange);
+        }
+
+        .section-title {
+            color: var(--primary-dark);
+            font-size: 1.8rem;
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .section-title i {
+            font-size: 1.8rem;
+        }
+
+        /* Process Steps */
+        .process-steps {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 25px;
+            margin: 30px 0;
+        }
+
+        .process-step {
+            text-align: center;
+            padding: 25px;
+            border-radius: 12px;
+            background: #f8f9fa;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .process-step:hover {
+            transform: translateY(-5px);
+            border-color: var(--primary-light);
+            box-shadow: 0 10px 25px rgba(52, 152, 219, 0.15);
+        }
+
+        .step-number {
+            width: 60px;
+            height: 60px;
+            background: var(--gradient-primary);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin: 0 auto 20px;
+            box-shadow: 0 5px 15px rgba(44, 62, 80, 0.2);
+        }
+
+        .step-title {
+            font-size: 1.3rem;
+            color: var(--primary-dark);
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+
+        .step-desc {
+            color: #666;
+            line-height: 1.6;
+            font-size: 0.95rem;
+        }
+
+        /* Category Cards */
+        .category-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin: 25px 0;
+        }
+
+        .category-card {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 10px;
+            text-align: center;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .category-card:hover {
+            transform: translateY(-5px);
+            background: white;
+            border-color: var(--primary-light);
+            box-shadow: 0 10px 25px rgba(44, 62, 80, 0.1);
+        }
+
+        .category-card i {
+            font-size: 2.5rem;
+            margin-bottom: 15px;
+            display: block;
+        }
+
+        .card-degree i { color: var(--primary-light); }
+        .card-diploma i { color: var(--accent-green); }
+        .card-certificate i { color: var(--accent-orange); }
+        .card-kmtc i { color: var(--accent-teal); }
+
+        .category-card h4 {
+            font-size: 1.2rem;
+            color: var(--primary-dark);
+            margin-bottom: 8px;
+        }
+
+        .category-card p {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        /* Payment Info */
+        .payment-info-box {
+            background: linear-gradient(135deg, #f1f8e9 0%, #e8f5e9 100%);
+            padding: 25px;
+            border-radius: 10px;
+            margin: 25px 0;
+            border-left: 4px solid var(--accent-green);
+        }
+
+        .payment-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .payment-table th {
+            background: var(--primary-dark);
+            color: white;
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+        }
+
+        .payment-table td {
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .payment-table tr:nth-child(even) {
+            background: #f8f9fa;
+        }
+
+        .payment-table tr:hover {
+            background: #e3f2fd;
+        }
+
+        .price-tag {
+            background: var(--accent-green);
+            color: white;
+            padding: 6px 15px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            display: inline-block;
+        }
+
+        .paystack-features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin: 25px 0;
+        }
+
+        .paystack-feature {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            border: 2px solid #e0e0e0;
+        }
+
+        .paystack-feature i {
+            font-size: 2rem;
+            color: #00b894;
+            margin-bottom: 15px;
+        }
+
+        /* Info Boxes */
+        .info-box {
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border-left: 4px solid;
+        }
+
+        .tip-box {
+            background: #e3f2fd;
+            border-left-color: var(--primary-light);
+        }
+
+        .note-box {
+            background: #fff3e0;
+            border-left-color: var(--accent-orange);
+        }
+
+        .warning-box {
+            background: #ffebee;
+            border-left-color: var(--accent-red);
+        }
+
+        /* FAQ Section */
+        .faq-item {
+            background: white;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            overflow: hidden;
+            border: 1px solid #e0e0e0;
+        }
+
+        .faq-question {
+            padding: 20px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 600;
+            color: var(--primary-dark);
+            background: #f8f9fa;
+            transition: all 0.3s ease;
+        }
+
+        .faq-question:hover {
+            background: #e3e9f7;
+        }
+
+        .faq-question i {
+            transition: transform 0.3s ease;
+        }
+
+        .faq-answer {
+            padding: 0 20px;
+            max-height: 0;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .faq-item.active .faq-answer {
+            padding: 20px;
+            max-height: 500px;
+        }
+
+        .faq-item.active .faq-question i {
+            transform: rotate(180deg);
+        }
+
+        /* Call to Action */
+        .cta-section {
+            text-align: center;
+            margin-top: 40px;
+            padding: 40px;
+            background: linear-gradient(135deg, var(--primary-dark) 0%, #1a252f 100%);
+            color: white;
+            border-radius: 15px;
+        }
+
+        .cta-section h2 {
+            color: white;
+            margin-bottom: 15px;
+        }
+
+        .cta-section p {
+            opacity: 0.9;
+            margin-bottom: 25px;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .cta-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            background: var(--accent-green);
+            color: white;
+            padding: 14px 32px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(39, 174, 96, 0.3);
+        }
+
+        .cta-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(39, 174, 96, 0.4);
+            color: white;
+            background: #2ecc71;
+        }
+
+        /* Support Info */
+        .support-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+
+        .support-card {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            text-align: center;
+            border: 2px solid #e0e0e0;
+        }
+
+        .support-card i {
+            font-size: 2.5rem;
+            margin-bottom: 15px;
+            color: var(--primary-light);
+        }
+
+        .support-card h4 {
+            color: var(--primary-dark);
+            margin-bottom: 10px;
+        }
+
+        .support-card p {
+            color: #666;
+            font-size: 0.95rem;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .guide-hero {
+                padding: 40px 15px;
+            }
+
+            .guide-hero h1 {
+                font-size: 2rem;
+            }
+
+            .guide-hero p {
+                font-size: 1rem;
+            }
+
+            .guide-section {
+                padding: 25px;
+            }
+
+            .section-title {
+                font-size: 1.5rem;
+            }
+
+            .process-steps {
+                grid-template-columns: 1fr;
+            }
+
+            .category-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .payment-table {
+                font-size: 0.9rem;
+            }
+
+            .payment-table th,
+            .payment-table td {
+                padding: 12px 8px;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .guide-container {
+                padding: 0 15px 40px;
+            }
+
+            .guide-hero h1 {
+                font-size: 1.8rem;
+            }
+
+            .guide-tagline {
+                font-size: 1rem;
+                padding: 6px 20px;
+            }
+
+            .category-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .paystack-features {
+                grid-template-columns: 1fr;
+            }
+
+            .support-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .cta-button {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+
+        /* Utility Classes */
+        .mt-3 { margin-top: 30px; }
+        .mb-3 { margin-bottom: 30px; }
+        .text-center { text-align: center; }
+    </style>
+</head>
+<body>
+    {% include 'navbar.html' %}
+
+    <!-- Guide Hero Section -->
+    <section class="guide-hero">
+        <div class="container">
+            <h1>Complete User Guide</h1>
+            <p>Learn how to find courses you qualify for using the KUCCPS Course Checker platform. Simple steps, accurate results, and secure payments.</p>
+            <div class="guide-tagline">
+                Your journey to the perfect educational path starts here
+            </div>
+        </div>
+    </section>
+
+    <!-- Main Guide Content -->
+    <main class="guide-container">
+        <!-- Introduction -->
+        <section class="guide-section">
+            <h2 class="section-title">
+                <i class="bi bi-mortarboard-fill"></i>
+                Welcome to KUCCPS Course Checker
+            </h2>
+            <p>This comprehensive guide will walk you through using our platform to discover courses you qualify for based on your KCSE results. Our system provides accurate, up-to-date information to help you make informed decisions about your educational future.</p>
+            
+            <div class="info-box tip-box">
+                <p><strong>Pro Tip:</strong> You can check courses across multiple categories (Degree, Diploma, Certificate, KMTC) in a single session for maximum convenience.</p>
+            </div>
+        </section>
+
+        <!-- How It Works -->
+        <section class="guide-section">
+            <h2 class="section-title">
+                <i class="bi bi-diagram-3-fill"></i>
+                How It Works - Simple 4-Step Process
+            </h2>
+            
+            <div class="process-steps">
+                <div class="process-step">
+                    <div class="step-number">1</div>
+                    <h3 class="step-title">Select Category</h3>
+                    <p class="step-desc">Choose your desired program type and enter KCSE grades</p>
+                </div>
+                
+                <div class="process-step">
+                    <div class="step-number">2</div>
+                    <h3 class="step-title">Enter Details</h3>
+                    <p class="step-desc">Provide your email and KCSE index number for verification</p>
+                </div>
+                
+                <div class="process-step">
+                    <div class="step-number">3</div>
+                    <h3 class="step-title">Secure Payment</h3>
+                    <p class="step-desc">Make payment via Paystack (cards & mobile money)</p>
+                </div>
+                
+                <div class="process-step">
+                    <div class="step-number">4</div>
+                    <h3 class="step-title">View Results</h3>
+                    <p class="step-desc">Get instant access to all courses you qualify for</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Step 1 Details -->
+        <section class="guide-section">
+            <div class="step-header" style="display: flex; align-items: center; gap: 15px; margin-bottom: 25px;">
+                <div class="step-number" style="margin: 0;">1</div>
+                <h2 class="step-title" style="margin: 0; font-size: 1.8rem;">Select Your Category and Enter Grades</h2>
+            </div>
+            
+            <p>Start by selecting the program category that matches your educational goals:</p>
+            
+            <div class="category-grid">
+                <div class="category-card card-degree">
+                    <i class="bi bi-search"></i>
+                    <h4>Degree Programs</h4>
+                    <p>University bachelor's degrees</p>
+                </div>
+                
+                <div class="category-card card-diploma">
+                    <i class="bi bi-file-earmark-text"></i>
+                    <h4>Diploma Programs</h4>
+                    <p>College diploma courses</p>
+                </div>
+                
+                <div class="category-card card-certificate">
+                    <i class="bi bi-award-fill"></i>
+                    <h4>Certificate Programs</h4>
+                    <p>Technical certificates</p>
+                </div>
+                
+                <div class="category-card card-kmtc">
+                    <i class="bi bi-heart-pulse-fill"></i>
+                    <h4>KMTC Programs</h4>
+                    <p>Medical training courses</p>
+                </div>
+            </div>
+            
+            <div class="info-box note-box mt-3">
+                <p><strong>For Degree Programs:</strong> Enter your KCSE subject grades. Our system automatically calculates cluster points based on your subject performance.</p>
+            </div>
+            
+            <div class="info-box tip-box mt-3">
+                <p><strong>Multi-Category Discount:</strong> First category costs KSH 199. Additional categories only KSH 99 each!</p>
+            </div>
+        </section>
+
+        <!-- Step 2 Details -->
+        <section class="guide-section">
+            <div class="step-header" style="display: flex; align-items: center; gap: 15px; margin-bottom: 25px;">
+                <div class="step-number" style="margin: 0;">2</div>
+                <h2 class="step-title" style="margin: 0; font-size: 1.8rem;">Provide Required Information</h2>
+            </div>
+            
+            <p>After selecting your category, you'll need to provide:</p>
+            
+            <ul style="padding-left: 25px; margin: 20px 0; line-height: 1.8;">
+                <li><strong>Valid Email Address:</strong> Used to send your results and for account recovery</li>
+                <li><strong>KCSE Index Number:</strong> Your unique examination identification number</li>
+                <li><strong>Phone Number:</strong> For payment verification and results retrieval</li>
+            </ul>
+            
+            <div class="info-box warning-box mt-3">
+                <p><strong>Important:</strong> Ensure your email address is active and entered correctly. All results and confirmation emails will be sent to this address.</p>
+            </div>
+        </section>
+
+        <!-- Step 3 Details - Updated for Paystack -->
+        <section class="guide-section payment">
+            <div class="step-header" style="display: flex; align-items: center; gap: 15px; margin-bottom: 25px;">
+                <div class="step-number" style="margin: 0;">3</div>
+                <h2 class="step-title" style="margin: 0; font-size: 1.8rem;">Secure Payment via Paystack</h2>
+            </div>
+            
+            <p>We use <strong>Paystack</strong> for secure, reliable payments. Paystack supports multiple payment methods:</p>
+            
+            <div class="paystack-features">
+                <div class="paystack-feature">
+                    <i class="bi bi-credit-card-fill"></i>
+                    <h4>Credit/Debit Cards</h4>
+                    <p>Visa, Mastercard, Verve</p>
+                </div>
+                
+                <div class="paystack-feature">
+                    <i class="bi bi-phone-fill"></i>
+                    <h4>Mobile Money</h4>
+                    <p>M-Pesa, Airtel Money, Tigo Pesa</p>
+                </div>
+                
+                <div class="paystack-feature">
+                    <i class="bi bi-shield-lock-fill"></i>
+                    <h4>Bank Transfer</h4>
+                    <p>Direct bank transfers</p>
+                </div>
+            </div>
+            
+            <h3 class="mt-3 mb-2" style="color: var(--primary-dark);">Pricing Structure</h3>
+            <table class="payment-table">
+                <thead>
+                    <tr>
+                        <th>Service</th>
+                        <th>Amount</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>First Category Check</td>
+                        <td><span class="price-tag">KSH 199</span></td>
+                        <td>Initial payment for your first category check</td>
+                    </tr>
+                    <tr>
+                        <td>Each Additional Category</td>
+                        <td><span class="price-tag">KSH 99</span></td>
+                        <td>Discounted rate for checking multiple categories</td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <div class="payment-info-box mt-3">
+                <h4><i class="bi bi-info-circle-fill"></i> Payment Process:</h4>
+                <ol style="padding-left: 25px; margin-top: 15px; line-height: 1.8;">
+                    <li>Click "Proceed to Payment" after entering your details</li>
+                    <li>You'll be redirected to Paystack's secure payment page</li>
+                    <li>Choose your preferred payment method</li>
+                    <li>Complete the payment process on Paystack</li>
+                    <li>You'll be automatically redirected back to see your results</li>
+                </ol>
+            </div>
+            
+            <div class="info-box tip-box mt-3">
+                <p><strong>Example:</strong> Checking Degree (KSH 199) + Diploma (KSH 99) + Certificate (KSH 99) = <strong>Total KSH 397</strong></p>
+            </div>
+        </section>
+
+        <!-- Step 4 Details -->
+        <section class="guide-section results">
+            <div class="step-header" style="display: flex; align-items: center; gap: 15px; margin-bottom: 25px;">
+                <div class="step-number" style="margin: 0;">4</div>
+                <h2 class="step-title" style="margin: 0; font-size: 1.8rem;">Viewing Your Results</h2>
+            </div>
+            
+            <p>After successful payment, you'll immediately see your personalized results showing:</p>
+            
+            <ul style="padding-left: 25px; margin: 20px 0; line-height: 1.8;">
+                <li>All courses you qualify for based on your KCSE grades</li>
+                <li>Institutions offering each course</li>
+                <li>Programme codes for KUCCPS application</li>
+                <li>Detailed entry requirements</li>
+                <li>Course duration and fees (where available)</li>
+            </ul>
+            
+            <h3 class="mt-3 mb-2" style="color: var(--primary-dark);">Features for Your Convenience</h3>
+            
+            <div class="category-grid mt-3">
+                <div class="category-card">
+                    <i class="bi bi-download"></i>
+                    <h4>Save Results</h4>
+                    <p>Download or save your results for future reference</p>
+                </div>
+                
+
+                <div class="category-card">
+                    <i class="bi bi-arrow-clockwise"></i>
+                    <h4>Retrieve Anytime</h4>
+                    <p>Access your results anytime using your receipt</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Retrieval Information -->
+        <section class="guide-section">
+            <h2 class="section-title">
+                <i class="bi bi-arrow-clockwise"></i>
+                Retrieving Previous Results
+            </h2>
+            
+            <p>If you've already made payment and need to retrieve your results:</p>
+            
+            <ol style="padding-left: 25px; margin: 20px 0; line-height: 1.8;">
+                <li>Go to the <strong>"Already Paid"</strong> section in the main menu</li>
+                <li>Enter your Paystack transaction reference</li>
+                <li>Provide your KCSE index number</li>
+                <li>Click retrieve to view your results again</li>
+            </ol>
+            
+            <div class="info-box note-box mt-3">
+                <p><strong>Note:</strong> Keep your Paystack transaction receipt. You can use the transaction reference to retrieve your results anytime.</p>
+            </div>
+        </section>
+
+        <!-- FAQ Section -->
+        <section class="guide-section faq">
+            <h2 class="section-title">
+                <i class="bi bi-question-circle-fill"></i>
+                Frequently Asked Questions
+            </h2>
+            
+            <div class="faq-item">
+                <div class="faq-question">
+                    <span>Can I pay using mobile money?</span>
+                    <i class="bi bi-chevron-down"></i>
+                </div>
+                <div class="faq-answer">
+                    <p>Yes! Paystack supports M-Pesa, Airtel Money, and other mobile money services. Just select "Mobile Money" on the Paystack payment page.</p>
+                </div>
+            </div>
+            
+            <div class="faq-item">
+                <div class="faq-question">
+                    <span>How do I calculate cluster points for degree programs?</span>
+                    <i class="bi bi-chevron-down"></i>
+                </div>
+                <div class="faq-answer">
+                    <p>You don't need to! Our system automatically calculates your cluster points based on your KCSE subject grades. Just enter your subject grades, and we'll handle the calculations.</p>
+                </div>
+            </div>
+            
+            <div class="faq-item">
+                <div class="faq-question">
+                    <span>Is Paystack secure for payments?</span>
+                    <i class="bi bi-chevron-down"></i>
+                </div>
+                <div class="faq-answer">
+                    <p>Absolutely! Paystack is PCI DSS compliant, which means it meets the highest security standards for payment processing. Your financial information is completely secure.</p>
+                </div>
+            </div>
+            
+            
+            <div class="faq-item">
+                <div class="faq-question">
+                    <span>Can I check courses for multiple categories at once?</span>
+                    <i class="bi bi-chevron-down"></i>
+                </div>
+                <div class="faq-answer">
+                    <p>Yes! Select all the categories you're interested in during the selection process. You'll get a discounted rate for additional categories.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Support Section -->
+        <section class="guide-section">
+            <h2 class="section-title">
+                <i class="bi bi-headset"></i>
+                Need Help? We're Here for You
+            </h2>
+            
+            <p>If you encounter any issues or have questions about using the KUCCPS Course Checker:</p>
+            
+            <div class="support-grid mt-3">
+                <div class="support-card">
+                    <i class="bi bi-whatsapp"></i>
+                    <h4>WhatsApp Support</h4>
+                    <p>+254 708 188 840</p>
+                    <p style="font-size: 0.8rem; color: #666;">Quick chat support</p>
+                </div>
+                
+                <div class="support-card">
+                    <i class="bi bi-telephone-fill"></i>
+                    <h4>Call Support</h4>
+                    <p>+254 708 188 840</p>
+                    <p style="font-size: 0.8rem; color: #666;">Direct helpline</p>
+                </div>
+                
+                <div class="support-card">
+                    <i class="bi bi-envelope-fill"></i>
+                    <h4>Email Support</h4>
+                    <p>kuccpshelpdesk.ke@gmail.com</p>
+                    <p style="font-size: 0.8rem; color: #666;">Detailed inquiries</p>
+                </div>
+            </div>
+            
+            
+        </section>
+
+        <!-- Call to Action -->
+        <section class="cta-section">
+            <h2>Ready to Find Your Perfect Course?</h2>
+            <p>Join thousands of students who have successfully found their educational path using our platform. Start your journey today!</p>
+            <a href="{{ url_for('home') }}" class="cta-button">
+                <i class="bi bi-rocket-takeoff"></i>
+                Start Checking Courses Now
+            </a>
+        </section>
+    </main>
+
+   <footer class="footer">
+  <div class="footer-content">
+    <!-- Brand Section -->
+    <div class="footer-brand">
+      <a href="{{ url_for('home') }}" class="footer-logo">
+        <i class="bi bi-mortarboard-fill"></i>
+        KUCCPS Course Checker
+      </a>
+      <p class="footer-tagline">
+        Your trusted partner in educational journey planning. 
+        Accurate course matching based on KCSE results.
+      </p>
+    </div>
+    
+    <!-- Quick Links -->
+    <div class="footer-links">
+      <h4>Quick Links</h4>
+      <ul>
+        <li><a href="{{ url_for('home') }}"><i class="bi bi-house"></i> Home</a></li>
+        <li><a href="#" onclick="openDegreeModal()"><i class="bi bi-search"></i> Degree Programs</a></li>
+        <li><a href="{{ url_for('diploma_form') }}"><i class="bi bi-file-earmark-text"></i> Diploma Programs</a></li>
+        <li><a href="{{ url_for('certificate_form') }}"><i class="bi bi-award-fill"></i> Certificate Programs</a></li>
+        <li><a href="{{ url_for('kmtc_form') }}"><i class="bi bi-heart-pulse-fill"></i> KMTC Programs</a></li>
+      </ul>
+    </div>
+    
+    <!-- Contact & Social -->
+    <div class="footer-contact">
+      <div class="contact-item">
+        <i class="bi bi-envelope-fill"></i>
+        <div class="contact-details">
+          <span class="contact-label">Email Support</span>
+          <span class="contact-value">kuccpshelpdesk.ke@gmail.com</span>
+        </div>
+      </div>
+      
+      <div class="contact-item">
+        <i class="bi bi-telephone-fill"></i>
+        <div class="contact-details">
+          <span class="contact-label">Call Us</span>
+          <span class="contact-value">+254 708 188 840</span>
+        </div>
+      </div>
+      
+      
+      <div class="social-links">
+        <a href="https://wa.me/254708188840" class="social-link" target="_blank" title="WhatsApp">
+          <i class="bi bi-whatsapp"></i>
+        </a>
+        <a href="tel:+254708188840" class="social-link" title="Call">
+          <i class="bi bi-telephone"></i>   
+        <a href="mailto:kuccpshelpdesk.ke@gmail.com" class="social-link" title="Email">
+          <i class="bi bi-envelope"></i>
+        </a>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Bottom Bar -->
+  <div class="footer-bottom">
+    <p class="copyright">
+      &copy; 2026 KUCCPS Course Checker. All rights reserved.
+    </p>
+    
+    <div class="legal-links">
+      <a href="#">Privacy Policy</a>
+      <a href="#">Terms of Service</a>
+      <a href="{{ url_for('user_guide') }}">User Guide</a>
+      <a href="{{ url_for('already_paid_form') }}">Already Paid</a>
+    </div>
+    
+    <p class="disclaimer">
+      This platform uses official KUCCPS data for course recommendations. 
+      We are an independent service provider and not officially affiliated with KUCCPS.
+    </p>
+  </div>
+</footer>
+
+<!-- Scroll to Top Button -->
+<a href="#" class="scroll-top" id="scrollTop">
+  <i class="bi bi-chevron-up"></i>
+</a>
+
+<script>
+  // Scroll to top functionality
+  const scrollTopBtn = document.getElementById('scrollTop');
+  
+  window.addEventListener('scroll', () => {
+    if (window.pageYOffset > 300) {
+      scrollTopBtn.classList.add('visible');
+    } else {
+      scrollTopBtn.classList.remove('visible');
+    }
+  });
+  
+  scrollTopBtn.addEventListener('click', (e) => {
+    e.preventDefault();
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth'
+    });
+  });
+</script>
+
+    <script>
+        // FAQ functionality
+        document.querySelectorAll('.faq-question').forEach(question => {
+            question.addEventListener('click', () => {
+                const faqItem = question.parentElement;
+                faqItem.classList.toggle('active');
+            });
+        });
+        
+        // Smooth scrolling for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                
+                const targetId = this.getAttribute('href');
+                if (targetId === '#') return;
+                
+                const targetElement = document.querySelector(targetId);
+                if (targetElement) {
+                    window.scrollTo({
+                        top: targetElement.offsetTop - 100,
+                        behavior: 'smooth'
+                    });
+                }
+            });
+        });
+        
+        // Add active state to current page in navbar
+        document.addEventListener('DOMContentLoaded', function() {
+            const currentPath = window.location.pathname;
+            const navLinks = document.querySelectorAll('.nav-link, .mobile-nav-item');
+            
+            navLinks.forEach(link => {
+                if (link.getAttribute('href') === currentPath) {
+                    link.classList.add('active');
+                }
+            });
+        });
+    </script>
+</body>
+</html>

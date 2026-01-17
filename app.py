@@ -144,6 +144,9 @@ def certificate_form():
 @app.route('/kmtc')
 def kmtc_form():
     return render_template('kmtc.html')
+@app.route('/userguide')
+def user_guide():
+    return render_template('userguide.html')
 
 def run_degree_eligibility(grades, cluster_points):
     qualified = []
