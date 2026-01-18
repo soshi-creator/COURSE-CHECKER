@@ -799,7 +799,7 @@ def payment_page():
 
         # Determine amount
         already_paid_for = existing.get('program_type') if existing else None
-        amount = 199 if not already_paid_for else 99
+        amount = 100 if not already_paid_for else 100
         session['amount'] = amount
 
         # Initiate Paystack
