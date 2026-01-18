@@ -175,7 +175,6 @@ def run_degree_eligibility(grades, cluster_points):
                     if not condition_met:
                         meets_all = False
                         break
-
                 elif req.get('type') == 'multi':
                     pool = req['subject_pool']
                     min_points = grade_to_points(req['minGrade'])
@@ -189,17 +188,14 @@ def run_degree_eligibility(grades, cluster_points):
                     if passed < required_count:
                         meets_all = False
                         break
-
                 else:
                     req_subject = req.get('subject')
                     req_min = grade_to_points(req.get('minGrade'))
                     scores = []
                     for alias in req_subject.split('/'):
                         grade = resolve_grade_from_alias(grades, alias)
-                        score = grade_to_points(grade)
-                        scores.append(score)
-                    user_score = max(scores) if scores else 0.0
-                    if user_score < req_min:
+                        scores.append(grade_to_points(grade))
+                    if max(scores) < req_min:
                         meets_all = False
                         break
 
@@ -218,8 +214,10 @@ def run_degree_eligibility(grades, cluster_points):
     for item in qualified:
         grouped[item['cluster']].append(item)
 
+    # ✅ Sort clusters numerically
     named_clusters = []
-    for cluster_num, items in grouped.items():
+    for cluster_num in sorted(grouped.keys()):  # <--- this ensures Cluster 1 first
+        items = grouped[cluster_num]
         named_clusters.append({
             'label': f"Cluster {cluster_num}: {cluster_name_map.get(cluster_num, 'Unknown')}",
             'courses': items
@@ -787,7 +785,7 @@ def payment_page():
 
         # Determine amount
         already_paid_for = existing.get('program_type') if existing else None
-        amount = 199 if not already_paid_for else 99
+        amount = 1 if not already_paid_for else 1
         session['amount'] = amount
 
         # Initiate Paystack
@@ -1011,5 +1009,82 @@ def view_paid_results():
                            program_type=program_type,
                            email=email,
                            index_number=index_number)
+    
+
+
+@app.route('/subscribe', methods=['POST'])
+def subscribe():
+    try:
+        subscription_data = request.get_json()
+        
+        if not subscription_data:
+            return jsonify({"error": "No subscription data provided"}), 400
+        
+        # Validate required fields
+        endpoint = subscription_data.get('endpoint')
+        keys = subscription_data.get('keys')
+        
+        if not endpoint or not keys:
+            return jsonify({"error": "Invalid subscription format"}), 400
+        
+        # Save subscription to MongoDB
+        subscriptions_collection = db['push_subscriptions']  # Create new collection
+        
+        # Check if subscription already exists
+        existing = subscriptions_collection.find_one({"endpoint": endpoint})
+        
+        if existing:
+            # Update existing subscription
+            subscriptions_collection.update_one(
+                {"endpoint": endpoint},
+                {"$set": {
+                    **subscription_data,
+                    "updated_at": datetime.utcnow()
+                }}
+            )
+        else:
+            # Insert new subscription
+            subscriptions_collection.insert_one({
+                **subscription_data,
+                "created_at": datetime.utcnow(),
+                "updated_at": datetime.utcnow()
+            })
+        
+        print(f"Subscription saved for endpoint: {endpoint[:50]}...")
+        return jsonify({"success": True, "message": "Subscription saved"}), 200
+        
+    except Exception as e:
+        print(f"Error saving subscription: {str(e)}")
+        return jsonify({"error": str(e)}), 500
+    
+@app.route("/admin/notifications")
+def admin_notifications():
+    # You could also check if admin is logged in here
+    return render_template("admin_notifications.html")
+
+from pywebpush import webpush, WebPushException
+
+VAPID_PUBLIC_KEY = os.getenv("VAPID_PUBLIC_KEY")
+VAPID_PRIVATE_KEY = os.getenv("VAPID_PRIVATE_KEY")
+VAPID_CLAIMS = {"sub": "mailto:kuccpshelpdesk.ke@gmail.com"}
+
+@app.route('/admin/notify', methods=['POST'])
+def admin_notify():
+    data = request.json  # expects {"title": "Hello", "body": "Message", "url": "/results"}
+    subscriptions = list(db.subscriptions.find())
+    
+    for sub in subscriptions:
+        try:
+            webpush(
+                subscription_info=sub,
+                data=json.dumps(data),
+                vapid_private_key=VAPID_PRIVATE_KEY,
+                vapid_claims=VAPID_CLAIMS
+            )
+        except WebPushException as ex:
+            print(f"Push failed for {sub.get('endpoint')}: {ex}")
+    return jsonify({"success": True, "sent": len(subscriptions)})
+
+
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True)

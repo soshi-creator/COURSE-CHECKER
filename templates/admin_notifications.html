@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Send Push Notification</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 2rem; }
+    form { max-width: 500px; margin: auto; }
+    input, textarea, button { display: block; width: 100%; margin: 0.5rem 0; padding: 0.5rem; }
+  </style>
+</head>
+<body>
+  <h2>Send Push Notification to Users</h2>
+  <form id="notifForm">
+    <input type="text" name="title" placeholder="Notification Title" required>
+    <textarea name="body" placeholder="Notification Body" required></textarea>
+    <input type="text" name="url" placeholder="Click URL (optional)">
+    <button type="submit">Send Notification</button>
+  </form>
+
+  <script>
+    document.getElementById("notifForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const form = e.target;
+      const data = {
+        title: form.title.value,
+        body: form.body.value,
+        url: form.url.value || "/"
+      };
+
+      const res = await fetch("/admin/notify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data)
+      });
+
+      const result = await res.json();
+      alert(`Notification sent to ${result.sent} users`);
+      form.reset();
+    });
+  </script>
+</body>
+</html>

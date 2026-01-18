@@ -126,28 +126,33 @@ async function syncFormData() {
   // You can store form submissions in IndexedDB and sync here
 }
 
-// Push notifications (optional)
 self.addEventListener("push", (event) => {
+  let data = { title: "KUCCPS Course Checker", body: "New update", url: "/" };
+  
+  if (event.data) {
+    try {
+      data = event.data.json();
+    } catch {
+      data.body = event.data.text();
+    }
+  }
+
   const options = {
-    body: event.data ? event.data.text() : "New update from KUCCPS Checker",
+    body: data.body,
     icon: "/static/icons/icon-192x192.png",
     badge: "/static/icons/icon-192x192.png",
     vibrate: [200, 100, 200],
-    data: {
-      dateOfArrival: Date.now(),
-      primaryKey: 1
-    }
+    data: data.url
   };
 
   event.waitUntil(
-    self.registration.showNotification("KUCCPS Course Checker", options)
+    self.registration.showNotification(data.title, options)
   );
 });
 
-// Notification click handler
-self.addEventListener("notificationclick", (event) => {
+
+lf.addEventListener("notificationclick", function(event) {
   event.notification.close();
-  event.waitUntil(
-    clients.openWindow("/")
-  );
+  const url = event.notification.data?.url || "/";
+  event.waitUntil(clients.openWindow(url));
 });

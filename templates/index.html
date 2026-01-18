@@ -334,6 +334,31 @@
       </div>
     </div>
   </div>
+
+  <!-- Push Notifications Modal -->
+<div id="pushNotifModal" class="pwa-install-modal">
+  <div class="pwa-install-content">
+    <div class="pwa-install-icon">
+      <i class="bi bi-bell-fill"></i>
+    </div>
+    <h2 class="pwa-install-title">Enable Notifications</h2>
+    <p class="pwa-install-message">
+      Stay updated with KUCCPS deadlines, new courses, and important alerts instantly. 
+      Enable notifications to never miss an update.
+    </p>
+    <div class="pwa-install-buttons">
+      <button id="enableNotifBtn" class="modal-btn modal-btn-primary">
+        <i class="bi bi-bell-fill"></i>
+        Enable Notifications
+      </button>
+      <button id="notifDismissBtn" class="modal-btn modal-btn-secondary">
+        <i class="bi bi-clock"></i>
+        Maybe Later
+      </button>
+    </div>
+  </div>
+</div>
+
 <!-- KUCCPS Chat Support Widget -->
 <div id="chatWidget" class="chat-support-widget">
   <!-- Main chat icon (always visible) -->
@@ -1194,6 +1219,126 @@ document.addEventListener('DOMContentLoaded', function() {
         }
       });
     });
+
+    // Push Notifications Modal
+const pushNotifModal = document.getElementById('pushNotifModal');
+const enableNotifBtn = document.getElementById('enableNotifBtn');
+const notifDismissBtn = document.getElementById('notifDismissBtn');
+
+function closePushNotifModal() {
+  pushNotifModal.style.display = 'none';
+  document.body.style.overflow = 'auto';
+}
+
+// Show notifications modal after PWA install
+function showPushNotifModal() {
+  pushNotifModal.style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+}
+
+// Trigger modal after app is installed
+window.addEventListener('appinstalled', () => {
+  console.log('PWA installed');
+  showPushNotifModal();
+});
+
+// Or show after PWA install prompt accepted
+pwaInstallBtn.addEventListener('click', async () => {
+  if (!deferredPrompt) return;
+
+  deferredPrompt.prompt();
+  const { outcome } = await deferredPrompt.userChoice;
+  console.log(`User response: ${outcome}`);
+  closePWAInstallModal();
+  deferredPrompt = null;
+
+  if (outcome === 'accepted') {
+    // Give small delay then show notifications modal
+    setTimeout(showPushNotifModal, 800);
+  }
+});
+
+enableNotifBtn.addEventListener('click', async () => {
+  if (!("Notification" in window) || !("serviceWorker" in navigator)) {
+    alert("Push notifications are not supported on this device.");
+    return;
+  }
+
+  const permission = await Notification.requestPermission();
+  if (permission === "granted") {
+    const reg = await navigator.serviceWorker.ready;
+    const sub = await reg.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey: "BB703tCdCyIRMmn-aZDAiCA7GDQmiE9nDo8IjnFIWRm67xJeiXtm631QB8E7z_PitRwVD2O8Xf8KJztfKMLUb6s="
+    });
+
+    // Send subscription to your backend
+    await fetch("/subscribe", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(sub)
+    });
+
+    alert("Notifications enabled!");
+    closePushNotifModal();
+  } else {
+    alert("Notifications blocked. You can enable them later in your browser settings.");
+    closePushNotifModal();
+  }
+});
+
+notifDismissBtn.addEventListener('click', closePushNotifModal);
+pushNotifModal.addEventListener('click', (e) => {
+  if (e.target === pushNotifModal) closePushNotifModal();
+});
+
+// Public VAPID key (replace with your own)
+const VAPID_PUBLIC_KEY = "BB703tCdCyIRMmn-aZDAiCA7GDQmiE9nDo8IjnFIWRm67xJeiXtm631QB8E7z_PitRwVD2O8Xf8KJztfKMLUb6s=";
+
+async function urlBase64ToUint8Array(base64String) {
+  const padding = '='.repeat((4 - base64String.length % 4) % 4);
+  const base64 = (base64String + padding)
+    .replace(/\-/g, '+')
+    .replace(/_/g, '/');
+  const rawData = atob(base64);
+  return Uint8Array.from([...rawData].map(char => char.charCodeAt(0)));
+}
+
+async function subscribeToPush() {
+  if (!("serviceWorker" in navigator)) return alert("Service Workers not supported");
+
+  const registration = await navigator.serviceWorker.ready;
+
+  const subscription = await registration.pushManager.subscribe({
+    userVisibleOnly: true,
+    applicationServerKey: await urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
+  });
+
+  console.log("Push Subscription:", subscription);
+
+  // Send to backend
+  try {
+    const res = await fetch("/subscribe", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(subscription)
+    });
+
+    const data = await res.json();
+    if (data.success) {
+      alert("Notifications enabled successfully!");
+      document.getElementById('pushNotifModal').style.display = 'none';
+      document.body.style.overflow = 'auto';
+    }
+  } catch (err) {
+    console.error("Error sending subscription to backend:", err);
+    alert("Failed to enable notifications. Try again.");
+  }
+}
+
+document.getElementById('enableNotifBtn').addEventListener('click', subscribeToPush);
+
+
   </script>
 </body>
 </html>
