@@ -335,29 +335,7 @@
     </div>
   </div>
 
-  <!-- Push Notifications Modal -->
-<div id="pushNotifModal" class="pwa-install-modal">
-  <div class="pwa-install-content">
-    <div class="pwa-install-icon">
-      <i class="bi bi-bell-fill"></i>
-    </div>
-    <h2 class="pwa-install-title">Enable Notifications</h2>
-    <p class="pwa-install-message">
-      Stay updated with KUCCPS deadlines, new courses, and important alerts instantly. 
-      Enable notifications to never miss an update.
-    </p>
-    <div class="pwa-install-buttons">
-      <button id="enableNotifBtn" class="modal-btn modal-btn-primary">
-        <i class="bi bi-bell-fill"></i>
-        Enable Notifications
-      </button>
-      <button id="notifDismissBtn" class="modal-btn modal-btn-secondary">
-        <i class="bi bi-clock"></i>
-        Maybe Later
-      </button>
-    </div>
-  </div>
-</div>
+
 
 <!-- KUCCPS Chat Support Widget -->
 <div id="chatWidget" class="chat-support-widget">
@@ -1220,79 +1198,38 @@ document.addEventListener('DOMContentLoaded', function() {
       });
     });
 
-    // Push Notifications Modal
-const pushNotifModal = document.getElementById('pushNotifModal');
-const enableNotifBtn = document.getElementById('enableNotifBtn');
-const notifDismissBtn = document.getElementById('notifDismissBtn');
-
-function closePushNotifModal() {
-  pushNotifModal.style.display = 'none';
-  document.body.style.overflow = 'auto';
-}
-
-// Show notifications modal after PWA install
-function showPushNotifModal() {
-  pushNotifModal.style.display = 'flex';
-  document.body.style.overflow = 'hidden';
-}
-
-// Trigger modal after app is installed
-window.addEventListener('appinstalled', () => {
-  console.log('PWA installed');
-  showPushNotifModal();
-});
-
-// Or show after PWA install prompt accepted
-pwaInstallBtn.addEventListener('click', async () => {
-  if (!deferredPrompt) return;
-
-  deferredPrompt.prompt();
-  const { outcome } = await deferredPrompt.userChoice;
-  console.log(`User response: ${outcome}`);
-  closePWAInstallModal();
-  deferredPrompt = null;
-
-  if (outcome === 'accepted') {
-    // Give small delay then show notifications modal
-    setTimeout(showPushNotifModal, 800);
-  }
-});
-
-enableNotifBtn.addEventListener('click', async () => {
+// Auto-prompt for notifications (removed modal approach)
+async function requestNotificationPermission() {
   if (!("Notification" in window) || !("serviceWorker" in navigator)) {
-    alert("Push notifications are not supported on this device.");
+    console.log("Push notifications are not supported on this device.");
     return;
   }
 
-  const permission = await Notification.requestPermission();
-  if (permission === "granted") {
-    const reg = await navigator.serviceWorker.ready;
-    const sub = await reg.pushManager.subscribe({
-      userVisibleOnly: true,
-      applicationServerKey: "BB703tCdCyIRMmn-aZDAiCA7GDQmiE9nDo8IjnFIWRm67xJeiXtm631QB8E7z_PitRwVD2O8Xf8KJztfKMLUb6s="
-    });
-
-    // Send subscription to your backend
-    await fetch("/subscribe", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(sub)
-    });
-
-    alert("Notifications enabled!");
-    closePushNotifModal();
-  } else {
-    alert("Notifications blocked. You can enable them later in your browser settings.");
-    closePushNotifModal();
+  // Check if already granted
+  if (Notification.permission === "granted") {
+    console.log("Notifications already enabled");
+    await subscribeToPush();
+    return;
   }
-});
 
-notifDismissBtn.addEventListener('click', closePushNotifModal);
-pushNotifModal.addEventListener('click', (e) => {
-  if (e.target === pushNotifModal) closePushNotifModal();
-});
+  // Check if previously denied
+  if (Notification.permission === "denied") {
+    console.log("Notifications previously denied by user");
+    return;
+  }
 
-// Public VAPID key (replace with your own)
+  // Directly request permission
+  const permission = await Notification.requestPermission();
+  
+  if (permission === "granted") {
+    console.log("Notification permission granted");
+    await subscribeToPush();
+  } else {
+    console.log("Notification permission denied");
+  }
+}
+
+// Public VAPID key
 const VAPID_PUBLIC_KEY = "BB703tCdCyIRMmn-aZDAiCA7GDQmiE9nDo8IjnFIWRm67xJeiXtm631QB8E7z_PitRwVD2O8Xf8KJztfKMLUb6s=";
 
 async function urlBase64ToUint8Array(base64String) {
@@ -1305,19 +1242,17 @@ async function urlBase64ToUint8Array(base64String) {
 }
 
 async function subscribeToPush() {
-  if (!("serviceWorker" in navigator)) return alert("Service Workers not supported");
-
-  const registration = await navigator.serviceWorker.ready;
-
-  const subscription = await registration.pushManager.subscribe({
-    userVisibleOnly: true,
-    applicationServerKey: await urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
-  });
-
-  console.log("Push Subscription:", subscription);
-
-  // Send to backend
   try {
+    const registration = await navigator.serviceWorker.ready;
+
+    const subscription = await registration.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey: await urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
+    });
+
+    console.log("Push Subscription:", subscription);
+
+    // Send to backend
     const res = await fetch("/subscribe", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -1326,17 +1261,31 @@ async function subscribeToPush() {
 
     const data = await res.json();
     if (data.success) {
-      alert("Notifications enabled successfully!");
-      document.getElementById('pushNotifModal').style.display = 'none';
-      document.body.style.overflow = 'auto';
+      console.log("Notifications enabled successfully!");
+    } else {
+      console.error("Failed to save subscription:", data.error);
     }
   } catch (err) {
-    console.error("Error sending subscription to backend:", err);
-    alert("Failed to enable notifications. Try again.");
+    console.error("Error enabling notifications:", err);
   }
 }
 
-document.getElementById('enableNotifBtn').addEventListener('click', subscribeToPush);
+// Check and send subscription on every page load
+document.addEventListener('DOMContentLoaded', function() {
+  // Check if notifications are already granted
+  if (Notification.permission === "granted") {
+    console.log("Notifications already granted - sending subscription to backend");
+    
+    // Small delay to ensure service worker is ready
+    setTimeout(() => {
+      subscribeToPush();
+    }, 1000);
+  }
+  
+  // Still request permission for new users after 3 seconds
+  setTimeout(requestNotificationPermission, 3000);
+});
+
 
 
   </script>

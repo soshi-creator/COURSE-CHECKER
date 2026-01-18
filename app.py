@@ -34,6 +34,20 @@ PAYSTACK_SECRET_KEY = os.getenv("PAYSTACK_SECRET_KEY")
 MONGO_URI = os.getenv('MONGO_URI')
 client = MongoClient(MONGO_URI)
 db = client['course_checker']
+# === ADD THIS ===
+# Ensure push_subscriptions collection exists
+if 'push_subscriptions' not in db.list_collection_names():
+    # Create collection
+    db.create_collection('push_subscriptions')
+    print("✅ Created push_subscriptions collection")
+    
+    # Create indexes (optional but recommended)
+    db['push_subscriptions'].create_index([("endpoint", 1)], unique=True)
+    db['push_subscriptions'].create_index([("created_at", -1)])
+    print("✅ Created indexes for push_subscriptions")
+else:
+    print("ℹ️ push_subscriptions collection already exists")
+# === END ADDITION ===
 courses_collection = db['courses']
 institutions_collection = db['institutions']
 counters_collection = db['counters']
@@ -1015,46 +1029,62 @@ def view_paid_results():
 @app.route('/subscribe', methods=['POST'])
 def subscribe():
     try:
+        print("=== SUBSCRIBE ENDPOINT CALLED ===")
         subscription_data = request.get_json()
+        print(f"Received data: {json.dumps(subscription_data, indent=2)[:500]}...")
         
         if not subscription_data:
+            print("❌ No subscription data provided")
             return jsonify({"error": "No subscription data provided"}), 400
         
-        # Validate required fields
         endpoint = subscription_data.get('endpoint')
         keys = subscription_data.get('keys')
         
+        print(f"Endpoint: {endpoint}")
+        print(f"Keys present: {bool(keys)}")
+        
         if not endpoint or not keys:
+            print("❌ Invalid subscription format")
             return jsonify({"error": "Invalid subscription format"}), 400
         
         # Save subscription to MongoDB
-        subscriptions_collection = db['push_subscriptions']  # Create new collection
+        subscriptions_collection = db['push_subscriptions']
+        
+        print(f"Inserting into collection: push_subscriptions")
         
         # Check if subscription already exists
         existing = subscriptions_collection.find_one({"endpoint": endpoint})
         
         if existing:
-            # Update existing subscription
-            subscriptions_collection.update_one(
+            print("⚠️ Updating existing subscription")
+            result = subscriptions_collection.update_one(
                 {"endpoint": endpoint},
                 {"$set": {
                     **subscription_data,
                     "updated_at": datetime.utcnow()
                 }}
             )
+            print(f"Update result: {result.modified_count} modified")
         else:
-            # Insert new subscription
-            subscriptions_collection.insert_one({
+            print("✅ Inserting new subscription")
+            result = subscriptions_collection.insert_one({
                 **subscription_data,
                 "created_at": datetime.utcnow(),
                 "updated_at": datetime.utcnow()
             })
+            print(f"Insert ID: {result.inserted_id}")
+        
+        # Verify it was saved
+        count = subscriptions_collection.count_documents({"endpoint": endpoint})
+        print(f"✅ Verification: Subscription exists in DB = {count > 0}")
         
         print(f"Subscription saved for endpoint: {endpoint[:50]}...")
         return jsonify({"success": True, "message": "Subscription saved"}), 200
         
     except Exception as e:
-        print(f"Error saving subscription: {str(e)}")
+        print(f"❌ Error saving subscription: {str(e)}")
+        import traceback
+        traceback.print_exc()
         return jsonify({"error": str(e)}), 500
     
 @app.route("/admin/notifications")
@@ -1070,20 +1100,69 @@ VAPID_CLAIMS = {"sub": "mailto:kuccpshelpdesk.ke@gmail.com"}
 
 @app.route('/admin/notify', methods=['POST'])
 def admin_notify():
-    data = request.json  # expects {"title": "Hello", "body": "Message", "url": "/results"}
-    subscriptions = list(db.subscriptions.find())
+    try:
+        data = request.json  # expects {"title": "Hello", "body": "Message", "url": "/"}
+        
+        # CORRECT: Use push_subscriptions collection
+        subscriptions_collection = db['push_subscriptions']
+        subscriptions = list(subscriptions_collection.find())
+        
+        if not subscriptions:
+            return jsonify({"success": True, "message": "No subscribers to notify", "sent": 0}), 200
+        
+        sent_count = 0
+        failed_count = 0
+        
+        for sub in subscriptions:
+            try:
+                # Remove MongoDB _id from subscription data
+                sub_data = {k: v for k, v in sub.items() if k != '_id'}
+                
+                webpush(
+                    subscription_info=sub_data,
+                    data=json.dumps(data),
+                    vapid_private_key=VAPID_PRIVATE_KEY,
+                    vapid_claims=VAPID_CLAIMS
+                )
+                sent_count += 1
+            except WebPushException as ex:
+                print(f"Push failed for {sub.get('endpoint', 'Unknown')}: {ex}")
+                failed_count += 1
+            except Exception as ex:
+                print(f"Unexpected error: {ex}")
+                failed_count += 1
+        
+        return jsonify({"success": True, "sent": sent_count, "failed": failed_count, "total": len(subscriptions)}), 200
+        
+    except Exception as e:
+        print(f"Error sending notifications: {str(e)}")
+        return jsonify({"error": str(e)}), 500
     
-    for sub in subscriptions:
-        try:
-            webpush(
-                subscription_info=sub,
-                data=json.dumps(data),
-                vapid_private_key=VAPID_PRIVATE_KEY,
-                vapid_claims=VAPID_CLAIMS
-            )
-        except WebPushException as ex:
-            print(f"Push failed for {sub.get('endpoint')}: {ex}")
-    return jsonify({"success": True, "sent": len(subscriptions)})
+@app.route('/debug-subscriptions')
+def debug_subscriptions():
+    """Debug endpoint to check subscription status"""
+    try:
+        # List all collections
+        collections = db.list_collection_names()
+        
+        # Check push_subscriptions collection
+        if 'push_subscriptions' in collections:
+            count = db['push_subscriptions'].count_documents({})
+            subs = list(db['push_subscriptions'].find({}, {"endpoint": 1, "created_at": 1, "_id": 0}))
+            return jsonify({
+                "collections": collections,
+                "push_subscriptions_exists": True,
+                "count": count,
+                "subscriptions": subs
+            })
+        else:
+            return jsonify({
+                "collections": collections,
+                "push_subscriptions_exists": False,
+                "message": "Collection doesn't exist yet"
+            })
+    except Exception as e:
+        return jsonify({"error": str(e)})
 
 
 if __name__ == "__main__":
