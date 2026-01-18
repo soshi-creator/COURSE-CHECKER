@@ -336,94 +336,108 @@
   </div>
 <!-- KUCCPS Chat Support Widget -->
 <div id="chatWidget" class="chat-support-widget">
-  <div class="chat-widget-header" onclick="toggleChatWidget()">
-    <div class="d-flex align-items-center">
-      <div class="chat-widget-avatar">
-        <i class="bi bi-chat-dots-fill"></i>
-      </div>
-      <div class="ms-2">
-        <div class="fw-bold">KUCCPS Support</div>
-        <div class="text-muted" style="font-size: 0.8rem;">Live Chat Available</div>
-      </div>
-    </div>
-    <div class="chat-widget-indicator">
-      <span class="badge bg-success" id="chatStatusBadge">Online</span>
-    </div>
+  <!-- Main chat icon (always visible) -->
+  <div class="chat-icon-circle" onclick="toggleChatWidget()" id="chatIcon">
+    <i class="bi bi-chat-dots-fill"></i>
+    <span class="chat-notification-dot" id="notificationDot"></span>
   </div>
   
-  <div class="chat-widget-body" id="chatWidgetBody" style="display: none;">
-    <!-- Step 1: Chat Welcome -->
-    <div id="chatStep1" class="chat-step">
-      <div class="chat-welcome-message">
-        <h5>KUCCPS Chat Support</h5>
-        <p>Get instant help with:</p>
-        <ul>
-          <li>Course selection advice</li>
-          <li>Cut-off points explanation</li>
-          <li>Application process help</li>
-          <li>Document verification</li>
-        </ul>
-        <p class="small text-muted">
-          <i class="bi bi-shield-check"></i> 100% Free & Anonymous
-        </p>
-      </div>
-      
-      <div class="chat-actions">
-        <button onclick="checkExistingSession()" class="btn btn-outline-primary btn-sm w-100 mb-2">
-          <i class="bi bi-arrow-clockwise me-1"></i> Resume Previous Chat
-        </button>
-        <button onclick="showUsernameStep()" class="btn btn-primary btn-sm w-100">
-          <i class="bi bi-chat-left-text me-1"></i> Start New Chat
-        </button>
-      </div>
+  <!-- Help popup (shown on first visit) -->
+  <div class="chat-help-popup" id="helpPopup">
+    <div class="popup-content">
+      <p>Need help with KUCCPS?</p>
+      <p class="small">Click the chat icon!</p>
+      <button class="btn-close-popup" onclick="closeHelpPopup()">
+        <i class="bi bi-x"></i>
+      </button>
     </div>
-    
-    <!-- Step 2: Username Setup -->
-    <div id="chatStep2" class="chat-step" style="display: none;">
-      <div class="chat-welcome-message">
-        <h5>Create Your Chat Profile</h5>
-        <p>Choose a username to save your chat history. You can continue chatting later from any device.</p>
-        
-        <div class="mb-3">
-          <label class="form-label small">Choose a username:</label>
-          <input type="text" id="chatUsername" class="form-control form-control-sm" 
-                 placeholder="e.g., student_john" maxlength="20">
-          <div class="form-text small">This will be your permanent chat ID</div>
+    <div class="popup-arrow"></div>
+  </div>
+  
+  <!-- Chat container (hidden by default) -->
+  <div class="chat-container" id="chatContainer" style="display: none;">
+    <div class="chat-header">
+      <div class="chat-header-left">
+        <div class="chat-avatar-small">
+          <i class="bi bi-chat-dots-fill"></i>
         </div>
-      </div>
-      
-      <div class="chat-actions">
-        <button onclick="createUsernameAndStartChat()" class="btn btn-primary btn-sm w-100 mb-2">
-          <i class="bi bi-check-circle me-1"></i> Create & Start Chat
-        </button>
-        <button onclick="showStep(1)" class="btn btn-outline-secondary btn-sm w-100">
-          <i class="bi bi-arrow-left me-1"></i> Back
-        </button>
-      </div>
-    </div>
-    
-    <!-- Step 3: Chat IFrame -->
-    <div id="chatStep3" class="chat-step" style="display: none;">
-      <div class="chat-iframe-header">
-        <div class="d-flex justify-content-between align-items-center">
-          <span class="fw-bold">KUCCPS Support Chat</span>
-          <div>
-            <span class="badge bg-success me-2" id="chatOnlineStatus">Online</span>
-            <button onclick="closeChatFrame()" class="btn-close btn-close-sm"></button>
+        <div>
+          <div class="fw-bold">KUCCPS Support</div>
+          <div class="chat-status">
+            <span class="status-dot"></span>
+            <small id="chatStatusText">Online</small>
           </div>
         </div>
       </div>
-      
-      <div class="chat-iframe-container">
-        <iframe id="chatFrame" 
-                style="width: 100%; height: 400px; border: none; border-radius: 8px;"></iframe>
+      <button class="btn-close-chat" onclick="toggleChatWidget()">
+        <i class="bi bi-x"></i>
+      </button>
+    </div>
+    
+    <div class="chat-body">
+      <!-- Step 1: Welcome -->
+      <div id="chatStep1" class="chat-step">
+        <div class="chat-welcome">
+          <h6>KUCCPS Chat Support</h6>
+          <p class="small">Get instant help with:</p>
+          <ul class="small">
+            <li>Course selection advice</li>
+            <li>Cut-off points</li>
+            <li>Application process</li>
+            <li>Document verification</li>
+          </ul>
+        </div>
+        
+        <div class="chat-buttons">
+          <button onclick="checkExistingSession()" class="btn btn-outline-primary btn-sm w-100 mb-2">
+            <i class="bi bi-arrow-clockwise me-1"></i> Resume Chat
+          </button>
+          <button onclick="showUsernameStep()" class="btn btn-primary btn-sm w-100">
+            <i class="bi bi-chat-left-text me-1"></i> New Chat
+          </button>
+        </div>
       </div>
       
-      <div class="chat-iframe-footer">
-        <small class="text-muted">
-          <i class="bi bi-info-circle"></i> 
-          Your chat is saved. Visit <a href="https://your-anon-support-url.onrender.com" target="_blank">KUCCPS Support</a> to continue later.
-        </small>
+      <!-- Step 2: Username -->
+      <div id="chatStep2" class="chat-step" style="display: none;">
+        <div class="chat-welcome">
+          <h6>Create Chat Profile</h6>
+          <p class="small">Choose a username to save your chat history.</p>
+          
+          <div class="mb-3">
+            <label class="form-label small">Username:</label>
+            <input type="text" id="chatUsername" class="form-control form-control-sm" 
+                   placeholder="e.g., student_john" maxlength="20">
+          </div>
+        </div>
+        
+        <div class="chat-buttons">
+          <button onclick="createUsernameAndStartChat()" class="btn btn-primary btn-sm w-100 mb-2">
+            <i class="bi bi-check-circle me-1"></i> Start Chat
+          </button>
+          <button onclick="showStep(1)" class="btn btn-outline-secondary btn-sm w-100">
+            <i class="bi bi-arrow-left me-1"></i> Back
+          </button>
+        </div>
+      </div>
+      
+      <!-- Step 3: Chat IFrame -->
+      <div id="chatStep3" class="chat-step" style="display: none;">
+        <div class="chat-frame-header">
+          <small class="text-muted">Live Chat Session</small>
+        </div>
+        
+        <div class="chat-iframe-wrapper">
+          <iframe id="chatFrame" 
+                  style="width: 100%; height: 400px; border: none; border-radius: 6px;"></iframe>
+        </div>
+        
+        <div class="chat-frame-footer">
+          <small class="text-muted">
+            <i class="bi bi-info-circle"></i> 
+            Chat saved. Visit <a href="https://your-anon-support-url.onrender.com" target="_blank">KUCCPS Support</a> to continue later.
+          </small>
+        </div>
       </div>
     </div>
   </div>
@@ -433,48 +447,185 @@
 /* Chat Widget Styles */
 .chat-support-widget {
   position: fixed;
-  bottom: 20px;
+  bottom: 80px; /* Higher to avoid mobile nav */
   right: 20px;
-  width: 350px;
-  background: white;
-  border-radius: 15px;
-  box-shadow: 0 10px 40px rgba(0,0,0,0.2);
   z-index: 9999;
-  overflow: hidden;
-  border: 1px solid #dee2e6;
   font-family: 'Inter', sans-serif;
 }
 
-.chat-widget-header {
+/* Main chat icon */
+.chat-icon-circle {
+  width: 56px;
+  height: 56px;
   background: linear-gradient(135deg, #2c3e50, #3498db);
-  color: white;
-  padding: 15px;
-  cursor: pointer;
-  transition: all 0.3s;
-}
-
-.chat-widget-header:hover {
-  background: linear-gradient(135deg, #3498db, #2c3e50);
-}
-
-.chat-widget-avatar {
-  width: 40px;
-  height: 40px;
-  background: white;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #2c3e50;
-  font-size: 1.2rem;
+  color: white;
+  font-size: 1.5rem;
+  cursor: pointer;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+  transition: all 0.3s ease;
+  position: relative;
+  z-index: 10001;
 }
 
-.chat-widget-indicator .badge {
+.chat-icon-circle:hover {
+  transform: scale(1.1);
+  box-shadow: 0 6px 25px rgba(0,0,0,0.4);
+}
+
+.chat-notification-dot {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  width: 10px;
+  height: 10px;
+  background: #ff4757;
+  border-radius: 50%;
+  border: 2px solid white;
+  display: none;
+}
+
+/* Help popup */
+.chat-help-popup {
+  position: absolute;
+  bottom: 65px;
+  right: 0;
+  width: 180px;
+  background: white;
+  border-radius: 10px;
+  box-shadow: 0 5px 25px rgba(0,0,0,0.15);
+  padding: 12px;
+  z-index: 10000;
+  animation: slideInUp 0.5s ease;
+  display: none;
+}
+
+.chat-help-popup .popup-content {
+  position: relative;
+  padding-right: 20px;
+}
+
+.chat-help-popup p {
+  margin: 0;
+  font-size: 0.85rem;
+  color: #2c3e50;
+}
+
+.chat-help-popup p.small {
+  font-size: 0.75rem;
+  color: #7f8c8d;
+}
+
+.btn-close-popup {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  width: 20px;
+  height: 20px;
+  background: #ff4757;
+  border: none;
+  border-radius: 50%;
+  color: white;
+  font-size: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+}
+
+.popup-arrow {
+  position: absolute;
+  bottom: -8px;
+  right: 20px;
+  width: 0;
+  height: 0;
+  border-left: 8px solid transparent;
+  border-right: 8px solid transparent;
+  border-top: 8px solid white;
+}
+
+/* Chat container */
+.chat-container {
+  position: absolute;
+  bottom: 65px;
+  right: 0;
+  width: 320px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+  overflow: hidden;
+  animation: slideInUp 0.3s ease;
+  border: 1px solid #dee2e6;
+}
+
+.chat-header {
+  background: linear-gradient(135deg, #2c3e50, #3498db);
+  color: white;
+  padding: 12px 15px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.chat-header-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.chat-avatar-small {
+  width: 36px;
+  height: 36px;
+  background: rgba(255,255,255,0.2);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+}
+
+.chat-status {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 2px;
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  background: #2ecc71;
+  border-radius: 50%;
   animation: pulse 2s infinite;
 }
 
-.chat-widget-body {
-  padding: 20px;
+.btn-close-chat {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 1.25rem;
+  cursor: pointer;
+  padding: 0;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: background 0.2s;
+}
+
+.btn-close-chat:hover {
+  background: rgba(255,255,255,0.1);
+}
+
+/* Chat body */
+.chat-body {
+  padding: 15px;
   max-height: 500px;
   overflow-y: auto;
 }
@@ -483,98 +634,131 @@
   animation: fadeIn 0.3s ease;
 }
 
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-.chat-welcome-message {
+.chat-welcome {
   background: #f8f9fa;
   padding: 15px;
-  border-radius: 10px;
-  margin-bottom: 20px;
+  border-radius: 8px;
+  margin-bottom: 15px;
 }
 
-.chat-welcome-message h5 {
+.chat-welcome h6 {
   color: #2c3e50;
   margin-bottom: 10px;
 }
 
-.chat-welcome-message p {
-  color: #495057;
-  margin-bottom: 10px;
-  font-size: 0.9rem;
-}
-
-.chat-welcome-message ul {
+.chat-welcome ul {
   padding-left: 20px;
-  margin-bottom: 15px;
+  margin: 10px 0;
 }
 
-.chat-welcome-message ul li {
+.chat-welcome ul li {
+  font-size: 0.85rem;
+  margin-bottom: 3px;
   color: #495057;
-  font-size: 0.9rem;
-  margin-bottom: 5px;
 }
 
-.chat-actions .btn {
-  border-radius: 8px;
-  padding: 8px 12px;
-  font-size: 0.9rem;
+.chat-buttons .btn {
+  border-radius: 6px;
+  padding: 6px 12px;
+  font-size: 0.85rem;
 }
 
-.chat-iframe-header {
-  background: #2c3e50;
-  color: white;
-  padding: 12px 15px;
-  border-radius: 8px 8px 0 0;
+/* Chat iframe */
+.chat-frame-header {
+  text-align: center;
+  margin-bottom: 10px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #dee2e6;
+}
+
+.chat-iframe-wrapper {
+  border: 1px solid #dee2e6;
+  border-radius: 6px;
+  overflow: hidden;
   margin-bottom: 10px;
 }
 
-.chat-iframe-container {
-  border: 1px solid #dee2e6;
-  border-radius: 8px;
-  overflow: hidden;
-}
-
-.chat-iframe-footer {
-  margin-top: 10px;
-  padding: 10px;
+.chat-frame-footer {
+  padding: 8px;
   background: #f8f9fa;
-  border-radius: 8px;
-  font-size: 0.8rem;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  text-align: center;
 }
 
-.chat-iframe-footer a {
+.chat-frame-footer a {
   color: #3498db;
   text-decoration: none;
 }
 
-.chat-iframe-footer a:hover {
-  text-decoration: underline;
+/* Animations */
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 @keyframes pulse {
   0% { opacity: 1; }
-  50% { opacity: 0.7; }
+  50% { opacity: 0.5; }
   100% { opacity: 1; }
 }
 
+/* Mobile adjustments */
 @media (max-width: 768px) {
   .chat-support-widget {
-    width: 320px;
-    bottom: 10px;
+    bottom: 100px; /* Higher to avoid mobile browsers' bottom nav */
+    right: 15px;
+  }
+  
+  .chat-icon-circle {
+    width: 50px;
+    height: 50px;
+    font-size: 1.3rem;
+  }
+  
+  .chat-container {
+    width: 280px;
+    max-height: 80vh;
+  }
+  
+  .chat-iframe-wrapper iframe {
+    height: 350px;
+  }
+  
+  /* Prevent hiding navbar items */
+  @media (max-height: 600px) {
+    .chat-support-widget {
+      bottom: 120px;
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .chat-container {
+    width: calc(100vw - 40px);
     right: 10px;
   }
   
-  .chat-iframe-container iframe {
-    height: 350px;
+  .chat-help-popup {
+    width: 160px;
+    right: -10px;
   }
 }
 </style>
 
 <script>
-// Configuration - UPDATE THESE URLs!
+// Configuration
 const ANONYMOUS_SUPPORT_URL = "https://anonymoussupport.onrender.com";
 const COURSE_CHECKER_URL = "https://course-checker-2vfv.onrender.com";
 
@@ -586,7 +770,6 @@ function generateDeviceFingerprint() {
                navigator.language +
                new Date().getTimezoneOffset();
   
-  // Simple hash function
   let hash = 0;
   for (let i = 0; i < data.length; i++) {
     hash = ((hash << 5) - hash) + data.charCodeAt(i);
@@ -613,6 +796,70 @@ function clearChatSession() {
   localStorage.removeItem('kuccps_chat_session');
 }
 
+// Show/hide help popup
+function showHelpPopup() {
+  const hasSeenPopup = localStorage.getItem('kuccps_chat_popup_seen');
+  if (!hasSeenPopup) {
+    const popup = document.getElementById('helpPopup');
+    popup.style.display = 'block';
+    
+    // Auto-hide after 8 seconds
+    setTimeout(() => {
+      if (popup.style.display === 'block') {
+        popup.style.display = 'none';
+        localStorage.setItem('kuccps_chat_popup_seen', 'true');
+      }
+    }, 8000);
+  }
+}
+
+function closeHelpPopup() {
+  const popup = document.getElementById('helpPopup');
+  popup.style.display = 'none';
+  localStorage.setItem('kuccps_chat_popup_seen', 'true');
+}
+
+// Toggle chat widget
+function toggleChatWidget() {
+  const container = document.getElementById('chatContainer');
+  const popup = document.getElementById('helpPopup');
+  
+  // Close help popup if open
+  if (popup.style.display === 'block') {
+    popup.style.display = 'none';
+    localStorage.setItem('kuccps_chat_popup_seen', 'true');
+  }
+  
+  // Toggle chat container
+  if (container.style.display === 'none') {
+    container.style.display = 'block';
+    // Reset to step 1
+    showStep(1);
+  } else {
+    container.style.display = 'none';
+  }
+}
+
+// Close chat when clicking outside
+document.addEventListener('click', function(event) {
+  const widget = document.getElementById('chatWidget');
+  const container = document.getElementById('chatContainer');
+  const popup = document.getElementById('helpPopup');
+  const icon = document.getElementById('chatIcon');
+  
+  if (!widget.contains(event.target) && 
+      container.style.display === 'block') {
+    container.style.display = 'none';
+  }
+  
+  if (!widget.contains(event.target) && 
+      popup.style.display === 'block' &&
+      !icon.contains(event.target)) {
+    popup.style.display = 'none';
+    localStorage.setItem('kuccps_chat_popup_seen', 'true');
+  }
+});
+
 // Step Navigation
 function showStep(stepNumber) {
   // Hide all steps
@@ -638,10 +885,10 @@ async function checkExistingSession() {
   }
   
   try {
-    const response = await fetch(`${ANONYMOUS_SUPPORT_URL}/api/session_status/${session.session_id}`);
-    {
-    credentials: "include"
-  }
+    const response = await fetch(`${ANONYMOUS_SUPPORT_URL}/api/session_status/${session.session_id}`, {
+      credentials: "include"
+    });
+    
     if (response.ok) {
       const data = await response.json();
       if (data.exists) {
@@ -721,14 +968,6 @@ function openChatFrame(chatUrl) {
   startStatusCheck();
 }
 
-// Close chat frame
-function closeChatFrame() {
-  showStep(1);
-  const iframe = document.getElementById('chatFrame');
-  iframe.src = '';
-  stopStatusCheck();
-}
-
 // Chat status checking
 let statusCheckInterval;
 
@@ -738,28 +977,27 @@ function startStatusCheck() {
   
   statusCheckInterval = setInterval(async () => {
     try {
-      const response = await fetch(`${ANONYMOUS_SUPPORT_URL}/api/session_status/${session.session_id}`,
-        {
-    credentials: "include"
-  }
-      );
+      const response = await fetch(`${ANONYMOUS_SUPPORT_URL}/api/session_status/${session.session_id}`, {
+        credentials: "include"
+      });
       if (response.ok) {
         const data = await response.json();
-        const statusBadge = document.getElementById('chatOnlineStatus');
-        if (statusBadge) {
+        const statusText = document.getElementById('chatStatusText');
+        const statusDot = document.querySelector('.status-dot');
+        if (statusText && statusDot) {
           if (data.is_online) {
-            statusBadge.className = 'badge bg-success me-2';
-            statusBadge.textContent = 'Online';
+            statusText.textContent = 'Online';
+            statusDot.style.background = '#2ecc71';
           } else {
-            statusBadge.className = 'badge bg-secondary me-2';
-            statusBadge.textContent = 'Offline';
+            statusText.textContent = 'Offline';
+            statusDot.style.background = '#95a5a6';
           }
         }
       }
     } catch (error) {
       console.error('Status check error:', error);
     }
-  }, 30000); // Check every 30 seconds
+  }, 30000);
 }
 
 function stopStatusCheck() {
@@ -768,29 +1006,20 @@ function stopStatusCheck() {
   }
 }
 
-// Toggle chat widget
-function toggleChatWidget() {
-  const widgetBody = document.getElementById('chatWidgetBody');
-  if (widgetBody.style.display === 'none') {
-    widgetBody.style.display = 'block';
-  } else {
-    widgetBody.style.display = 'none';
-  }
-}
-
-// Auto-show widget after 20 seconds
-setTimeout(() => {
-  const widgetBody = document.getElementById('chatWidgetBody');
-  if (widgetBody.style.display === 'none') {
-    widgetBody.style.display = 'block';
-  }
-}, 20000);
-
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', function() {
+  // Show help popup after a short delay
+  setTimeout(showHelpPopup, 1000);
+  
   // Check if user has existing session
   const session = getChatSession();
   if (session) {
+    // Show notification dot
+    const notificationDot = document.getElementById('notificationDot');
+    if (notificationDot) {
+      notificationDot.style.display = 'block';
+    }
+    
     // Update the resume button text
     const resumeBtn = document.querySelector('[onclick="checkExistingSession()"]');
     if (resumeBtn) {
