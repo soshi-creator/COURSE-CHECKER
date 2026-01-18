@@ -639,7 +639,9 @@ async function checkExistingSession() {
   
   try {
     const response = await fetch(`${ANONYMOUS_SUPPORT_URL}/api/session_status/${session.session_id}`);
-    
+    {
+    credentials: "include"
+  }
     if (response.ok) {
       const data = await response.json();
       if (data.exists) {
@@ -677,6 +679,7 @@ async function createUsernameAndStartChat() {
   try {
     const response = await fetch(`${ANONYMOUS_SUPPORT_URL}/api/create_username`, {
       method: 'POST',
+      credentials: "include",
       headers: {
         'Content-Type': 'application/json',
       },
@@ -735,7 +738,11 @@ function startStatusCheck() {
   
   statusCheckInterval = setInterval(async () => {
     try {
-      const response = await fetch(`${ANONYMOUS_SUPPORT_URL}/api/session_status/${session.session_id}`);
+      const response = await fetch(`${ANONYMOUS_SUPPORT_URL}/api/session_status/${session.session_id}`,
+        {
+    credentials: "include"
+  }
+      );
       if (response.ok) {
         const data = await response.json();
         const statusBadge = document.getElementById('chatOnlineStatus');
