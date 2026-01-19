@@ -1157,80 +1157,290 @@ def set_anon_cookie(response):
 
 def get_user_id():
     return request.cookies.get('anon_user_id')
+def deliver_global_notifications(user_id):
+    """
+    Copies global notifications to user_notifications if not already delivered.
+    Uses upsert to avoid duplicates.
+    """
+    global_notifs = list(global_notifications_collection.find().sort("created_at", -1).limit(10))
+    for notif in global_notifs:
+        try:
+            user_notifications_collection.update_one(
+                {
+                    "user_id": user_id,
+                    "notification_id": notif["_id"]
+                },
+                {
+                    "$setOnInsert": {
+                        "title": notif["title"],
+                        "message": notif["message"],
+                        "type": notif.get("type", "info"),
+                        "is_urgent": notif.get("is_urgent", False),
+                        "is_read": False,
+                        "created_at": notif["created_at"]
+                    }
+                },
+                upsert=True
+            )
+        except Exception as e:
+            print(f"Failed to deliver notification: {e}")
 
 
-# ---------- ADMIN: SEND NOTIFICATION ----------
 
+# Collections
+notifications_collection = db['notifications']
+global_notifications_collection = db['global_notifications']
+user_notifications_collection = db['user_notifications']
+
+# Indexes (ensure unique for user notifications)
+user_notifications_collection.create_index(
+    [("user_id", 1), ("notification_id", 1)],
+    unique=True
+)
+global_notifications_collection.create_index([("created_at", -1)])
+notifications_collection.create_index([("created_at", -1)])
+
+# -------------------- Admin: Manage Notifications --------------------
+@app.route('/admin/notifications/manage')
+def manage_notifications():
+    """Admin page to manage notifications"""
+    admin_key = request.args.get('admin_key')
+    if admin_key != os.getenv('ADMIN_KEY', 'kuccps-admin-2026'):
+        return "Unauthorized", 401
+
+    notifications = list(notifications_collection.find().sort("created_at", -1))
+    
+    stats = {
+        "total": notifications_collection.count_documents({}),
+        "active": global_notifications_collection.count_documents({}),
+        "sent_today": notifications_collection.count_documents({
+            "created_at": {"$gte": datetime.utcnow().replace(hour=0, minute=0, second=0)}
+        })
+    }
+    
+    return render_template('admin/manage_notifications.html', 
+                           notifications=notifications,
+                           stats=stats)
+
+# -------------------- Admin: Send Notification --------------------
 @app.route('/admin/notification/send', methods=['POST'])
 def send_notification():
+    """Admin endpoint to send a notification with rich formatting support"""
     admin_key = request.form.get('admin_key')
     if admin_key != os.getenv('ADMIN_KEY', 'kuccps-admin-2026'):
         return jsonify({"error": "Unauthorized"}), 401
 
     title = request.form.get('title', '').strip()
     message = request.form.get('message', '').strip()
-    notif_type = request.form.get('type', 'info')
+    notification_type = request.form.get('type', 'info')
+    target_group = request.form.get('target_group', 'all')
     is_urgent = request.form.get('is_urgent') == 'true'
+    enable_rich_formatting = request.form.get('rich_formatting', 'true') == 'true'
 
     if not title or not message:
-        return jsonify({"error": "Title and message required"}), 400
+        return jsonify({"error": "Title and message are required"}), 400
 
-    notif_id = str(ObjectId())
-
-    notifications_collection.insert_one({
-        "_id": notif_id,
-        "title": title,
-        "message": message,
-        "type": notif_type,
-        "is_urgent": is_urgent,
-        "created_at": datetime.utcnow(),
-        "created_by": "admin"
-    })
-
-    global_notifications_collection.insert_one({
-        "_id": notif_id,
-        "title": title,
-        "message": message,
-        "type": notif_type,
-        "is_urgent": is_urgent,
-        "created_at": datetime.utcnow(),
-        "is_active": True
-    })
-
-    return jsonify({"success": True, "notification_id": notif_id})
-
-
-# ---------- SAFE DELIVERY (ONCE PER USER) ----------
-
-def deliver_global_notifications(user_id):
-    if not user_id:
-        return
-
-    globals_ = global_notifications_collection.find({"is_active": True})
-
-    for notif in globals_:
+    # Process message with rich formatting
+    processed_message = message
+    
+    if enable_rich_formatting:
+        # Preserve new lines for HTML display (convert \n to <br>)
+        html_message = message.replace('\n', '<br>')
         
-        try:
-                 user_notifications_collection.update_one(
-        {
-            "user_id": user_id,
-            "notification_id": notif["_id"]
-        },
-        {
-            "$setOnInsert": {
-                "title": notif["title"],
-                "message": notif["message"],
-                "type": notif["type"],
-                "is_urgent": notif.get("is_urgent", False),
-                "is_read": False,
-                "created_at": notif["created_at"]
-            }
-        },
-        upsert=True
-    )
-        except Exception:
-          pass  # safe to ignore duplicates
+        # Auto-detect and convert URLs to clickable links
+        import re
+        
+        # Pattern for URLs
+        url_pattern = r'(https?://\S+|www\.\S+)'
+        
+        def make_clickable(match):
+            url = match.group(0)
+            if not url.startswith(('http://', 'https://')):
+                url = 'http://' + url
+            return f'<a href="{url}" target="_blank" style="color: #3498db; text-decoration: underline;">{match.group(0)}</a>'
+        
+        html_message = re.sub(url_pattern, make_clickable, html_message)
+        
+        # Pattern for email addresses
+        email_pattern = r'([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})'
+        html_message = re.sub(email_pattern, r'<a href="mailto:\1" style="color: #27ae60;">\1</a>', html_message)
+        
+        # Pattern for phone numbers (Kenyan format)
+        phone_pattern = r'(\+?254[-\s]?\d{3}[-\s]?\d{3}[-\s]?\d{3}|07[-\s]?\d{3}[-\s]?\d{3}[-\s]?\d{3})'
+        html_message = re.sub(phone_pattern, r'<a href="tel:\1" style="color: #e74c3c;">\1</a>', html_message)
+        
+        # Pattern for important keywords (bold)
+        keywords = ['deadline', 'urgent', 'important', 'required', 'action needed', 'deadline', 'final']
+        for keyword in keywords:
+            if keyword in message.lower():
+                html_message = re.sub(fr'\b({keyword})\b', r'<strong>\1</strong>', html_message, flags=re.IGNORECASE)
+        
+        # Add paragraphs for better structure
+        paragraphs = html_message.split('<br><br>')
+        if len(paragraphs) > 1:
+            html_message = ''.join([f'<p style="margin-bottom: 10px;">{p}</p>' for p in paragraphs])
+        
+        # Store both plain and HTML versions
+        processed_message = html_message
+        plain_message = message  # Keep original for push notifications
 
+    notification_id = str(ObjectId())
+    now = datetime.utcnow()
+
+    # Save to admin notifications with both versions
+    admin_notification = {
+        "_id": notification_id,
+        "title": title,
+        "message": plain_message if enable_rich_formatting else message,  # Store plain version
+        "html_message": processed_message if enable_rich_formatting else None,  # Store HTML version if enabled
+        "type": notification_type,
+        "target_group": target_group,
+        "is_urgent": is_urgent,
+        "is_active": True,
+        "created_at": now,
+        "created_by": "admin",
+        "has_rich_formatting": enable_rich_formatting,
+        "version": 2  # Version to identify rich formatted notifications
+    }
+    
+    notifications_collection.insert_one(admin_notification)
+
+    # Save to global notifications with both versions
+    global_notification = {
+        "_id": notification_id,
+        "title": title,
+        "message": plain_message if enable_rich_formatting else message,
+        "html_message": processed_message if enable_rich_formatting else None,
+        "type": notification_type,
+        "is_urgent": is_urgent,
+        "created_at": now,
+        "target_group": target_group,
+        "is_global": True,
+        "is_active": True,
+        "user_count": 0,
+        "has_rich_formatting": enable_rich_formatting,
+        "version": 2
+    }
+    
+    global_notifications_collection.insert_one(global_notification)
+
+    # Save to user-specific notifications for targeted groups
+    users_collection = db['users']  # Assuming you have a users collection
+    
+    if target_group != 'all':
+        # Query users based on target group
+        query = {}
+        if target_group == 'paid':
+            query = {"has_paid": True}
+        elif target_group == 'degree':
+            query = {"program_type": "degree"}
+        elif target_group == 'diploma':
+            query = {"program_type": "diploma"}
+        elif target_group == 'certificate':
+            query = {"program_type": "certificate"}
+        elif target_group == 'kmtc':
+            query = {"program_type": "kmtc"}
+        
+        users = list(users_collection.find(query, {'_id': 1}))
+        
+        # Create user notifications
+        user_notifications = []
+        for user in users:
+            user_notifications.append({
+                "_id": str(ObjectId()),
+                "notification_id": notification_id,
+                "user_id": user['_id'],
+                "title": title,
+                "message": plain_message if enable_rich_formatting else message,
+                "html_message": processed_message if enable_rich_formatting else None,
+                "type": notification_type,
+                "is_urgent": is_urgent,
+                "is_read": False,
+                "created_at": now,
+                "has_rich_formatting": enable_rich_formatting,
+                "version": 2
+            })
+        
+        if user_notifications:
+            db['user_notifications'].insert_many(user_notifications)
+    else:
+        # For all users, you might want to handle differently
+        # Either create notifications for all users or mark as global
+        pass
+
+    # Push notifications (optional)
+    push_sent = 0
+    if 'push_subscriptions' in db.list_collection_names():
+        try:
+            # For push notifications, use plain text version
+            push_body = plain_message if enable_rich_formatting else message
+            
+            # Truncate if too long for push notification
+            if len(push_body) > 200:
+                push_body = push_body[:197] + "..."
+            
+            push_data = {
+                "title": title,
+                "body": push_body,
+                "url": "/notifications",
+                "icon": "/static/icon-192.png",
+                "notification_id": notification_id,
+                "type": notification_type,
+                "urgent": is_urgent,
+                "actions": [
+                    {"action": "view", "title": "View Details"},
+                    {"action": "dismiss", "title": "Dismiss"}
+                ]
+            }
+            
+            subscriptions = list(db['push_subscriptions'].find())
+            for sub in subscriptions:
+                try:
+                    sub_info = {k: v for k, v in sub.items() if k != "_id"}
+                    webpush(
+                        subscription_info=sub_info,
+                        data=json.dumps(push_data),
+                        vapid_private_key=os.getenv("VAPID_PRIVATE_KEY"),
+                        vapid_claims={"sub": "mailto:admin@example.com"}
+                    )
+                    push_sent += 1
+                except Exception as e:
+                    print(f"Push error for subscription {sub.get('_id')}: {e}")
+                    # Optionally remove invalid subscriptions
+                    # db['push_subscriptions'].delete_one({"_id": sub['_id']})
+                    
+        except Exception as e:
+            print(f"Push error: {e}")
+
+    # Log the notification
+    print(f"Notification sent: {title} | Type: {notification_type} | Target: {target_group} | Rich Formatting: {enable_rich_formatting}")
+
+    return jsonify({
+        "success": True, 
+        "notification_id": notification_id, 
+        "push_sent": push_sent,
+        "has_rich_formatting": enable_rich_formatting,
+        "message_preview": plain_message[:100] + "..." if len(plain_message) > 100 else plain_message
+    })
+
+# -------------------- Admin: Delete Notification --------------------
+@app.route('/admin/notification/delete/<notification_id>', methods=['POST'])
+def delete_notification(notification_id):
+    admin_key = request.form.get('admin_key')
+    if admin_key != os.getenv('ADMIN_KEY', 'kuccps-admin-2026'):
+        return jsonify({"error": "Unauthorized"}), 401
+
+    result_admin = notifications_collection.delete_one({"_id": notification_id})
+    result_global = global_notifications_collection.delete_one({"_id": notification_id})
+    result_user = user_notifications_collection.delete_many({"notification_id": notification_id})
+
+    return jsonify({
+        "success": True,
+        "deleted_admin": result_admin.deleted_count,
+        "deleted_global": result_global.deleted_count,
+        "deleted_user": result_user.deleted_count,
+        "notification_id": notification_id
+    })
 
 
 # ---------- FETCH RECENT (NO INSERTS HERE) ----------
@@ -1299,11 +1509,17 @@ def notifications_page():
     for n in notifications:
         n["_id"] = str(n["_id"])
 
+    # Mark all as read
     user_notifications_collection.update_many(
         {"user_id": user_id, "is_read": False},
-        {"$set": {"is_read": True}}
+        {"$set": {"is_read": True, "read_at": datetime.utcnow()}}
     )
 
+    # Render notifications page
     return render_template("notifications.html", notifications=notifications)
+
+
+
+
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True)

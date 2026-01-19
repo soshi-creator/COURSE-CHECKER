@@ -197,11 +197,102 @@
             line-height: 1.4;
         }
 
+        /* Rich Message Styling */
         .notification-message {
             color: #555;
             line-height: 1.6;
             font-size: 1rem;
             margin-bottom: 15px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        .notification-message-rich {
+            color: #555;
+            line-height: 1.6;
+            font-size: 1rem;
+            margin-bottom: 15px;
+            white-space: normal;
+            overflow-wrap: break-word;
+        }
+
+        .notification-message-rich a {
+            color: var(--primary-color);
+            text-decoration: none;
+            font-weight: 500;
+            border-bottom: 1px solid rgba(52, 152, 219, 0.3);
+            transition: var(--transition);
+        }
+
+        .notification-message-rich a:hover {
+            color: var(--secondary-color);
+            border-bottom-color: var(--primary-color);
+            text-decoration: none;
+        }
+
+        .notification-message-rich strong {
+            color: var(--danger-color);
+            font-weight: 700;
+        }
+
+        .notification-message-rich em {
+            color: var(--warning-color);
+            font-style: italic;
+        }
+
+        .notification-message-rich ul,
+        .notification-message-rich ol {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+
+        .notification-message-rich li {
+            margin-bottom: 5px;
+        }
+
+        /* Link preview for URLs */
+        .link-preview {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 12px;
+            margin: 10px 0;
+            border-left: 3px solid var(--primary-color);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .link-preview i {
+            color: var(--primary-color);
+            font-size: 1.2rem;
+        }
+
+        .link-preview-content h6 {
+            margin: 0 0 5px 0;
+            font-size: 0.9rem;
+            color: var(--secondary-color);
+        }
+
+        .link-preview-content a {
+            font-size: 0.85rem;
+            color: var(--gray-color);
+            text-decoration: none;
+        }
+
+        .link-preview-content a:hover {
+            color: var(--primary-color);
+            text-decoration: underline;
+        }
+
+        /* Rich formatting indicator */
+        .rich-formatting-badge {
+            background: linear-gradient(135deg, #2ecc71, #27ae60);
+            color: white;
+            font-size: 10px;
+            padding: 2px 8px;
+            border-radius: 10px;
+            margin-left: 5px;
+            vertical-align: middle;
         }
 
         .notification-footer {
@@ -260,6 +351,27 @@
         .action-buttons {
             display: flex;
             gap: 10px;
+        }
+
+        /* Filter buttons */
+        .filter-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+
+        .filter-btn {
+            font-size: 0.85rem;
+            padding: 5px 15px;
+            border-radius: 20px;
+            transition: var(--transition);
+        }
+
+        .filter-btn.active {
+            background: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
         }
 
         /* Empty State */
@@ -363,6 +475,10 @@
             body {
                 padding-bottom: 65px; /* Your navbar.css already has this */
             }
+
+            .filter-buttons {
+                justify-content: center;
+            }
         }
 
         /* Custom Scrollbar */
@@ -416,6 +532,57 @@
         .spinning {
             animation: spin 1s linear infinite;
         }
+
+        /* Animation for new notifications */
+        @keyframes slideUp {
+            from { 
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to { 
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .notification-item {
+            animation: slideUp 0.5s ease forwards;
+        }
+
+        .notification-item:nth-child(1) { animation-delay: 0.1s; }
+        .notification-item:nth-child(2) { animation-delay: 0.2s; }
+        .notification-item:nth-child(3) { animation-delay: 0.3s; }
+        .notification-item:nth-child(4) { animation-delay: 0.4s; }
+        .notification-item:nth-child(5) { animation-delay: 0.5s; }
+        .notification-item:nth-child(n+6) { animation-delay: 0.6s; }
+
+        /* Formatting example */
+        .formatting-help {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 15px;
+            margin: 15px 0;
+            border: 1px solid #e9ecef;
+        }
+
+        .formatting-help h6 {
+            color: var(--secondary-color);
+            margin-bottom: 10px;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .formatting-example {
+            font-family: 'Courier New', monospace;
+            background: white;
+            padding: 10px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            border: 1px solid #dee2e6;
+            margin: 10px 0;
+        }
     </style>
 </head>
 <body>
@@ -444,17 +611,30 @@
                 
                 <div class="header-stats">
                     <div class="stat-item">
-                        <i class="bi bi-clock-history"></i>
-                        <span>Real-time updates</span>
+                        <i class="bi bi-code-slash"></i>
+                        <span>Rich formatting supported</span>
                     </div>
                     <div class="stat-item">
-                        <i class="bi bi-shield-check"></i>
-                        <span>Official information only</span>
+                        <i class="bi bi-link-45deg"></i>
+                        <span>Clickable links & emails</span>
                     </div>
                     <div class="stat-item">
                         <i class="bi bi-bell"></i>
                         <span>Never miss important deadlines</span>
                     </div>
+                </div>
+
+                <!-- Filter Buttons -->
+                <div class="filter-buttons">
+                    <button class="btn btn-outline-primary filter-btn active" onclick="filterNotifications('all')">
+                        All Notifications
+                    </button>
+                    <button class="btn btn-outline-danger filter-btn" onclick="filterNotifications('unread')">
+                        Unread Only
+                    </button>
+                    <button class="btn btn-outline-success filter-btn" onclick="filterNotifications('urgent')">
+                        Urgent Only
+                    </button>
                 </div>
             </div>
         </div>
@@ -467,6 +647,17 @@
                 <span class="badge bg-primary ms-2" id="notificationCount">
                     {% if notifications %}{{ notifications|length }}{% else %}0{% endif %}
                 </span>
+                <span class="badge bg-success ms-1" id="unreadCount">
+                    {% set unread_count = 0 %}
+                    {% if notifications %}
+                        {% for notif in notifications %}
+                            {% if not notif.is_read %}
+                                {% set unread_count = unread_count + 1 %}
+                            {% endif %}
+                        {% endfor %}
+                    {% endif %}
+                    {{ unread_count }} unread
+                </span>
             </div>
             
             <div class="action-buttons">
@@ -477,16 +668,22 @@
                 <button onclick="refreshNotifications()" class="btn btn-outline-primary btn-sm">
                     <i class="bi bi-arrow-clockwise"></i> Refresh
                 </button>
+                <button onclick="clearAllNotifications()" class="btn btn-outline-danger btn-sm">
+                    <i class="bi bi-trash"></i> Clear All
+                </button>
                 {% endif %}
             </div>
         </div>
 
         <!-- Notifications List -->
-        <div class="notification-list">
+        <div class="notification-list" id="notificationsList">
             {% if notifications %}
                 {% for notif in notifications %}
                 <div class="notification-item {% if not notif.is_read %}unread{% endif %} {% if notif.is_urgent %}urgent{% endif %}" 
-                     id="notification-{{ notif._id }}">
+                     id="notification-{{ notif._id }}"
+                     data-type="{{ notif.type }}"
+                     data-read="{{ notif.is_read|lower }}"
+                     data-urgent="{{ notif.is_urgent|lower }}">
                     <div class="notification-item-header">
                         <div class="notification-badges">
                             <span class="notification-type type-{{ notif.type }}">
@@ -500,6 +697,11 @@
                             {% if not notif.is_read %}
                             <span class="badge bg-primary">
                                 <span class="status-badge status-unread"></span> NEW
+                            </span>
+                            {% endif %}
+                            {% if notif.has_rich_formatting %}
+                            <span class="badge bg-success">
+                                <i class="bi bi-code-slash"></i> RICH
                             </span>
                             {% endif %}
                         </div>
@@ -520,7 +722,23 @@
                     
                     <div class="notification-content">
                         <h3 class="notification-title">{{ notif.title }}</h3>
-                        <p class="notification-message">{{ notif.message }}</p>
+                        
+                        <div class="notification-message-rich">
+                            {% if notif.html_message %}
+                                {{ notif.html_message|safe }}
+                            {% else %}
+                                {{ notif.message|replace('\n', '<br>')|safe }}
+                            {% endif %}
+                        </div>
+
+                        <!-- Link preview will be added by JavaScript -->
+                        <div class="link-preview" id="link-preview-{{ notif._id }}" style="display: none;">
+                            <i class="bi bi-link-45deg"></i>
+                            <div class="link-preview-content">
+                                <h6>Links in this notification:</h6>
+                                <div id="link-list-{{ notif._id }}"></div>
+                            </div>
+                        </div>
                     </div>
                     
                     <div class="notification-footer">
@@ -534,8 +752,12 @@
                         </div>
                         
                         <div class="notification-actions">
-                            <button onclick="shareNotification('{{ notif.title }}', '{{ notif.message }}')" 
+                            <button onclick="copyNotification('{{ notif.title }}', '{{ notif.message|replace("\"", "\\\"")|replace("\'", "\\\'") }}')" 
                                     class="btn btn-outline-secondary btn-sm">
+                                <i class="bi bi-clipboard"></i> Copy
+                            </button>
+                            <button onclick="shareNotification('{{ notif.title }}', '{{ notif.message|replace("\"", "\\\"")|replace("\'", "\\\'") }}')" 
+                                    class="btn btn-outline-primary btn-sm">
                                 <i class="bi bi-share"></i> Share
                             </button>
                         </div>
@@ -551,8 +773,18 @@
                     <h3 class="empty-title">No notifications yet</h3>
                     <p class="empty-description">
                         You're all caught up! When new KUCCPS updates, deadlines, or important information 
-                        become available, they'll appear here.
+                        become available, they'll appear here with rich formatting.
                     </p>
+                    <div class="formatting-help">
+                        <h6><i class="bi bi-info-circle"></i> What to expect:</h6>
+                        <div class="formatting-example">
+                            <strong>Deadline Alert:</strong><br>
+                            Application deadline: March 30, 2024<br>
+                            Visit: https://kuccps.ac.ke<br>
+                            Contact: support@kuccps.ac.ke<br>
+                            <strong>URGENT:</strong> Complete your application now!
+                        </div>
+                    </div>
                     <button onclick="window.location.href='/'" class="btn btn-primary">
                         <i class="bi bi-house-door"></i> Back to Home
                     </button>
@@ -569,20 +801,80 @@
             <div class="d-flex align-items-center">
                 <i class="bi bi-info-circle-fill me-3" style="font-size: 1.5rem;"></i>
                 <div>
-                    <strong>Notification Tips:</strong>
+                    <strong>Rich Formatting Features:</strong>
                     <ul class="mb-0 mt-2" style="padding-left: 20px;">
-                        <li>Notifications are automatically marked as read when you view this page</li>
-                        <li>Urgent notifications are highlighted in red with a pulsing effect</li>
-                        <li>You can share important notifications with friends using the Share button</li>
-                        <li>All notifications are stored for 30 days</li>
+                        <li><strong>Clickable links:</strong> URLs become clickable (e.g., https://kuccps.ac.ke)</li>
+                        <li><strong>Email links:</strong> Email addresses become mailto links (e.g., support@kuccps.ac.ke)</li>
+                        <li><strong>Phone links:</strong> Phone numbers become clickable tel links</li>
+                        <li><strong>Bold text:</strong> Important words like DEADLINE, URGENT, IMPORTANT are bolded automatically</li>
+                        <li><strong>Line breaks:</strong> New lines are preserved for better readability</li>
                     </ul>
                 </div>
             </div>
         </div>
         {% endif %}
+
+        <!-- Formatting Guide -->
+        <div class="alert alert-light mt-4" style="border-radius: var(--border-radius); border: 1px dashed #dee2e6;">
+            <h6><i class="bi bi-magic"></i> How notifications work:</h6>
+            <p class="mb-2 small">Notifications are automatically marked as read when you view them. You can:</p>
+            <div class="row">
+                <div class="col-md-6">
+                    <ul class="small">
+                        <li>Click on any link to visit the website</li>
+                        <li>Click on email addresses to compose an email</li>
+                        <li>Click on phone numbers to call (on mobile)</li>
+                    </ul>
+                </div>
+                <div class="col-md-6">
+                    <ul class="small">
+                        <li>Use filter buttons to show specific notifications</li>
+                        <li>Share important notifications with friends</li>
+                        <li>Copy notification text for reference</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script>
+        // Function to extract URLs from text
+        function extractUrls(text) {
+            const urlRegex = /(https?:\/\/[^\s]+|www\.[^\s]+)/g;
+            return text.match(urlRegex) || [];
+        }
+
+        // Function to create link previews
+        function createLinkPreviews() {
+            document.querySelectorAll('.notification-message-rich').forEach((element, index) => {
+                const text = element.textContent || element.innerText;
+                const urls = extractUrls(text);
+                
+                if (urls.length > 0) {
+                    const notificationId = element.closest('.notification-item').id.replace('notification-', '');
+                    const previewDiv = document.getElementById(`link-preview-${notificationId}`);
+                    const linkListDiv = document.getElementById(`link-list-${notificationId}`);
+                    
+                    if (previewDiv && linkListDiv) {
+                        previewDiv.style.display = 'flex';
+                        linkListDiv.innerHTML = '';
+                        
+                        urls.forEach(url => {
+                            const link = document.createElement('a');
+                            link.href = url.startsWith('http') ? url : `http://${url}`;
+                            link.target = '_blank';
+                            link.rel = 'noopener noreferrer';
+                            link.textContent = url.length > 50 ? url.substring(0, 50) + '...' : url;
+                            link.style.display = 'block';
+                            link.style.marginBottom = '3px';
+                            
+                            linkListDiv.appendChild(link);
+                        });
+                    }
+                }
+            });
+        }
+
         // Mark single notification as read
         function markAsRead(notificationId) {
             const button = document.querySelector(`#notification-${notificationId} .btn-mark-read`);
@@ -603,6 +895,8 @@
                     const element = document.getElementById(`notification-${notificationId}`);
                     if (element) {
                         element.classList.remove('unread');
+                        element.setAttribute('data-read', 'true');
+                        
                         const statusBadge = element.querySelector('.status-unread');
                         if (statusBadge) {
                             statusBadge.classList.replace('status-unread', 'status-read');
@@ -618,8 +912,8 @@
                             `;
                         }
                         
-                        // Update badge count
-                        updateNotificationBadge();
+                        // Update badge counts
+                        updateNotificationCounts();
                         
                         // Show success message
                         showToast('Notification marked as read', 'success');
@@ -658,6 +952,8 @@
                     // Remove unread styles from all notifications
                     document.querySelectorAll('.notification-item.unread').forEach(item => {
                         item.classList.remove('unread');
+                        item.setAttribute('data-read', 'true');
+                        
                         const statusBadge = item.querySelector('.status-unread');
                         if (statusBadge) {
                             statusBadge.classList.replace('status-unread', 'status-read');
@@ -673,15 +969,10 @@
                         }
                     });
                     
-                    // Update badge count
-                    updateNotificationBadge();
+                    // Update badge counts
+                    updateNotificationCounts();
                     
                     showToast(`Marked ${data.modified || 'all'} notifications as read`, 'success');
-                    
-                    // Reload after 2 seconds to update UI
-                    setTimeout(() => {
-                        window.location.reload();
-                    }, 2000);
                 }
             })
             .catch(error => {
@@ -694,12 +985,67 @@
             });
         }
         
-        // Update notification badge count
-        function updateNotificationBadge() {
+        // Clear all notifications
+        function clearAllNotifications() {
+            if (!confirm('Are you sure you want to clear all notifications? This action cannot be undone.')) {
+                return;
+            }
+            
+            const button = document.querySelector('.action-buttons .btn-outline-danger');
+            const originalText = button ? button.innerHTML : '';
+            
+            if (button) {
+                button.innerHTML = '<i class="bi bi-hourglass-split"></i> Clearing...';
+                button.disabled = true;
+            }
+            
+            fetch('/api/notifications/clear-all', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showToast('All notifications cleared', 'success');
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1500);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showToast('Failed to clear notifications', 'error');
+                if (button) {
+                    button.innerHTML = originalText;
+                    button.disabled = false;
+                }
+            });
+        }
+        
+        // Update notification badge counts
+        function updateNotificationCounts() {
+            // Count unread notifications
+            const unreadCount = document.querySelectorAll('.notification-item.unread').length;
+            const totalCount = document.querySelectorAll('.notification-item').length;
+            
+            // Update unread count badge
+            const unreadBadge = document.getElementById('unreadCount');
+            if (unreadBadge) {
+                unreadBadge.textContent = `${unreadCount} unread`;
+            }
+            
+            // Update total count badge
+            const countBadge = document.getElementById('notificationCount');
+            if (countBadge) {
+                countBadge.textContent = totalCount;
+            }
+            
+            // Update floating badge in navbar
             fetch('/api/notifications/unread-count')
             .then(response => response.json())
             .then(data => {
-                // Update floating badge in navbar
                 const floatingBadge = document.getElementById('floatingNotificationBadge');
                 if (floatingBadge) {
                     if (data.count > 0) {
@@ -709,13 +1055,40 @@
                         floatingBadge.style.display = 'none';
                     }
                 }
-                
-                // Update count badge on page
-                const countBadge = document.getElementById('notificationCount');
-                if (countBadge) {
-                    countBadge.textContent = data.count || 0;
-                }
             });
+        }
+        
+        // Filter notifications
+        function filterNotifications(filterType) {
+            // Update active button
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            const allNotifications = document.querySelectorAll('.notification-item');
+            
+            allNotifications.forEach(notification => {
+                let show = true;
+                
+                switch(filterType) {
+                    case 'unread':
+                        show = notification.getAttribute('data-read') === 'false';
+                        break;
+                    case 'urgent':
+                        show = notification.getAttribute('data-urgent') === 'true';
+                        break;
+                    case 'all':
+                    default:
+                        show = true;
+                        break;
+                }
+                
+                notification.style.display = show ? 'block' : 'none';
+            });
+            
+            // Update counts
+            setTimeout(updateNotificationCounts, 100);
         }
         
         // Refresh notifications
@@ -733,6 +1106,17 @@
             }, 1000);
         }
         
+        // Copy notification to clipboard
+        function copyNotification(title, message) {
+            const text = `${title}\n\n${message}`;
+            navigator.clipboard.writeText(text)
+                .then(() => showToast('Notification copied to clipboard', 'success'))
+                .catch(err => {
+                    console.error('Failed to copy:', err);
+                    showToast('Failed to copy notification', 'error');
+                });
+        }
+        
         // Share notification
         function shareNotification(title, message) {
             if (navigator.share) {
@@ -742,13 +1126,16 @@
                     url: window.location.href
                 })
                 .then(() => showToast('Notification shared successfully', 'success'))
-                .catch(error => console.log('Sharing cancelled:', error));
+                .catch(error => {
+                    if (error.name !== 'AbortError') {
+                        console.log('Sharing error:', error);
+                        // Fallback to copy
+                        copyNotification(title, message);
+                    }
+                });
             } else {
-                // Fallback for browsers that don't support Web Share API
-                const text = `${title}: ${message}`;
-                navigator.clipboard.writeText(text)
-                    .then(() => showToast('Notification copied to clipboard', 'info'))
-                    .catch(err => console.error('Failed to copy:', err));
+                // Fallback: copy to clipboard
+                copyNotification(title, message);
             }
         }
         
@@ -795,11 +1182,28 @@
         
         // Initialize on page load
         document.addEventListener('DOMContentLoaded', function() {
-            updateNotificationBadge();
+            updateNotificationCounts();
+            createLinkPreviews();
             
-            // Add animation to new notifications
-            document.querySelectorAll('.notification-item.unread').forEach((item, index) => {
-                item.style.animationDelay = `${index * 0.1}s`;
+            // Make all links open in new tab
+            document.querySelectorAll('.notification-message-rich a').forEach(link => {
+                if (!link.getAttribute('target')) {
+                    link.setAttribute('target', '_blank');
+                    link.setAttribute('rel', 'noopener noreferrer');
+                }
+            });
+            
+            // Add click handler for mark as read when clicking notification
+            document.querySelectorAll('.notification-item').forEach(item => {
+                item.addEventListener('click', function(e) {
+                    // Only mark as read if clicked on notification body (not on buttons)
+                    if (!e.target.closest('button') && !e.target.closest('.notification-actions')) {
+                        const notificationId = this.id.replace('notification-', '');
+                        if (this.classList.contains('unread')) {
+                            markAsRead(notificationId);
+                        }
+                    }
+                });
             });
         });
     </script>

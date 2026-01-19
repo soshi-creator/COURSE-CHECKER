@@ -377,53 +377,420 @@
       </div>
     </div>
 
-    <script>
-        // Modal Functions
-        function openDegreeModal() {
-            const modal = document.getElementById('degreeModal');
-            modal.style.display = 'flex';
-            document.body.style.overflow = 'hidden';
-        }
+ <script>
+    // Floating Notifications Functions
+    function initializeFloatingNotifications() {
+        const floatingBtn = document.getElementById('floatingNotificationBtn');
+        const dropdown = document.getElementById('floatingNotificationDropdown');
         
-        function closeDegreeModal() {
-            const modal = document.getElementById('degreeModal');
-            modal.style.display = 'none';
-            document.body.style.overflow = 'auto';
-        }
+        // Load notifications immediately on page load
+        loadFloatingNotifications();
         
-        // Close modal when clicking outside
-        document.getElementById('degreeModal').addEventListener('click', function(e) {
-            if (e.target === this) {
-                closeDegreeModal();
+        // Update badge on page load
+        updateFloatingNotificationBadge();
+        
+        // Toggle dropdown
+        floatingBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            const isVisible = dropdown.style.display === 'block';
+            dropdown.style.display = isVisible ? 'none' : 'block';
+            if (!isVisible) {
+                // Refresh notifications when opening dropdown
+                loadFloatingNotifications();
             }
         });
         
-        // Close with Escape key
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape') {
-                closeDegreeModal();
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!dropdown.contains(e.target) && !floatingBtn.contains(e.target)) {
+                dropdown.style.display = 'none';
             }
         });
         
-        // Add click handler for all degree modal buttons
-        document.querySelectorAll('.degree-modal-btn').forEach(btn => {
-            btn.addEventListener('click', openDegreeModal);
-        });
+        // Auto-update notifications every 60 seconds
+        setInterval(loadFloatingNotifications, 60000);
         
-        // Add active class based on current page
-        document.addEventListener('DOMContentLoaded', function() {
-            const currentPath = window.location.pathname;
-            const navLinks = document.querySelectorAll('a.nav-link, a.mobile-nav-item');
-            
-            navLinks.forEach(link => {
-                if (link.getAttribute('href') === currentPath) {
-                    link.classList.add('active');
+        // Auto-update badge every 30 seconds
+        setInterval(updateFloatingNotificationBadge, 30000);
+        
+        // Update notifications when page becomes visible again
+        document.addEventListener('visibilitychange', function() {
+            if (!document.hidden) {
+                loadFloatingNotifications();
+                updateFloatingNotificationBadge();
+            }
+        });
+    }
+    
+    function loadFloatingNotifications() {
+        const listContainer = document.getElementById('floatingNotificationList');
+        
+        // Don't show loading state if we already have content
+        if (!listContainer.innerHTML.includes('floating-notification-item')) {
+            listContainer.innerHTML = `
+                <div class="text-center py-4 text-muted">
+                    <div class="spinner-border spinner-border-sm" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="mt-2 small">Loading notifications...</p>
+                </div>
+            `;
+        }
+        
+        // Fetch notifications from API
+        fetch('/api/notifications/recent')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.notifications && data.notifications.length > 0) {
+                    let html = '';
+                    
+                    data.notifications.forEach(notif => {
+                        const timeAgo = getTimeAgo(new Date(notif.created_at));
+                        const isUnread = !notif.is_read;
+                        
+                        // Determine icon based on notification type
+                        let iconClass = 'bi-bell-fill';
+                        let iconColor = 'text-primary';
+                        
+                        if (notif.is_urgent) {
+                            iconClass = 'bi-exclamation-triangle-fill';
+                            iconColor = 'text-danger';
+                        } else if (notif.type === 'update') {
+                            iconClass = 'bi-arrow-up-circle-fill';
+                            iconColor = 'text-success';
+                        } else if (notif.type === 'deadline') {
+                            iconClass = 'bi-calendar-x-fill';
+                            iconColor = 'text-warning';
+                        }
+                        
+                        html += `
+                        <a href="/notifications" class="floating-notification-item ${isUnread ? 'unread' : ''}">
+                            <div class="d-flex w-100">
+                                <div class="me-2" style="font-size: 1.2rem;">
+                                    <i class="bi ${iconClass} ${iconColor}"></i>
+                                </div>
+                                <div class="flex-grow-1">
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <h6 class="mb-1" style="font-size: 13px; font-weight: 600;">${escapeHtml(notif.title)}</h6>
+                                        ${isUnread ? '<span class="badge bg-primary badge-sm">New</span>' : ''}
+                                    </div>
+                                    <p class="mb-1 small text-muted" style="font-size: 12px;">${escapeHtml(notif.message.substring(0, 80))}${notif.message.length > 80 ? '...' : ''}</p>
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <small class="text-muted" style="font-size: 11px;">${timeAgo}</small>
+                                        ${notif.type ? `<span class="badge bg-secondary badge-sm" style="font-size: 9px;">${notif.type}</span>` : ''}
+                                    </div>
+                                </div>
+                            </div>
+                        </a>`;
+                    });
+                    
+                    listContainer.innerHTML = html;
+                    
+                    // Update dropdown position if it's visible
+                    const dropdown = document.getElementById('floatingNotificationDropdown');
+                    if (dropdown.style.display === 'block') {
+                        adjustDropdownPosition();
+                    }
+                    
+                } else {
+                    listContainer.innerHTML = `
+                    <div class="text-center py-4">
+                        <i class="bi bi-bell-slash text-muted" style="font-size: 2rem;"></i>
+                        <p class="mt-2 small text-muted">No notifications yet</p>
+                        <p class="small text-muted mt-1">You'll see important updates here</p>
+                    </div>`;
+                }
+            })
+            .catch(error => {
+                console.error('Error loading notifications:', error);
+                
+                // Don't show error if we're just refreshing in background
+                const dropdown = document.getElementById('floatingNotificationDropdown');
+                if (dropdown.style.display !== 'block') {
+                    return;
+                }
+                
+                listContainer.innerHTML = `
+                <div class="text-center py-4 text-muted">
+                    <i class="bi bi-wifi-off"></i>
+                    <p class="mt-2 small">Failed to load notifications</p>
+                    <button onclick="loadFloatingNotifications()" class="btn btn-sm btn-outline-primary mt-2">
+                        Retry
+                    </button>
+                </div>`;
+            });
+    }
+    
+    function updateFloatingNotificationBadge() {
+        fetch('/api/notifications/unread-count')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                const badge = document.getElementById('floatingNotificationBadge');
+                if (badge) {
+                    const previousCount = parseInt(badge.textContent || 0);
+                    const newCount = data.count || 0;
+                    
+                    if (newCount > 0) {
+                        badge.textContent = newCount;
+                        badge.style.display = 'flex';
+                        
+                        // Add animation for new notifications
+                        if (newCount > previousCount) {
+                            badge.style.animation = 'pulse 0.5s 3';
+                            
+                            // Show desktop notification if count increased
+                            if (newCount > previousCount && previousCount > 0) {
+                                showDesktopNotification(newCount - previousCount);
+                            }
+                        }
+                        
+                        // Add bounce animation to the bell icon
+                        if (newCount > 0 && previousCount === 0) {
+                            const bellIcon = document.querySelector('.notification-floating-btn i');
+                            bellIcon.style.animation = 'pulse 2s infinite';
+                        }
+                    } else {
+                        badge.style.display = 'none';
+                        // Remove bounce animation
+                        const bellIcon = document.querySelector('.notification-floating-btn i');
+                        bellIcon.style.animation = '';
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('Error updating notification badge:', error);
+            });
+    }
+    
+    function markAllAsRead() {
+        fetch('/api/notifications/mark-all-read', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Update badge immediately
+                const badge = document.getElementById('floatingNotificationBadge');
+                badge.style.display = 'none';
+                badge.textContent = '0';
+                
+                // Remove bounce animation
+                const bellIcon = document.querySelector('.notification-floating-btn i');
+                bellIcon.style.animation = '';
+                
+                // Update notifications list
+                loadFloatingNotifications();
+                
+                // Show success feedback
+                showToast('All notifications marked as read', 'success');
+            }
+        })
+        .catch(error => {
+            console.error('Error marking notifications as read:', error);
+            showToast('Failed to mark notifications as read', 'error');
+        });
+    }
+    
+    // Helper functions
+    function getTimeAgo(date) {
+        const seconds = Math.floor((new Date() - date) / 1000);
+        
+        let interval = Math.floor(seconds / 31536000);
+        if (interval >= 1) return interval + "y ago";
+        
+        interval = Math.floor(seconds / 2592000);
+        if (interval >= 1) return interval + "mo ago";
+        
+        interval = Math.floor(seconds / 86400);
+        if (interval >= 1) return interval + "d ago";
+        
+        interval = Math.floor(seconds / 3600);
+        if (interval >= 1) return interval + "h ago";
+        
+        interval = Math.floor(seconds / 60);
+        if (interval >= 1) return interval + "m ago";
+        
+        return "Just now";
+    }
+    
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+    
+    function adjustDropdownPosition() {
+        const dropdown = document.getElementById('floatingNotificationDropdown');
+        const viewportWidth = window.innerWidth;
+        
+        // Adjust position based on viewport width
+        if (viewportWidth < 768) {
+            dropdown.style.left = '-200px';
+        } else {
+            dropdown.style.left = '-260px';
+        }
+    }
+    
+    function showDesktopNotification(newNotificationsCount) {
+        // Check if browser supports notifications
+        if (!("Notification" in window)) {
+            return;
+        }
+        
+        // Check if permission is already granted
+        if (Notification.permission === "granted") {
+            createDesktopNotification(newNotificationsCount);
+        } 
+        // Otherwise, ask for permission
+        else if (Notification.permission !== "denied") {
+            Notification.requestPermission().then(permission => {
+                if (permission === "granted") {
+                    createDesktopNotification(newNotificationsCount);
                 }
             });
-            
-            // Initialize floating notifications
-            initializeFloatingNotifications();
+        }
+    }
+    
+    function createDesktopNotification(count) {
+        const notification = new Notification("KUCCPS Portal", {
+            body: `You have ${count} new notification${count > 1 ? 's' : ''}`,
+            icon: "/static/favicon.ico",
+            badge: "/static/favicon.ico"
         });
+        
+        // Close notification after 5 seconds
+        setTimeout(() => {
+            notification.close();
+        }, 5000);
+        
+        // Click notification to open the page
+        notification.onclick = function() {
+            window.focus();
+            this.close();
+            // Open notifications dropdown
+            const dropdown = document.getElementById('floatingNotificationDropdown');
+            dropdown.style.display = 'block';
+            loadFloatingNotifications();
+        };
+    }
+    
+    function showToast(message, type = 'info') {
+        // Create toast element
+        const toast = document.createElement('div');
+        toast.className = `toast-notification toast-${type}`;
+        toast.innerHTML = `
+            <div class="toast-content">
+                <i class="bi ${type === 'success' ? 'bi-check-circle-fill' : 'bi-exclamation-circle-fill'}"></i>
+                <span>${message}</span>
+            </div>
+            <button class="toast-close" onclick="this.parentElement.remove()">&times;</button>
+        `;
+        
+        // Add styles for toast
+        if (!document.querySelector('.toast-styles')) {
+            const style = document.createElement('style');
+            style.className = 'toast-styles';
+            style.textContent = `
+                .toast-notification {
+                    position: fixed;
+                    top: 20px;
+                    right: 20px;
+                    background: white;
+                    padding: 12px 20px;
+                    border-radius: 8px;
+                    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    min-width: 300px;
+                    z-index: 10000;
+                    animation: slideInRight 0.3s ease;
+                    border-left: 4px solid #3498db;
+                }
+                .toast-success {
+                    border-left-color: #27ae60;
+                }
+                .toast-error {
+                    border-left-color: #e74c3c;
+                }
+                .toast-content {
+                    display: flex;
+                    align-items: center;
+                    gap: 10px;
+                }
+                .toast-content i {
+                    font-size: 1.2rem;
+                }
+                .toast-success .toast-content i {
+                    color: #27ae60;
+                }
+                .toast-error .toast-content i {
+                    color: #e74c3c;
+                }
+                .toast-close {
+                    background: none;
+                    border: none;
+                    font-size: 1.5rem;
+                    cursor: pointer;
+                    color: #666;
+                    line-height: 1;
+                }
+                @keyframes slideInRight {
+                    from {
+                        transform: translateX(100%);
+                        opacity: 0;
+                    }
+                    to {
+                        transform: translateX(0);
+                        opacity: 1;
+                    }
+                }
+            `;
+            document.head.appendChild(style);
+        }
+        
+        // Add to document
+        document.body.appendChild(toast);
+        
+        // Auto-remove after 3 seconds
+        setTimeout(() => {
+            if (toast.parentElement) {
+                toast.style.animation = 'slideInRight 0.3s ease reverse';
+                setTimeout(() => {
+                    if (toast.parentElement) {
+                        toast.remove();
+                    }
+                }, 300);
+            }
+        }, 3000);
+    }
+    
+    // Initialize on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        const currentPath = window.location.pathname;
+        const navLinks = document.querySelectorAll('a.nav-link, a.mobile-nav-item');
+        
+        navLinks.forEach(link => {
+            if (link.getAttribute('href') === currentPath) {
+                link.classList.add('active');
+            }
+        });
+        
+        // Initialize floating notifications immediately
+        initializeFloatingNotifications();
         
         // Make desktop nav scrollable on hover
         const desktopNav = document.querySelector('.desktop-nav');
@@ -436,164 +803,38 @@
             });
         }
         
-        // Floating Notifications Functions
-        function initializeFloatingNotifications() {
-            const floatingBtn = document.getElementById('floatingNotificationBtn');
-            const dropdown = document.getElementById('floatingNotificationDropdown');
-            
-            // Toggle dropdown
-            floatingBtn.addEventListener('click', function(e) {
-                e.stopPropagation();
-                const isVisible = dropdown.style.display === 'block';
-                dropdown.style.display = isVisible ? 'none' : 'block';
-                if (!isVisible) {
-                    loadFloatingNotifications();
-                }
-            });
-            
-            // Close dropdown when clicking outside
-            document.addEventListener('click', function(e) {
-                if (!dropdown.contains(e.target) && !floatingBtn.contains(e.target)) {
-                    dropdown.style.display = 'none';
-                }
-            });
-            
-            // Load initial notification count
-            updateFloatingNotificationBadge();
-            
-            // Update badge every 30 seconds
-            setInterval(updateFloatingNotificationBadge, 30000);
+        // Adjust dropdown position on resize
+        window.addEventListener('resize', adjustDropdownPosition);
+    });
+    
+    // Modal Functions (keep your existing modal code)
+    function openDegreeModal() {
+        const modal = document.getElementById('degreeModal');
+        modal.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+    }
+    
+    function closeDegreeModal() {
+        const modal = document.getElementById('degreeModal');
+        modal.style.display = 'none';
+        document.body.style.overflow = 'auto';
+    }
+    
+    document.getElementById('degreeModal').addEventListener('click', function(e) {
+        if (e.target === this) {
+            closeDegreeModal();
         }
-        
-        function loadFloatingNotifications() {
-            const listContainer = document.getElementById('floatingNotificationList');
-            
-            // Show loading
-            listContainer.innerHTML = `
-                <div class="text-center py-4 text-muted">
-                    <div class="spinner-border spinner-border-sm" role="status">
-                        <span class="visually-hidden">Loading...</span>
-                    </div>
-                    <p class="mt-2 small">Loading notifications...</p>
-                </div>
-            `;
-            
-            // Fetch notifications from API
-            fetch('/api/notifications/recent')
-                .then(response => response.json())
-                .then(data => {
-                    if (data.notifications && data.notifications.length > 0) {
-                        let html = '';
-                        
-                        data.notifications.forEach(notif => {
-                            const timeAgo = getTimeAgo(new Date(notif.created_at));
-                            const isUnread = !notif.is_read;
-                            
-                            html += `
-                            <a href="/notifications" class="floating-notification-item ${isUnread ? 'unread' : ''}">
-                                <div class="d-flex w-100">
-                                    <div class="me-2" style="font-size: 1.2rem;">
-                                        <i class="bi ${notif.is_urgent ? 'bi-exclamation-triangle-fill text-danger' : 'bi-bell-fill text-primary'}"></i>
-                                    </div>
-                                    <div class="flex-grow-1">
-                                        <div class="d-flex justify-content-between align-items-start">
-                                            <h6 class="mb-1" style="font-size: 13px; font-weight: 600;">${notif.title}</h6>
-                                            ${isUnread ? '<span class="badge bg-primary badge-sm">New</span>' : ''}
-                                        </div>
-                                        <p class="mb-1 small text-muted" style="font-size: 12px;">${notif.message.substring(0, 80)}${notif.message.length > 80 ? '...' : ''}</p>
-                                        <small class="text-muted" style="font-size: 11px;">${timeAgo}</small>
-                                    </div>
-                                </div>
-                            </a>`;
-                        });
-                        
-                        listContainer.innerHTML = html;
-                    } else {
-                        listContainer.innerHTML = `
-                        <div class="text-center py-4">
-                            <i class="bi bi-bell-slash text-muted" style="font-size: 2rem;"></i>
-                            <p class="mt-2 small text-muted">No notifications yet</p>
-                        </div>`;
-                    }
-                })
-                .catch(error => {
-                    console.error('Error loading notifications:', error);
-                    listContainer.innerHTML = `
-                    <div class="text-center py-4 text-danger">
-                        <i class="bi bi-exclamation-triangle"></i>
-                        <p class="mt-2 small">Failed to load notifications</p>
-                    </div>`;
-                });
+    });
+    
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            closeDegreeModal();
         }
-        
-        function updateFloatingNotificationBadge() {
-            fetch('/api/notifications/unread-count')
-                .then(response => response.json())
-                .then(data => {
-                    const badge = document.getElementById('floatingNotificationBadge');
-                    if (badge) {
-                        if (data.count > 0) {
-                            badge.textContent = data.count;
-                            badge.style.display = 'flex';
-                            
-                            // Add animation for new notifications
-                            if (data.count > parseInt(badge.textContent || 0)) {
-                                badge.style.animation = 'pulse 0.5s 3';
-                            }
-                        } else {
-                            badge.style.display = 'none';
-                        }
-                    }
-                })
-                .catch(error => {
-                    console.error('Error updating notification badge:', error);
-                });
-        }
-        
-        function markAllAsRead() {
-            fetch('/api/notifications/mark-all-read', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    // Update badge
-                    updateFloatingNotificationBadge();
-                    
-                    // Reload notifications list
-                    loadFloatingNotifications();
-                }
-            });
-        }
-        
-        function getTimeAgo(date) {
-            const seconds = Math.floor((new Date() - date) / 1000);
-            
-            let interval = Math.floor(seconds / 31536000);
-            if (interval >= 1) return interval + "y ago";
-            
-            interval = Math.floor(seconds / 2592000);
-            if (interval >= 1) return interval + "mo ago";
-            
-            interval = Math.floor(seconds / 86400);
-            if (interval >= 1) return interval + "d ago";
-            
-            interval = Math.floor(seconds / 3600);
-            if (interval >= 1) return interval + "h ago";
-            
-            interval = Math.floor(seconds / 60);
-            if (interval >= 1) return interval + "m ago";
-            
-            return "Just now";
-        }
-        
-        // Add route for marking all as read (you need to add this to your app.py)
-        // @app.route('/api/notifications/mark-all-read', methods=['POST'])
-        // def mark_all_notifications_read():
-        //     # Implementation
-    </script>
+    });
+    
+    document.querySelectorAll('.degree-modal-btn').forEach(btn => {
+        btn.addEventListener('click', openDegreeModal);
+    });
+</script>
 </body>
 </html>
