@@ -1,7 +1,9 @@
 from tempfile import template
-from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, session
+from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, session, g
 from pymongo import MongoClient, ReturnDocument
 import os
+import hashlib
+
 from bson.objectid import ObjectId
 from flask import Flask, render_template, request, send_file
 from reportlab.lib.pagesizes import letter
@@ -12,6 +14,8 @@ from reportlab.lib.units import inch
 from io import BytesIO
 from collections import defaultdict
 import json
+from flask import make_response
+import uuid
 import requests
 from collections import defaultdict
 import uuid
@@ -57,6 +61,13 @@ certificate_collection = db['certificate']
 payments_collection = db['payments']
 results_collection = db['results']
 kmtc_collection = db['kmtc']
+# In your app.py, add these near other collection definitions
+notifications_collection = db['notifications']
+user_notifications_collection = db['user_notifications']
+
+# Create indexes for better performance
+user_notifications_collection.create_index([("user_id", 1), ("is_read", 1)])
+user_notifications_collection.create_index([("user_id", 1), ("created_at", -1)])
 SUBJECT_ALIASES = {
     "English": ["Eng", "ENG", "eng", "English", "english"],
     "Kiswahili": ["Kisw", "KIS", "kisw", "Kiswahili", "kiswahili"],
@@ -1098,72 +1109,201 @@ VAPID_PUBLIC_KEY = os.getenv("VAPID_PUBLIC_KEY")
 VAPID_PRIVATE_KEY = os.getenv("VAPID_PRIVATE_KEY")
 VAPID_CLAIMS = {"sub": "mailto:kuccpshelpdesk.ke@gmail.com"}
 
-@app.route('/admin/notify', methods=['POST'])
-def admin_notify():
-    try:
-        data = request.json  # expects {"title": "Hello", "body": "Message", "url": "/"}
-        
-        # CORRECT: Use push_subscriptions collection
-        subscriptions_collection = db['push_subscriptions']
-        subscriptions = list(subscriptions_collection.find())
-        
-        if not subscriptions:
-            return jsonify({"success": True, "message": "No subscribers to notify", "sent": 0}), 200
-        
-        sent_count = 0
-        failed_count = 0
-        
-        for sub in subscriptions:
-            try:
-                # Remove MongoDB _id from subscription data
-                sub_data = {k: v for k, v in sub.items() if k != '_id'}
-                
-                webpush(
-                    subscription_info=sub_data,
-                    data=json.dumps(data),
-                    vapid_private_key=VAPID_PRIVATE_KEY,
-                    vapid_claims=VAPID_CLAIMS
-                )
-                sent_count += 1
-            except WebPushException as ex:
-                print(f"Push failed for {sub.get('endpoint', 'Unknown')}: {ex}")
-                failed_count += 1
-            except Exception as ex:
-                print(f"Unexpected error: {ex}")
-                failed_count += 1
-        
-        return jsonify({"success": True, "sent": sent_count, "failed": failed_count, "total": len(subscriptions)}), 200
-        
-    except Exception as e:
-        print(f"Error sending notifications: {str(e)}")
-        return jsonify({"error": str(e)}), 500
-    
-@app.route('/debug-subscriptions')
-def debug_subscriptions():
-    """Debug endpoint to check subscription status"""
-    try:
-        # List all collections
-        collections = db.list_collection_names()
-        
-        # Check push_subscriptions collection
-        if 'push_subscriptions' in collections:
-            count = db['push_subscriptions'].count_documents({})
-            subs = list(db['push_subscriptions'].find({}, {"endpoint": 1, "created_at": 1, "_id": 0}))
-            return jsonify({
-                "collections": collections,
-                "push_subscriptions_exists": True,
-                "count": count,
-                "subscriptions": subs
-            })
-        else:
-            return jsonify({
-                "collections": collections,
-                "push_subscriptions_exists": False,
-                "message": "Collection doesn't exist yet"
-            })
-    except Exception as e:
-        return jsonify({"error": str(e)})
+# ---------- COLLECTION SETUP ----------
+
+collections = ['notifications', 'global_notifications', 'user_notifications']
+for col in collections:
+    if col not in db.list_collection_names():
+        db.create_collection(col)
+
+notifications_collection = db['notifications']              # Admin history
+global_notifications_collection = db['global_notifications']  # Broadcast
+user_notifications_collection = db['user_notifications']      # Per-user inbox
 
 
+# ---------- INDEXES (CRITICAL) ----------
+
+user_notifications_collection.create_index(
+    [("user_id", 1), ("notification_id", 1)],
+    unique=True
+)
+user_notifications_collection.create_index([("user_id", 1), ("is_read", 1)])
+user_notifications_collection.create_index([("user_id", 1), ("created_at", -1)])
+global_notifications_collection.create_index([("created_at", -1)])
+
+
+# ---------- ANONYMOUS USER (COOKIE BASED) ----------
+
+@app.before_request
+def ensure_anon_user():
+    if 'anon_user_id' not in request.cookies:
+        g.new_anon_user = str(uuid.uuid4())
+    else:
+        g.new_anon_user = None
+
+
+@app.after_request
+def set_anon_cookie(response):
+    if g.get('new_anon_user'):
+        response.set_cookie(
+            'anon_user_id',
+            g.new_anon_user,
+            max_age=60 * 60 * 24 * 365,
+            httponly=True,
+            samesite='Lax'
+        )
+    return response
+
+
+def get_user_id():
+    return request.cookies.get('anon_user_id')
+
+
+# ---------- ADMIN: SEND NOTIFICATION ----------
+
+@app.route('/admin/notification/send', methods=['POST'])
+def send_notification():
+    admin_key = request.form.get('admin_key')
+    if admin_key != os.getenv('ADMIN_KEY', 'kuccps-admin-2026'):
+        return jsonify({"error": "Unauthorized"}), 401
+
+    title = request.form.get('title', '').strip()
+    message = request.form.get('message', '').strip()
+    notif_type = request.form.get('type', 'info')
+    is_urgent = request.form.get('is_urgent') == 'true'
+
+    if not title or not message:
+        return jsonify({"error": "Title and message required"}), 400
+
+    notif_id = str(ObjectId())
+
+    notifications_collection.insert_one({
+        "_id": notif_id,
+        "title": title,
+        "message": message,
+        "type": notif_type,
+        "is_urgent": is_urgent,
+        "created_at": datetime.utcnow(),
+        "created_by": "admin"
+    })
+
+    global_notifications_collection.insert_one({
+        "_id": notif_id,
+        "title": title,
+        "message": message,
+        "type": notif_type,
+        "is_urgent": is_urgent,
+        "created_at": datetime.utcnow(),
+        "is_active": True
+    })
+
+    return jsonify({"success": True, "notification_id": notif_id})
+
+
+# ---------- SAFE DELIVERY (ONCE PER USER) ----------
+
+def deliver_global_notifications(user_id):
+    if not user_id:
+        return
+
+    globals_ = global_notifications_collection.find({"is_active": True})
+
+    for notif in globals_:
+        
+        try:
+                 user_notifications_collection.update_one(
+        {
+            "user_id": user_id,
+            "notification_id": notif["_id"]
+        },
+        {
+            "$setOnInsert": {
+                "title": notif["title"],
+                "message": notif["message"],
+                "type": notif["type"],
+                "is_urgent": notif.get("is_urgent", False),
+                "is_read": False,
+                "created_at": notif["created_at"]
+            }
+        },
+        upsert=True
+    )
+        except Exception:
+          pass  # safe to ignore duplicates
+
+
+
+# ---------- FETCH RECENT (NO INSERTS HERE) ----------
+
+@app.route('/api/notifications/recent')
+def get_recent_notifications():
+    user_id = get_user_id()
+    deliver_global_notifications(user_id)
+
+    notifications = list(
+        user_notifications_collection
+        .find({"user_id": user_id})
+        .sort("created_at", -1)
+        .limit(10)
+    )
+
+    for n in notifications:
+        n["_id"] = str(n["_id"])
+
+    return jsonify({"notifications": notifications})
+
+
+# ---------- UNREAD COUNT ----------
+
+@app.route('/api/notifications/unread-count')
+def get_unread_count():
+    user_id = get_user_id()
+    if not user_id:
+        return jsonify({"count": 0})
+
+    count = user_notifications_collection.count_documents({
+        "user_id": user_id,
+        "is_read": False
+    })
+
+    return jsonify({"count": count})
+
+
+# ---------- MARK ALL AS READ ----------
+
+@app.route('/api/notifications/mark-all-read', methods=['POST'])
+def mark_all_read():
+    user_id = get_user_id()
+
+    user_notifications_collection.update_many(
+        {"user_id": user_id, "is_read": False},
+        {"$set": {"is_read": True, "read_at": datetime.utcnow()}}
+    )
+
+    return jsonify({"success": True})
+
+
+# ---------- NOTIFICATIONS PAGE ----------
+
+@app.route('/notifications')
+def notifications_page():
+    user_id = get_user_id()
+    deliver_global_notifications(user_id)
+
+    notifications = list(
+        user_notifications_collection
+        .find({"user_id": user_id})
+        .sort("created_at", -1)
+    )
+
+    for n in notifications:
+        n["_id"] = str(n["_id"])
+
+    user_notifications_collection.update_many(
+        {"user_id": user_id, "is_read": False},
+        {"$set": {"is_read": True}}
+    )
+
+    return render_template("notifications.html", notifications=notifications)
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True)

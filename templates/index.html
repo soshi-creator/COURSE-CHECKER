@@ -42,24 +42,66 @@
 
 
 
-  <!-- Floating Action Buttons - Moved to Top Right -->
-  <div class="floating-action-container">
-    <a href="https://wa.me/254708188840" target="_blank" class="floating-action-btn btn-whatsapp">
+  <!-- Collapsible Contact Details -->
+<div class="contact-details-container">
+  <!-- Support Tooltip Popup -->
+<div class="support-tooltip-popup" id="supportTooltip">
+  <div class="tooltip-content">
+    <span>Need help? Click here!</span>
+    <div class="tooltip-arrow"></div>
+  </div>
+</div>
+  <!-- Main Contact Button (Always Visible) -->
+  <button class="contact-main-btn" onclick="toggleContactDetails()">
+    <i class="bi bi-headset"></i>
+    <span class="contact-btn-text">Support</span>
+    <i class="bi bi-chevron-up contact-arrow" id="contactArrow"></i>
+    <span class="support-notification-badge" id="supportNotificationBadge">1</span>
+  </button>
+  
+  <!-- Hidden Contact Options (Collapsible) -->
+  <div class="contact-options" id="contactOptions">
+    <!-- Chat Option (Top Priority) -->
+    <button class="contact-option-btn btn-chat" onclick="openChatModal()">
+      <i class="bi bi-chat-dots-fill"></i>
+      <div class="contact-option-details">
+        <span class="contact-option-title">Live Chat</span>
+        <span class="contact-option-sub">Get instant help</span>
+      </div>
+      <span class="contact-option-status online" id="chatStatusIndicator">Online</span>
+    </button>
+    
+    <!-- Divider -->
+    <div class="contact-divider">
+      <span>Contact Support</span>
+    </div>
+    
+    <!-- Existing Contact Options -->
+    <a href="https://wa.me/254708188840" target="_blank" class="contact-option-btn btn-whatsapp">
       <i class="bi bi-whatsapp"></i>
-      <span>WhatsApp Support</span>
+      <div class="contact-option-details">
+        <span class="contact-option-title">WhatsApp</span>
+        <span class="contact-option-sub">Fast response</span>
+      </div>
     </a>
     
-    <a href="tel:+254708188840" class="floating-action-btn btn-call">
+    <a href="tel:+254708188840" class="contact-option-btn btn-call">
       <i class="bi bi-telephone-fill"></i>
-      <span>Call Helpline</span>
+      <div class="contact-option-details">
+        <span class="contact-option-title">Call Now</span>
+        <span class="contact-option-sub">+254 708 188840</span>
+      </div>
     </a>
     
-    <a href="mailto:kuccpshelpdesk.ke@gmail.com" class="floating-action-btn btn-email">
+    <a href="mailto:kuccpshelpdesk.ke@gmail.com" class="contact-option-btn btn-email">
       <i class="bi bi-envelope-fill"></i>
-      <span>Email Support</span>
+      <div class="contact-option-details">
+        <span class="contact-option-title">Email</span>
+        <span class="contact-option-sub">kuccpshelpdesk.ke@gmail.com</span>
+      </div>
     </a>
   </div>
-
+</div>
   <!-- Hero Section -->
   <div class="hero-section">
     <div class="hero-content">
@@ -73,25 +115,26 @@
         </p>
       </div>
 
-      <!-- Stats Section -->
-      <div class="stats-section">
-        <div class="stat-card">
-          <div class="stat-number">50K+</div>
-          <div class="stat-label">Students Helped</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-number">100+</div>
-          <div class="stat-label">Institutions</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-number">5K+</div>
-          <div class="stat-label">Courses</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-number">98%</div>
-          <div class="stat-label">Accuracy</div>
-        </div>
-      </div>
+     <!-- Stats Section - Compact -->
+<!-- Stats Section -->
+<div class="stats-section mobile-compact">
+  <div class="stat-card">
+    <div class="stat-number">50K+</div>
+    <div class="stat-label">Students</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-number">100+</div>
+    <div class="stat-label">Institutions</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-number">5K+</div>
+    <div class="stat-label">Courses</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-number">98%</div>
+    <div class="stat-label">Accuracy</div>
+  </div>
+</div>
     </div>
   </div>
 
@@ -204,8 +247,7 @@
       <span class="btn-subtitle">Get instant help from KUCCPS advisors</span>
     </div>
   </div>
-  <button onclick="document.getElementById('chatWidgetBody').style.display='block'" 
-          class="card-action-btn">
+  <button onclick="openChatModal()" class="card-action-btn">
     <i class="bi bi-chat-left-text me-1"></i>
     Start Chat
   </button>
@@ -340,47 +382,25 @@
 
 
 
-<!-- KUCCPS Chat Support Widget -->
-<div id="chatWidget" class="chat-support-widget">
-  <!-- Main chat icon (always visible) -->
-  <div class="chat-icon-circle" onclick="toggleChatWidget()" id="chatIcon">
-    <i class="bi bi-chat-dots-fill"></i>
-    <span class="chat-notification-dot" id="notificationDot"></span>
-  </div>
-  
-  <!-- Help popup (shown on first visit) -->
-  <div class="chat-help-popup" id="helpPopup">
-    <div class="popup-content">
-      <p>Need help with KUCCPS?</p>
-      <p class="small">Click the chat icon!</p>
-      <button class="btn-close-popup" onclick="closeHelpPopup()">
-        <i class="bi bi-x"></i>
-      </button>
-    </div>
-    <div class="popup-arrow"></div>
-  </div>
-  
-  <!-- Chat container (hidden by default) -->
-  <div class="chat-container" id="chatContainer" style="display: none;">
-    <div class="chat-header">
-      <div class="chat-header-left">
-        <div class="chat-avatar-small">
-          <i class="bi bi-chat-dots-fill"></i>
-        </div>
-        <div>
-          <div class="fw-bold">KUCCPS Support</div>
-          <div class="chat-status">
-            <span class="status-dot"></span>
-            <small id="chatStatusText">Online</small>
-          </div>
-        </div>
+<!-- Chat Modal (Hidden by Default) -->
+<div id="chatModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 10000; align-items: center; justify-content: center; padding: 20px;">
+  <div style="background: white; border-radius: 15px; width: 100%; max-width: 500px; max-height: 90vh; display: flex; flex-direction: column;">
+    <!-- Chat Modal Header -->
+    <div style="padding: 15px; border-bottom: 1px solid #dee2e6; display: flex; justify-content: space-between; align-items: center;">
+      <div style="display: flex; align-items: center; gap: 10px; color: #2c3e50;">
+        <i class="bi bi-chat-dots-fill" style="font-size: 1.5rem; color: #3498db;"></i>
+        <h5 style="margin: 0;">KUCCPS Live Chat</h5>
+        <span class="badge bg-success ms-2">
+          <span class="status-dot"></span> Always Online
+        </span>
       </div>
-      <button class="btn-close-chat" onclick="toggleChatWidget()">
-        <i class="bi bi-x"></i>
+      <button onclick="closeChatModal()" style="background: none; border: none; font-size: 1.2rem; color: #7f8c8d; cursor: pointer; padding: 5px;">
+        <i class="bi bi-x-lg"></i>
       </button>
     </div>
     
-    <div class="chat-body">
+    <!-- Chat Body (No nested chat-container) -->
+    <div class="chat-body" style="padding: 15px; max-height: 500px; overflow-y: auto;">
       <!-- Step 1: Welcome -->
       <div id="chatStep1" class="chat-step">
         <div class="chat-welcome">
@@ -441,7 +461,7 @@
         <div class="chat-frame-footer">
           <small class="text-muted">
             <i class="bi bi-info-circle"></i> 
-            Chat saved. Visit <a href="https://your-anon-support-url.onrender.com" target="_blank">KUCCPS Support</a> to continue later.
+            Chat saved. Visit <a href="https://anonysupport-url.onrender.com" target="_blank">KUCCPS Support</a> to continue later.
           </small>
         </div>
       </div>
@@ -449,591 +469,6 @@
   </div>
 </div>
 
-<style>
-/* Chat Widget Styles */
-.chat-support-widget {
-  position: fixed;
-  bottom: 80px; /* Higher to avoid mobile nav */
-  right: 20px;
-  z-index: 9999;
-  font-family: 'Inter', sans-serif;
-}
-
-/* Main chat icon */
-.chat-icon-circle {
-  width: 56px;
-  height: 56px;
-  background: linear-gradient(135deg, #2c3e50, #3498db);
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  font-size: 1.5rem;
-  cursor: pointer;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.3);
-  transition: all 0.3s ease;
-  position: relative;
-  z-index: 10001;
-}
-
-.chat-icon-circle:hover {
-  transform: scale(1.1);
-  box-shadow: 0 6px 25px rgba(0,0,0,0.4);
-}
-
-.chat-notification-dot {
-  position: absolute;
-  top: 5px;
-  right: 5px;
-  width: 10px;
-  height: 10px;
-  background: #ff4757;
-  border-radius: 50%;
-  border: 2px solid white;
-  display: none;
-}
-
-/* Help popup */
-.chat-help-popup {
-  position: absolute;
-  bottom: 65px;
-  right: 0;
-  width: 180px;
-  background: white;
-  border-radius: 10px;
-  box-shadow: 0 5px 25px rgba(0,0,0,0.15);
-  padding: 12px;
-  z-index: 10000;
-  animation: slideInUp 0.5s ease;
-  display: none;
-}
-
-.chat-help-popup .popup-content {
-  position: relative;
-  padding-right: 20px;
-}
-
-.chat-help-popup p {
-  margin: 0;
-  font-size: 0.85rem;
-  color: #2c3e50;
-}
-
-.chat-help-popup p.small {
-  font-size: 0.75rem;
-  color: #7f8c8d;
-}
-
-.btn-close-popup {
-  position: absolute;
-  top: -8px;
-  right: -8px;
-  width: 20px;
-  height: 20px;
-  background: #ff4757;
-  border: none;
-  border-radius: 50%;
-  color: white;
-  font-size: 0.75rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  padding: 0;
-}
-
-.popup-arrow {
-  position: absolute;
-  bottom: -8px;
-  right: 20px;
-  width: 0;
-  height: 0;
-  border-left: 8px solid transparent;
-  border-right: 8px solid transparent;
-  border-top: 8px solid white;
-}
-
-/* Chat container */
-.chat-container {
-  position: absolute;
-  bottom: 65px;
-  right: 0;
-  width: 320px;
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 10px 40px rgba(0,0,0,0.2);
-  overflow: hidden;
-  animation: slideInUp 0.3s ease;
-  border: 1px solid #dee2e6;
-}
-
-.chat-header {
-  background: linear-gradient(135deg, #2c3e50, #3498db);
-  color: white;
-  padding: 12px 15px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.chat-header-left {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.chat-avatar-small {
-  width: 36px;
-  height: 36px;
-  background: rgba(255,255,255,0.2);
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1rem;
-}
-
-.chat-status {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  margin-top: 2px;
-}
-
-.status-dot {
-  width: 8px;
-  height: 8px;
-  background: #2ecc71;
-  border-radius: 50%;
-  animation: pulse 2s infinite;
-}
-
-.btn-close-chat {
-  background: none;
-  border: none;
-  color: white;
-  font-size: 1.25rem;
-  cursor: pointer;
-  padding: 0;
-  width: 24px;
-  height: 24px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 4px;
-  transition: background 0.2s;
-}
-
-.btn-close-chat:hover {
-  background: rgba(255,255,255,0.1);
-}
-
-/* Chat body */
-.chat-body {
-  padding: 15px;
-  max-height: 500px;
-  overflow-y: auto;
-}
-
-.chat-step {
-  animation: fadeIn 0.3s ease;
-}
-
-.chat-welcome {
-  background: #f8f9fa;
-  padding: 15px;
-  border-radius: 8px;
-  margin-bottom: 15px;
-}
-
-.chat-welcome h6 {
-  color: #2c3e50;
-  margin-bottom: 10px;
-}
-
-.chat-welcome ul {
-  padding-left: 20px;
-  margin: 10px 0;
-}
-
-.chat-welcome ul li {
-  font-size: 0.85rem;
-  margin-bottom: 3px;
-  color: #495057;
-}
-
-.chat-buttons .btn {
-  border-radius: 6px;
-  padding: 6px 12px;
-  font-size: 0.85rem;
-}
-
-/* Chat iframe */
-.chat-frame-header {
-  text-align: center;
-  margin-bottom: 10px;
-  padding-bottom: 10px;
-  border-bottom: 1px solid #dee2e6;
-}
-
-.chat-iframe-wrapper {
-  border: 1px solid #dee2e6;
-  border-radius: 6px;
-  overflow: hidden;
-  margin-bottom: 10px;
-}
-
-.chat-frame-footer {
-  padding: 8px;
-  background: #f8f9fa;
-  border-radius: 6px;
-  font-size: 0.75rem;
-  text-align: center;
-}
-
-.chat-frame-footer a {
-  color: #3498db;
-  text-decoration: none;
-}
-
-/* Animations */
-@keyframes slideInUp {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
-@keyframes pulse {
-  0% { opacity: 1; }
-  50% { opacity: 0.5; }
-  100% { opacity: 1; }
-}
-
-/* Mobile adjustments */
-@media (max-width: 768px) {
-  .chat-support-widget {
-    bottom: 100px; /* Higher to avoid mobile browsers' bottom nav */
-    right: 15px;
-  }
-  
-  .chat-icon-circle {
-    width: 50px;
-    height: 50px;
-    font-size: 1.3rem;
-  }
-  
-  .chat-container {
-    width: 280px;
-    max-height: 80vh;
-  }
-  
-  .chat-iframe-wrapper iframe {
-    height: 350px;
-  }
-  
-  /* Prevent hiding navbar items */
-  @media (max-height: 600px) {
-    .chat-support-widget {
-      bottom: 120px;
-    }
-  }
-}
-
-@media (max-width: 480px) {
-  .chat-container {
-    width: calc(100vw - 40px);
-    right: 10px;
-  }
-  
-  .chat-help-popup {
-    width: 160px;
-    right: -10px;
-  }
-}
-</style>
-
-<script>
-// Configuration
-const ANONYMOUS_SUPPORT_URL = "https://anonymoussupport.onrender.com";
-const COURSE_CHECKER_URL = "https://course-checker-2vfv.onrender.com";
-
-// Generate device fingerprint
-function generateDeviceFingerprint() {
-  const data = navigator.userAgent + 
-               screen.height + 
-               screen.width + 
-               navigator.language +
-               new Date().getTimezoneOffset();
-  
-  let hash = 0;
-  for (let i = 0; i < data.length; i++) {
-    hash = ((hash << 5) - hash) + data.charCodeAt(i);
-    hash = hash & hash;
-  }
-  return Math.abs(hash).toString(16).slice(0, 16);
-}
-
-// Local Storage Management
-function saveChatSession(sessionData) {
-  localStorage.setItem('kuccps_chat_session', JSON.stringify({
-    ...sessionData,
-    saved_at: new Date().toISOString(),
-    source: 'course_checker'
-  }));
-}
-
-function getChatSession() {
-  const session = localStorage.getItem('kuccps_chat_session');
-  return session ? JSON.parse(session) : null;
-}
-
-function clearChatSession() {
-  localStorage.removeItem('kuccps_chat_session');
-}
-
-// Show/hide help popup
-function showHelpPopup() {
-  const hasSeenPopup = localStorage.getItem('kuccps_chat_popup_seen');
-  if (!hasSeenPopup) {
-    const popup = document.getElementById('helpPopup');
-    popup.style.display = 'block';
-    
-    // Auto-hide after 8 seconds
-    setTimeout(() => {
-      if (popup.style.display === 'block') {
-        popup.style.display = 'none';
-        localStorage.setItem('kuccps_chat_popup_seen', 'true');
-      }
-    }, 8000);
-  }
-}
-
-function closeHelpPopup() {
-  const popup = document.getElementById('helpPopup');
-  popup.style.display = 'none';
-  localStorage.setItem('kuccps_chat_popup_seen', 'true');
-}
-
-// Toggle chat widget
-function toggleChatWidget() {
-  const container = document.getElementById('chatContainer');
-  const popup = document.getElementById('helpPopup');
-  
-  // Close help popup if open
-  if (popup.style.display === 'block') {
-    popup.style.display = 'none';
-    localStorage.setItem('kuccps_chat_popup_seen', 'true');
-  }
-  
-  // Toggle chat container
-  if (container.style.display === 'none') {
-    container.style.display = 'block';
-    // Reset to step 1
-    showStep(1);
-  } else {
-    container.style.display = 'none';
-  }
-}
-
-// Close chat when clicking outside
-document.addEventListener('click', function(event) {
-  const widget = document.getElementById('chatWidget');
-  const container = document.getElementById('chatContainer');
-  const popup = document.getElementById('helpPopup');
-  const icon = document.getElementById('chatIcon');
-  
-  if (!widget.contains(event.target) && 
-      container.style.display === 'block') {
-    container.style.display = 'none';
-  }
-  
-  if (!widget.contains(event.target) && 
-      popup.style.display === 'block' &&
-      !icon.contains(event.target)) {
-    popup.style.display = 'none';
-    localStorage.setItem('kuccps_chat_popup_seen', 'true');
-  }
-});
-
-// Step Navigation
-function showStep(stepNumber) {
-  // Hide all steps
-  document.querySelectorAll('.chat-step').forEach(step => {
-    step.style.display = 'none';
-  });
-  
-  // Show selected step
-  document.getElementById(`chatStep${stepNumber}`).style.display = 'block';
-}
-
-function showUsernameStep() {
-  showStep(2);
-}
-
-// Check existing session
-async function checkExistingSession() {
-  const session = getChatSession();
-  if (!session) {
-    alert('No existing chat session found. Starting new chat...');
-    showUsernameStep();
-    return;
-  }
-  
-  try {
-    const response = await fetch(`${ANONYMOUS_SUPPORT_URL}/api/session_status/${session.session_id}`, {
-      credentials: "include"
-    });
-    
-    if (response.ok) {
-      const data = await response.json();
-      if (data.exists) {
-        // Open existing chat
-        openChatFrame(`${ANONYMOUS_SUPPORT_URL}/chat/${session.session_id}`);
-        return;
-      }
-    }
-  } catch (error) {
-    console.error('Session check error:', error);
-  }
-  
-  // Session doesn't exist
-  alert('Your previous chat session has expired. Starting new chat...');
-  showUsernameStep();
-}
-
-// Create username and start chat
-async function createUsernameAndStartChat() {
-  const usernameInput = document.getElementById('chatUsername');
-  const username = usernameInput.value.trim();
-  
-  if (!username) {
-    alert('Please enter a username');
-    return;
-  }
-  
-  if (username.length < 3 || username.length > 20) {
-    alert('Username must be between 3-20 characters');
-    return;
-  }
-  
-  const deviceFp = generateDeviceFingerprint();
-  
-  try {
-    const response = await fetch(`${ANONYMOUS_SUPPORT_URL}/api/create_username`, {
-      method: 'POST',
-      credentials: "include",
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        username: username,
-        device_fingerprint: deviceFp
-      })
-    });
-    
-    const data = await response.json();
-    
-    if (!response.ok) {
-      throw new Error(data.error || 'Failed to create username');
-    }
-    
-    // Save session
-    saveChatSession({
-      session_id: data.session_id,
-      username: data.username,
-      device_fp: deviceFp
-    });
-    
-    // Open chat
-    openChatFrame(`${ANONYMOUS_SUPPORT_URL}/chat/${data.session_id}`);
-    
-  } catch (error) {
-    console.error('Create username error:', error);
-    alert(`Error: ${error.message}. Please try a different username.`);
-  }
-}
-
-// Open chat in iframe
-function openChatFrame(chatUrl) {
-  showStep(3);
-  const iframe = document.getElementById('chatFrame');
-  iframe.src = chatUrl;
-  
-  // Start checking chat status
-  startStatusCheck();
-}
-
-// Chat status checking
-let statusCheckInterval;
-
-function startStatusCheck() {
-  const session = getChatSession();
-  if (!session) return;
-  
-  statusCheckInterval = setInterval(async () => {
-    try {
-      const response = await fetch(`${ANONYMOUS_SUPPORT_URL}/api/session_status/${session.session_id}`, {
-        credentials: "include"
-      });
-      if (response.ok) {
-        const data = await response.json();
-        const statusText = document.getElementById('chatStatusText');
-        const statusDot = document.querySelector('.status-dot');
-        if (statusText && statusDot) {
-          if (data.is_online) {
-            statusText.textContent = 'Online';
-            statusDot.style.background = '#2ecc71';
-          } else {
-            statusText.textContent = 'Offline';
-            statusDot.style.background = '#95a5a6';
-          }
-        }
-      }
-    } catch (error) {
-      console.error('Status check error:', error);
-    }
-  }, 30000);
-}
-
-function stopStatusCheck() {
-  if (statusCheckInterval) {
-    clearInterval(statusCheckInterval);
-  }
-}
-
-// Initialize on page load
-document.addEventListener('DOMContentLoaded', function() {
-  // Show help popup after a short delay
-  setTimeout(showHelpPopup, 1000);
-  
-  // Check if user has existing session
-  const session = getChatSession();
-  if (session) {
-    // Show notification dot
-    const notificationDot = document.getElementById('notificationDot');
-    if (notificationDot) {
-      notificationDot.style.display = 'block';
-    }
-    
-    // Update the resume button text
-    const resumeBtn = document.querySelector('[onclick="checkExistingSession()"]');
-    if (resumeBtn) {
-      resumeBtn.innerHTML = `<i class="bi bi-arrow-clockwise me-1"></i> Resume as ${session.username}`;
-    }
-  }
-});
-</script>
   <!-- Footer -->
   <div class="footer">
     <h3 style="margin-bottom: 15px; font-size: 1.3rem;">
@@ -1065,232 +500,6 @@ document.addEventListener('DOMContentLoaded', function() {
       <small>Independent service provider using official KUCCPS data</small>
     </div>
   </div>
-
-  <!-- JavaScript -->
-  <script>
-    // Fixed Modal Functions
-    function openModal() {
-      const modal = document.getElementById('degreeModal');
-      modal.style.display = 'flex';
-      document.body.style.overflow = 'hidden';
-    }
-    
-    function closeModal() {
-      const modal = document.getElementById('degreeModal');
-      modal.style.display = 'none';
-      document.body.style.overflow = 'auto';
-    }
-    
-    // Close modal when clicking outside
-    document.getElementById('degreeModal').addEventListener('click', function(e) {
-      if (e.target === this) {
-        closeModal();
-      }
-    });
-    
-    // Close with Escape key
-    document.addEventListener('keydown', function(e) {
-      if (e.key === 'Escape') {
-        closeModal();
-        closePWAInstallModal();
-      }
-    });
-    
-    // PWA Install Modal Functions
-    function closePWAInstallModal() {
-      const modal = document.getElementById('pwaInstallModal');
-      modal.style.display = 'none';
-      document.body.style.overflow = 'auto';
-    }
-    
-    // Service Worker Registration
-    if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("{{ url_for('static', filename='service-worker.js') }}")
-        .then(() => console.log("Service Worker registered"))
-        .catch((err) => console.log("Service Worker registration failed:", err));
-    }
-    
-    // PWA Install Prompt
-    let deferredPrompt;
-    const pwaInstallModal = document.getElementById('pwaInstallModal');
-    const pwaInstallBtn = document.getElementById('pwaInstallBtn');
-    const pwaDismissBtn = document.getElementById('pwaDismissBtn');
-    
-    window.addEventListener('beforeinstallprompt', (e) => {
-      e.preventDefault();
-      deferredPrompt = e;
-      
-      setTimeout(() => {
-        pwaInstallModal.style.display = 'flex';
-        document.body.style.overflow = 'hidden';
-      }, 3000);
-    });
-    
-    pwaInstallBtn.addEventListener('click', async () => {
-      if (!deferredPrompt) return;
-      
-      deferredPrompt.prompt();
-      const { outcome } = await deferredPrompt.userChoice;
-      console.log(`User response: ${outcome}`);
-      
-      closePWAInstallModal();
-      deferredPrompt = null;
-    });
-    
-    pwaDismissBtn.addEventListener('click', () => {
-      closePWAInstallModal();
-    });
-    
-    pwaInstallModal.addEventListener('click', (e) => {
-      if (e.target === pwaInstallModal) {
-        closePWAInstallModal();
-      }
-    });
-    
-    window.addEventListener('appinstalled', () => {
-      console.log('PWA was installed');
-      closePWAInstallModal();
-      deferredPrompt = null;
-    });
-    
-    // Enhanced button hover effects with sound simulation
-    document.querySelectorAll('.main-btn').forEach(btn => {
-      btn.addEventListener('mouseenter', function() {
-        this.style.transform = 'translateY(-5px)';
-        // Add subtle animation to click indicator
-        const indicator = this.querySelector('.click-indicator');
-        if (indicator) {
-          indicator.style.animation = 'pulse 0.6s ease';
-        }
-      });
-      
-      btn.addEventListener('mouseleave', function() {
-        this.style.transform = 'translateY(0)';
-      });
-      
-      btn.addEventListener('mousedown', function() {
-        this.style.transform = 'translateY(2px) scale(0.98)';
-      });
-      
-      btn.addEventListener('mouseup', function() {
-        this.style.transform = 'translateY(-5px)';
-      });
-      
-      // For touch devices
-      btn.addEventListener('touchstart', function() {
-        this.style.transform = 'translateY(2px) scale(0.98)';
-      });
-      
-      btn.addEventListener('touchend', function() {
-        this.style.transform = 'translateY(0)';
-      });
-    });
-    
-    // Add click animation to all interactive elements
-    document.querySelectorAll('.payment-btn, .modal-btn, .floating-action-btn').forEach(btn => {
-      btn.addEventListener('mousedown', function() {
-        this.style.transform = 'translateY(2px)';
-      });
-      
-      btn.addEventListener('mouseup', function() {
-        if (this.classList.contains('payment-btn') || this.classList.contains('modal-btn-primary')) {
-          this.style.transform = 'translateY(-3px)';
-        } else {
-          this.style.transform = 'translateY(0)';
-        }
-      });
-    });
-
-// Auto-prompt for notifications (removed modal approach)
-async function requestNotificationPermission() {
-  if (!("Notification" in window) || !("serviceWorker" in navigator)) {
-    console.log("Push notifications are not supported on this device.");
-    return;
-  }
-
-  // Check if already granted
-  if (Notification.permission === "granted") {
-    console.log("Notifications already enabled");
-    await subscribeToPush();
-    return;
-  }
-
-  // Check if previously denied
-  if (Notification.permission === "denied") {
-    console.log("Notifications previously denied by user");
-    return;
-  }
-
-  // Directly request permission
-  const permission = await Notification.requestPermission();
-  
-  if (permission === "granted") {
-    console.log("Notification permission granted");
-    await subscribeToPush();
-  } else {
-    console.log("Notification permission denied");
-  }
-}
-
-// Public VAPID key
-const VAPID_PUBLIC_KEY = "BB703tCdCyIRMmn-aZDAiCA7GDQmiE9nDo8IjnFIWRm67xJeiXtm631QB8E7z_PitRwVD2O8Xf8KJztfKMLUb6s=";
-
-async function urlBase64ToUint8Array(base64String) {
-  const padding = '='.repeat((4 - base64String.length % 4) % 4);
-  const base64 = (base64String + padding)
-    .replace(/\-/g, '+')
-    .replace(/_/g, '/');
-  const rawData = atob(base64);
-  return Uint8Array.from([...rawData].map(char => char.charCodeAt(0)));
-}
-
-async function subscribeToPush() {
-  try {
-    const registration = await navigator.serviceWorker.ready;
-
-    const subscription = await registration.pushManager.subscribe({
-      userVisibleOnly: true,
-      applicationServerKey: await urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
-    });
-
-    console.log("Push Subscription:", subscription);
-
-    // Send to backend
-    const res = await fetch("/subscribe", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(subscription)
-    });
-
-    const data = await res.json();
-    if (data.success) {
-      console.log("Notifications enabled successfully!");
-    } else {
-      console.error("Failed to save subscription:", data.error);
-    }
-  } catch (err) {
-    console.error("Error enabling notifications:", err);
-  }
-}
-
-// Check and send subscription on every page load
-document.addEventListener('DOMContentLoaded', function() {
-  // Check if notifications are already granted
-  if (Notification.permission === "granted") {
-    console.log("Notifications already granted - sending subscription to backend");
-    
-    // Small delay to ensure service worker is ready
-    setTimeout(() => {
-      subscribeToPush();
-    }, 1000);
-  }
-  
-  // Still request permission for new users after 3 seconds
-  setTimeout(requestNotificationPermission, 3000);
-});
-
-
-
-  </script>
+  <script src="{{ url_for('static', filename='index.js') }}"></script>
 </body>
 </html>

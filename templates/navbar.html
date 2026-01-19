@@ -4,7 +4,222 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='navbar.css') }}">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
     <style>
- 
+ /* Floating Notifications Container */
+.floating-notifications {
+    position: fixed;
+    top: 115px;
+    right: 5px;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+}
+
+/* Floating Button */
+.notification-floating-btn {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #3498db, #2c3e50);
+    color: #fff;
+    border: none;
+    box-shadow: 0 6px 20px rgba(52, 152, 219, 0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.notification-floating-btn:hover {
+    transform: translateY(-5px) scale(1.1);
+    box-shadow: 0 8px 25px rgba(52, 152, 219, 0.4);
+    background: linear-gradient(135deg, #2980b9, #2c3e50);
+}
+
+.notification-floating-btn:active {
+    transform: translateY(-2px) scale(1.05);
+}
+
+/* Badge */
+.notification-floating-badge {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background: #e74c3c;
+    color: #fff;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    font-size: 12px;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid #fff;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+    100% { transform: scale(1); }
+}
+
+/* Label */
+.notification-floating-label {
+    background: rgba(44, 62, 80, 0.9);
+    color: #fff;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 500;
+    white-space: nowrap;
+    opacity: 0;
+    transform: translateY(10px);
+    transition: all 0.3s ease;
+    pointer-events: none;
+}
+
+.notification-floating-btn:hover + .notification-floating-label {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* Notification Dropdown */
+.floating-notification-dropdown {
+    position: absolute;
+    top: 75px;
+    left: -260px;
+    width: 320px;
+    max-height: 400px;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+    overflow: hidden;
+    display: none;
+    z-index: 10000;
+    animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-15px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Header */
+.floating-notification-header {
+    background: linear-gradient(135deg, #2c3e50, #3498db);
+    color: #fff;
+    padding: 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.floating-notification-header h6 {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+/* List */
+.floating-notification-list {
+    max-height: 300px;
+    overflow-y: auto;
+    padding: 0;
+}
+
+/* Items */
+.floating-notification-item {
+    padding: 12px 15px;
+    border-bottom: 1px solid #f0f0f0;
+    transition: background 0.2s;
+    cursor: pointer;
+    display: block;
+    text-decoration: none;
+    color: inherit;
+}
+
+.floating-notification-item:hover {
+    background: #f8f9fa;
+}
+
+.floating-notification-item.unread {
+    background: #f0f8ff;
+    border-left: 3px solid #3498db;
+}
+
+/* Footer */
+.floating-notification-footer {
+    padding: 12px;
+    background: #f8f9fa;
+    text-align: center;
+    border-top: 1px solid #eee;
+}
+
+.view-all-notifications {
+    font-size: 12px;
+    color: #3498db;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.view-all-notifications:hover {
+    text-decoration: underline;
+}
+
+/* Tablet */
+@media (max-width: 768px) {
+    .floating-notifications {
+        top: auto;
+        
+        right: 5px;
+    }
+
+    .notification-floating-btn {
+        width: 55px;
+        height: 55px;
+        font-size: 1.3rem;
+    }
+
+    .floating-notification-dropdown {
+        width: 280px;
+        left: -220px;
+        top: 70px;
+    }
+}
+
+/* Mobile */
+@media (max-width: 480px) {
+    .floating-notifications {
+        top: 110px;
+        right: 0;
+    }
+
+    .notification-floating-btn {
+        width: 50px;
+        height: 50px;
+        font-size: 1.2rem;
+    }
+
+    .floating-notification-dropdown {
+        width: 250px;
+        left: -200px;
+        top: 65px;
+    }
+}
+
     </style>
 </head>
 <body>
@@ -72,6 +287,38 @@
       <i class="bi bi-check-circle-fill"></i>
       Paid?
     </a>
+
+    <!-- Floating Notifications Icon -->
+    <div class="floating-notifications">
+        <button class="notification-floating-btn" id="floatingNotificationBtn">
+            <i class="bi bi-bell-fill"></i>
+            <span class="notification-floating-badge" id="floatingNotificationBadge" style="display: none;">0</span>
+        </button>
+        <div class="notification-floating-label">Notifications</div>
+        
+        <!-- Notification Dropdown -->
+        <div class="floating-notification-dropdown" id="floatingNotificationDropdown">
+            <div class="floating-notification-header">
+                <h6>Recent Notifications</h6>
+                <button onclick="markAllAsRead()" class="btn btn-sm btn-outline-light" style="font-size: 11px; padding: 3px 8px;">
+                    Mark All Read
+                </button>
+            </div>
+            <div class="floating-notification-list" id="floatingNotificationList">
+                <div class="text-center py-4 text-muted">
+                    <div class="spinner-border spinner-border-sm" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="mt-2 small">Loading notifications...</p>
+                </div>
+            </div>
+            <div class="floating-notification-footer">
+                <a href="/notifications" class="view-all-notifications">
+                    <i class="bi bi-list-ul"></i> View All Notifications
+                </a>
+            </div>
+        </div>
+    </div>
 
     <!-- Mobile Bottom Navigation -->
     <nav class="mobile-bottom-nav">
@@ -173,6 +420,9 @@
                     link.classList.add('active');
                 }
             });
+            
+            // Initialize floating notifications
+            initializeFloatingNotifications();
         });
         
         // Make desktop nav scrollable on hover
@@ -185,6 +435,165 @@
                 }
             });
         }
+        
+        // Floating Notifications Functions
+        function initializeFloatingNotifications() {
+            const floatingBtn = document.getElementById('floatingNotificationBtn');
+            const dropdown = document.getElementById('floatingNotificationDropdown');
+            
+            // Toggle dropdown
+            floatingBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                const isVisible = dropdown.style.display === 'block';
+                dropdown.style.display = isVisible ? 'none' : 'block';
+                if (!isVisible) {
+                    loadFloatingNotifications();
+                }
+            });
+            
+            // Close dropdown when clicking outside
+            document.addEventListener('click', function(e) {
+                if (!dropdown.contains(e.target) && !floatingBtn.contains(e.target)) {
+                    dropdown.style.display = 'none';
+                }
+            });
+            
+            // Load initial notification count
+            updateFloatingNotificationBadge();
+            
+            // Update badge every 30 seconds
+            setInterval(updateFloatingNotificationBadge, 30000);
+        }
+        
+        function loadFloatingNotifications() {
+            const listContainer = document.getElementById('floatingNotificationList');
+            
+            // Show loading
+            listContainer.innerHTML = `
+                <div class="text-center py-4 text-muted">
+                    <div class="spinner-border spinner-border-sm" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="mt-2 small">Loading notifications...</p>
+                </div>
+            `;
+            
+            // Fetch notifications from API
+            fetch('/api/notifications/recent')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.notifications && data.notifications.length > 0) {
+                        let html = '';
+                        
+                        data.notifications.forEach(notif => {
+                            const timeAgo = getTimeAgo(new Date(notif.created_at));
+                            const isUnread = !notif.is_read;
+                            
+                            html += `
+                            <a href="/notifications" class="floating-notification-item ${isUnread ? 'unread' : ''}">
+                                <div class="d-flex w-100">
+                                    <div class="me-2" style="font-size: 1.2rem;">
+                                        <i class="bi ${notif.is_urgent ? 'bi-exclamation-triangle-fill text-danger' : 'bi-bell-fill text-primary'}"></i>
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <div class="d-flex justify-content-between align-items-start">
+                                            <h6 class="mb-1" style="font-size: 13px; font-weight: 600;">${notif.title}</h6>
+                                            ${isUnread ? '<span class="badge bg-primary badge-sm">New</span>' : ''}
+                                        </div>
+                                        <p class="mb-1 small text-muted" style="font-size: 12px;">${notif.message.substring(0, 80)}${notif.message.length > 80 ? '...' : ''}</p>
+                                        <small class="text-muted" style="font-size: 11px;">${timeAgo}</small>
+                                    </div>
+                                </div>
+                            </a>`;
+                        });
+                        
+                        listContainer.innerHTML = html;
+                    } else {
+                        listContainer.innerHTML = `
+                        <div class="text-center py-4">
+                            <i class="bi bi-bell-slash text-muted" style="font-size: 2rem;"></i>
+                            <p class="mt-2 small text-muted">No notifications yet</p>
+                        </div>`;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading notifications:', error);
+                    listContainer.innerHTML = `
+                    <div class="text-center py-4 text-danger">
+                        <i class="bi bi-exclamation-triangle"></i>
+                        <p class="mt-2 small">Failed to load notifications</p>
+                    </div>`;
+                });
+        }
+        
+        function updateFloatingNotificationBadge() {
+            fetch('/api/notifications/unread-count')
+                .then(response => response.json())
+                .then(data => {
+                    const badge = document.getElementById('floatingNotificationBadge');
+                    if (badge) {
+                        if (data.count > 0) {
+                            badge.textContent = data.count;
+                            badge.style.display = 'flex';
+                            
+                            // Add animation for new notifications
+                            if (data.count > parseInt(badge.textContent || 0)) {
+                                badge.style.animation = 'pulse 0.5s 3';
+                            }
+                        } else {
+                            badge.style.display = 'none';
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('Error updating notification badge:', error);
+                });
+        }
+        
+        function markAllAsRead() {
+            fetch('/api/notifications/mark-all-read', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Update badge
+                    updateFloatingNotificationBadge();
+                    
+                    // Reload notifications list
+                    loadFloatingNotifications();
+                }
+            });
+        }
+        
+        function getTimeAgo(date) {
+            const seconds = Math.floor((new Date() - date) / 1000);
+            
+            let interval = Math.floor(seconds / 31536000);
+            if (interval >= 1) return interval + "y ago";
+            
+            interval = Math.floor(seconds / 2592000);
+            if (interval >= 1) return interval + "mo ago";
+            
+            interval = Math.floor(seconds / 86400);
+            if (interval >= 1) return interval + "d ago";
+            
+            interval = Math.floor(seconds / 3600);
+            if (interval >= 1) return interval + "h ago";
+            
+            interval = Math.floor(seconds / 60);
+            if (interval >= 1) return interval + "m ago";
+            
+            return "Just now";
+        }
+        
+        // Add route for marking all as read (you need to add this to your app.py)
+        // @app.route('/api/notifications/mark-all-read', methods=['POST'])
+        // def mark_all_notifications_read():
+        //     # Implementation
     </script>
 </body>
 </html>
