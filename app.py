@@ -3,7 +3,7 @@ from flask import Flask, render_template, request, redirect, url_for, flash, jso
 from pymongo import MongoClient, ReturnDocument
 import os
 import hashlib
-
+from datetime import datetime
 from bson.objectid import ObjectId
 from flask import Flask, render_template, request, send_file
 from reportlab.lib.pagesizes import letter
@@ -68,6 +68,18 @@ user_notifications_collection = db['user_notifications']
 # Create indexes for better performance
 user_notifications_collection.create_index([("user_id", 1), ("is_read", 1)])
 user_notifications_collection.create_index([("user_id", 1), ("created_at", -1)])
+
+# Add these collections with your other MongoDB collections
+baskets_collection = db['baskets']
+basket_items_collection = db['basket_items']
+
+# Create indexes
+baskets_collection.create_index([("email", 1), ("index_number", 1)], unique=True)
+baskets_collection.create_index([("email", 1)])
+baskets_collection.create_index([("last_updated", -1)])
+
+basket_items_collection.create_index([("basket_id", 1), ("program_code", 1)], unique=True)
+basket_items_collection.create_index([("basket_id", 1)])
 SUBJECT_ALIASES = {
     "English": ["Eng", "ENG", "eng", "English", "english"],
     "Kiswahili": ["Kisw", "KIS", "kisw", "Kiswahili", "kiswahili"],
@@ -810,7 +822,7 @@ def payment_page():
 
         # Determine amount
         already_paid_for = existing.get('program_type') if existing else None
-        amount = 199 if not already_paid_for else 100
+        amount = 1 if not already_paid_for else 1
         session['amount'] = amount
 
         # Initiate Paystack
@@ -897,10 +909,11 @@ def verify_payment():
 
     # Store results in session for rendering
     session['results'] = results
-    return redirect(url_for('results'))
+    return redirect(url_for('unified_results'))
 
-@app.route('/results')
-def results():
+@app.route('/unified-results')
+def unified_results():
+    """Unified results page for all program types"""
     if session.get('payment_status') != 'paid':
         return redirect(url_for('payment_page'))
 
@@ -912,84 +925,104 @@ def results():
     index = session.get('index_number')
 
     if not program or not email or not index:
-        return redirect(url_for('start_form'))  # fallback
+        return redirect(url_for('home'))
 
     # Run eligibility logic
     if program == 'degree':
-        named_clusters = run_degree_eligibility(grades, cluster_points)
-        template = 'results.html'
+        raw_results = run_degree_eligibility(grades, cluster_points)
+        result_type = 'clustered'
     elif program == 'diploma':
-        named_clusters = run_diploma_eligibility(grades)
-        template = 'diploma_results.html'
+        raw_results = run_diploma_eligibility(grades)
+        result_type = 'clustered'
     elif program == 'certificate':
-        named_clusters = run_certificate_eligibility(grades)
-        template = 'certificate_results.html'
+        raw_results = run_certificate_eligibility(grades)
+        result_type = 'clustered'
     elif program == 'kmtc':
-        qualified_sorted = run_kmtc_eligibility(grades)
-        template = 'kmtc_results.html'
+        raw_results = run_kmtc_eligibility(grades)
+        result_type = 'flat'
     else:
-        return "Invalid program type."
-    # Build cluster_name_map once (only relevant for degree/diploma/certificate)
+        return "Invalid program type.", 400
+
+    # Debug: Check what's returned
+    print(f"\n=== {program.upper()} RESULTS DEBUG ===")
+    print(f"Type: {type(raw_results)}")
+    
+    # Process results to ensure consistent structure
+    results_data = []
+    
+    if result_type == 'clustered':
+        # Handle clustered data
+        if isinstance(raw_results, list):
+            for i, item in enumerate(raw_results):
+                if isinstance(item, dict) and 'courses' in item:
+                    # Already has correct structure
+                    if 'label' not in item:
+                        item['label'] = f"Cluster {i+1}"
+                    results_data.append(item)
+                elif isinstance(item, dict):
+                    # Try to find courses
+                    for key, value in item.items():
+                        if isinstance(value, list) and len(value) > 0:
+                            # Check if this looks like courses
+                            if isinstance(value[0], dict) and ('program_code' in value[0] or 'name' in value[0]):
+                                results_data.append({
+                                    'label': f"Cluster {i+1}",
+                                    'courses': value
+                                })
+                                break
+                elif isinstance(item, list):
+                    # Item is directly courses list
+                    results_data.append({
+                        'label': f"Cluster {i+1}",
+                        'courses': item
+                    })
+        elif isinstance(raw_results, dict):
+            # Single cluster
+            if 'courses' in raw_results:
+                if 'label' not in raw_results:
+                    raw_results['label'] = "Results"
+                results_data.append(raw_results)
+    else:
+        # Flat data (KMTC)
+        results_data = raw_results if isinstance(raw_results, list) else []
+
+    # Debug output
+    if result_type == 'clustered':
+        total_courses = 0
+        for i, cluster in enumerate(results_data):
+            course_count = len(cluster.get('courses', []))
+            print(f"Cluster {i+1}: {course_count} courses")
+            total_courses += course_count
+        print(f"TOTAL: {total_courses} courses in {len(results_data)} clusters")
+    else:
+        print(f"KMTC: {len(results_data)} courses")
+    print("========================\n")
+
+    # Generate PDF data ID
+    data_id = str(uuid.uuid4())
     cluster_name_map = {doc['number']: doc['name'] for doc in clusters_collection.find()}
-
-    # Degree PDF
-    degree_id = str(uuid.uuid4())
-    qualified_courses_data[degree_id] = {
-        'qualified_courses': run_degree_eligibility(grades, cluster_points),
-        'cluster_name_map': cluster_name_map
+    
+    qualified_courses_data[data_id] = {
+        'qualified_courses': results_data,
+        'cluster_name_map': cluster_name_map,
+        'program_type': program
     }
-    session['degree_pdf_id'] = degree_id
+    session['pdf_data_id'] = data_id
 
-    # Diploma PDF
-    diploma_id = str(uuid.uuid4())
-    qualified_courses_data[diploma_id] = {
-        'qualified_courses': run_diploma_eligibility(grades),
-        'cluster_name_map': cluster_name_map
-    }
-    session['diploma_pdf_id'] = diploma_id
+    # Store in session
+    session['results_data'] = results_data
+    session['result_type'] = result_type
 
-    # Certificate PDF
-    certificate_id = str(uuid.uuid4())
-    qualified_courses_data[certificate_id] = {
-        'qualified_courses': run_certificate_eligibility(grades),
-        'cluster_name_map': cluster_name_map
-}
-    session['certificate_pdf_id'] = certificate_id
+    return render_template('unified_results.html',
+                         generated_time=datetime.now().strftime('%Y-%m-%d %H:%M'),
+                         program_type=program,
+                         results_data=results_data,
+                         result_type=result_type,
+                         email=email,
+                         index_number=index,
+                         pdf_data_id=data_id,
+                         cluster_name_map=cluster_name_map)
 
-    # KMTC PDF (no clusters)
-    kmtc_id = str(uuid.uuid4())
-    qualified_courses_data[kmtc_id] = {
-    'qualified_courses': run_kmtc_eligibility(grades),
-    'cluster_name_map': {},
-    'program_type': 'kmtc'
-}
-    session['kmtc_pdf_id'] = kmtc_id
-
-
-    # Optional: store results if not already stored
-    if not results_collection.find_one({
-        "email": email,
-        "index_number": index,
-        "program_type": program
-    }):
-        results_collection.insert_one({
-            "email": email,
-            "index_number": index,
-            "program_type": program,
-            "results": qualified_sorted if program == 'kmtc' else named_clusters,
-            "generated_at": datetime.utcnow()
-        })
-    # Render template with the correct variable
-    if program == 'kmtc':
-        return render_template(template,
-                               programs=qualified_sorted,
-                               email=email,
-                               index_number=index)
-    else:
-        return render_template(template,
-                               clusters=named_clusters,
-                               email=email,
-                              index_number=index)
 @app.route('/alreadypaid')
 def already_paid_form():
     return render_template('alreadypaid.html')
@@ -1022,18 +1055,21 @@ def view_paid_results():
     if not result_doc or 'results' not in result_doc:
         return "Results not found. Please contact support.", 404
 
+    # Determine result type
     if program_type == 'kmtc':
-       return render_template('view_paid_results.html',
-                           programs=result_doc['results'],
-                           program_type=program_type,
-                           email=email,
-                           index_number=index_number)
+        result_type = 'flat'
     else:
-        return render_template('view_paid_results.html',
-                           clusters=result_doc['results'],
-                           program_type=program_type,
-                           email=email,
-                           index_number=index_number)
+        result_type = 'clustered'
+
+    # Pass to unified template
+    return render_template('unified_results.html',
+                         program_type=program_type,
+                         results_data=result_doc['results'],
+                         result_type=result_type,
+                         email=email,
+                         index_number=index_number,
+                         pdf_data_id=str(uuid.uuid4()),  # Generate new ID for PDF
+                         is_paid_view=True)  # Flag to indicate this is paid results view
     
 
 
@@ -1519,6 +1555,373 @@ def notifications_page():
     return render_template("notifications.html", notifications=notifications)
 
 
+# Add this route to your Flask app
+@app.route('/basket')
+def basket():
+    # Get student info from URL parameters
+    email = request.args.get('email', '')
+    index_number = request.args.get('index', '')
+    
+    # If not provided in URL, try to get from session (for backward compatibility)
+    if not email:
+        email = session.get('email', '')
+    if not index_number:
+        index_number = session.get('index_number', '')
+    
+    return render_template('basket.html', 
+                         email=email,
+                         index_number=index_number)
+
+# ===== BASKET API ENDPOINTS =====
+
+@app.route('/api/basket/save', methods=['POST'])
+def save_basket():
+    """Save basket to database using email and index"""
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({"error": "No data provided"}), 400
+        
+        email = data.get('email')
+        index_number = data.get('index_number')
+        items = data.get('items', [])
+        
+        if not email or not index_number:
+            return jsonify({"error": "Email and index number required"}), 400
+        
+        # Create basket identifier
+        basket_id = f"{email}_{index_number}"
+        
+        # Get or create basket
+        basket = baskets_collection.find_one({"email": email, "index_number": index_number})
+        
+        now = datetime.utcnow()
+        
+        if not basket:
+            # Create new basket
+            basket_data = {
+                "basket_id": basket_id,
+                "email": email,
+                "index_number": index_number,
+                "created_at": now,
+                "last_updated": now,
+                "item_count": len(items),
+                "program_types": list(set([item.get('program_type') for item in items if item.get('program_type')]))
+            }
+            baskets_collection.insert_one(basket_data)
+            basket = basket_data
+        else:
+            # Update existing basket
+            baskets_collection.update_one(
+                {"email": email, "index_number": index_number},
+                {
+                    "$set": {
+                        "last_updated": now,
+                        "item_count": len(items),
+                        "program_types": list(set([item.get('program_type') for item in items if item.get('program_type')]))
+                    }
+                }
+            )
+        
+        # Clear old items
+        basket_items_collection.delete_many({"basket_id": basket_id})
+        
+        # Insert new items
+        if items:
+            items_to_insert = []
+            for item in items:
+                item_doc = {
+                    "_id": str(ObjectId()),
+                    "basket_id": basket_id,
+                    "program_code": item.get('program_code'),
+                    "course_name": item.get('course_name'),
+                    "institution": item.get('institution'),
+                    "program_type": item.get('program_type'),
+                    "cutoff": item.get('cutoff'),
+                    "cluster": item.get('cluster'),
+                    "priority": item.get('priority', 0),
+                    "added_at": now,
+                    "updated_at": now
+                }
+                items_to_insert.append(item_doc)
+            
+            if items_to_insert:
+                basket_items_collection.insert_many(items_to_insert)
+        
+        return jsonify({
+            "success": True,
+            "message": "Basket saved successfully",
+            "basket_id": basket_id,
+            "count": len(items),
+            "last_updated": now.isoformat()
+        })
+        
+    except Exception as e:
+        print(f"Error saving basket: {e}")
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/basket/load', methods=['POST'])
+def load_basket():
+    """Load basket from database using email and index"""
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({"error": "No data provided"}), 400
+        
+        email = data.get('email')
+        index_number = data.get('index_number')
+        
+        if not email or not index_number:
+            return jsonify({"error": "Email and index number required"}), 400
+        
+        basket_id = f"{email}_{index_number}"
+        
+        # Find basket
+        basket = baskets_collection.find_one({"email": email, "index_number": index_number})
+        
+        if not basket:
+            return jsonify({
+                "success": True,
+                "exists": False,
+                "items": [],
+                "count": 0
+            })
+        
+        # Get basket items
+        items = list(basket_items_collection.find({"basket_id": basket_id}))
+        
+        # Format items for frontend
+        formatted_items = []
+        for item in items:
+            formatted_items.append({
+                "program_code": item.get('program_code'),
+                "course_name": item.get('course_name'),
+                "institution": item.get('institution'),
+                "program_type": item.get('program_type'),
+                "cutoff": item.get('cutoff'),
+                "cluster": item.get('cluster'),
+                "priority": item.get('priority', 0)
+            })
+        
+        return jsonify({
+            "success": True,
+            "exists": True,
+            "items": formatted_items,
+            "count": len(formatted_items),
+            "last_updated": basket.get('last_updated').isoformat() if basket.get('last_updated') else None
+        })
+        
+    except Exception as e:
+        print(f"Error loading basket: {e}")
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/basket/add-item', methods=['POST'])
+def add_basket_item():
+    """Add single item to basket"""
+    try:
+        data = request.get_json()
+        email = data.get('email')
+        index_number = data.get('index_number')
+        item_data = data.get('item')
+        
+        if not email or not index_number or not item_data:
+            return jsonify({"error": "Missing required data"}), 400
+        
+        basket_id = f"{email}_{index_number}"
+        
+        # Check if basket exists
+        basket = baskets_collection.find_one({"email": email, "index_number": index_number})
+        
+        now = datetime.utcnow()
+        
+        if not basket:
+            # Create basket with this single item
+            basket_data = {
+                "basket_id": basket_id,
+                "email": email,
+                "index_number": index_number,
+                "created_at": now,
+                "last_updated": now,
+                "item_count": 1,
+                "program_types": [item_data.get('program_type')] if item_data.get('program_type') else []
+            }
+            baskets_collection.insert_one(basket_data)
+        else:
+            # Update basket count
+            baskets_collection.update_one(
+                {"email": email, "index_number": index_number},
+                {
+                    "$set": {"last_updated": now},
+                    "$inc": {"item_count": 1}
+                }
+            )
+        
+        # Check if item already exists
+        existing_item = basket_items_collection.find_one({
+            "basket_id": basket_id,
+            "program_code": item_data.get('program_code')
+        })
+        
+        was_added = True
+        if existing_item:
+            # Update existing item
+            basket_items_collection.update_one(
+                {"_id": existing_item["_id"]},
+                {
+                    "$set": {
+                        "course_name": item_data.get('course_name'),
+                        "institution": item_data.get('institution'),
+                        "program_type": item_data.get('program_type'),
+                        "cutoff": item_data.get('cutoff'),
+                        "cluster": item_data.get('cluster'),
+                        "priority": item_data.get('priority', 0),
+                        "updated_at": now
+                    }
+                }
+            )
+            was_added = False  # It was an update, not a new addition
+        else:
+            # Add new item
+            item_doc = {
+                "_id": str(ObjectId()),
+                "basket_id": basket_id,
+                "program_code": item_data.get('program_code'),
+                "course_name": item_data.get('course_name'),
+                "institution": item_data.get('institution'),
+                "program_type": item_data.get('program_type'),
+                "cutoff": item_data.get('cutoff'),
+                "cluster": item_data.get('cluster'),
+                "priority": item_data.get('priority', 0),
+                "added_at": now,
+                "updated_at": now
+            }
+            basket_items_collection.insert_one(item_doc)
+        
+        # Get updated count
+        basket = baskets_collection.find_one({"email": email, "index_number": index_number})
+        
+        return jsonify({
+            "success": True,
+            "was_added": was_added,
+            "count": basket.get('item_count', 0) if basket else 1
+        })
+        
+    except Exception as e:
+        print(f"Error adding basket item: {e}")
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/basket/remove-item', methods=['POST'])
+def remove_basket_item():
+    """Remove item from basket"""
+    try:
+        data = request.get_json()
+        email = data.get('email')
+        index_number = data.get('index_number')
+        program_code = data.get('program_code')
+        
+        if not email or not index_number or not program_code:
+            return jsonify({"error": "Missing required data"}), 400
+        
+        basket_id = f"{email}_{index_number}"
+        
+        # Remove item
+        result = basket_items_collection.delete_one({
+            "basket_id": basket_id,
+            "program_code": program_code
+        })
+        
+        if result.deleted_count > 0:
+            # Update basket count
+            baskets_collection.update_one(
+                {"email": email, "index_number": index_number},
+                {
+                    "$set": {"last_updated": datetime.utcnow()},
+                    "$inc": {"item_count": -1}
+                }
+            )
+        
+        # Get updated basket
+        basket = baskets_collection.find_one({"email": email, "index_number": index_number})
+        
+        return jsonify({
+            "success": True,
+            "deleted": result.deleted_count > 0,
+            "count": basket.get('item_count', 0) if basket else 0
+        })
+        
+    except Exception as e:
+        print(f"Error removing basket item: {e}")
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/basket/clear', methods=['POST'])
+def clear_user_basket():
+    """Clear entire basket for user"""
+    try:
+        data = request.get_json()
+        email = data.get('email')
+        index_number = data.get('index_number')
+        
+        if not email or not index_number:
+            return jsonify({"error": "Email and index number required"}), 400
+        
+        basket_id = f"{email}_{index_number}"
+        
+        # Delete all items
+        basket_items_collection.delete_many({"basket_id": basket_id})
+        
+        # Reset basket count
+        baskets_collection.update_one(
+            {"email": email, "index_number": index_number},
+            {
+                "$set": {
+                    "last_updated": datetime.utcnow(),
+                    "item_count": 0,
+                    "program_types": []
+                }
+            }
+        )
+        
+        return jsonify({
+            "success": True,
+            "message": "Basket cleared successfully"
+        })
+        
+    except Exception as e:
+        print(f"Error clearing basket: {e}")
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/basket/stats', methods=['POST'])
+def get_basket_stats():
+    """Get basket statistics"""
+    try:
+        data = request.get_json()
+        email = data.get('email')
+        index_number = data.get('index_number')
+        
+        if not email or not index_number:
+            return jsonify({"error": "Email and index number required"}), 400
+        
+        basket = baskets_collection.find_one({"email": email, "index_number": index_number})
+        
+        if not basket:
+            return jsonify({
+                "exists": False,
+                "count": 0,
+                "last_updated": None
+            })
+        
+        return jsonify({
+            "exists": True,
+            "count": basket.get('item_count', 0),
+            "last_updated": basket.get('last_updated').isoformat() if basket.get('last_updated') else None,
+            "created_at": basket.get('created_at').isoformat() if basket.get('created_at') else None,
+            "program_types": basket.get('program_types', [])
+        })
+        
+    except Exception as e:
+        print(f"Error getting basket stats: {e}")
+        return jsonify({"error": str(e)}), 500
+    
 
 
 if __name__ == "__main__":

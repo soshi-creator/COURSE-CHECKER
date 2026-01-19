@@ -1,0 +1,1360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Course Basket - KUCCPS</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='bootstrap.min.css') }}">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #3498db;
+            --secondary-color: #2c3e50;
+            --success-color: #2ecc71;
+            --danger-color: #e74c3c;
+            --warning-color: #f39c12;
+            --light-color: #f8f9fa;
+            --dark-color: #343a40;
+            --border-radius: 12px;
+            --box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+            --gradient-primary: linear-gradient(135deg, var(--secondary-color), var(--primary-color));
+        }
+
+        * {
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4e8f0 100%);
+            min-height: 100vh;
+        }
+
+        .basket-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* Header */
+        .basket-header {
+            background: var(--gradient-primary);
+            color: white;
+            padding: 30px;
+            border-radius: var(--border-radius);
+            margin-bottom: 30px;
+            box-shadow: var(--box-shadow);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .basket-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320"><path fill="rgba(255,255,255,0.05)" d="M0,96L48,112C96,128,192,160,288,160C384,160,480,128,576,112C672,96,768,96,864,112C960,128,1056,160,1152,160C1248,160,1344,128,1392,112L1440,96L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path></svg>');
+            background-size: cover;
+            opacity: 0.3;
+        }
+
+        .header-content {
+            position: relative;
+            z-index: 2;
+        }
+
+        /* HIDDEN STATS GRID - Still in code but not visible */
+        .stats-grid {
+            display: none !important; /* Hide from user */
+            visibility: hidden;
+            opacity: 0;
+            height: 0;
+            overflow: hidden;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 15px;
+            margin-top: 25px;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        /* Basket Content */
+        .basket-content {
+            background: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            overflow: hidden;
+            margin-bottom: 30px;
+        }
+
+        .basket-tabs {
+            display: flex;
+            background: #f8f9fa;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .basket-tab {
+            padding: 15px 25px;
+            border: none;
+            background: none;
+            font-weight: 600;
+            color: #6c757d;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .basket-tab.active {
+            color: var(--primary-color);
+            background: white;
+        }
+
+        .basket-tab.active::after {
+            content: '';
+            position: absolute;
+            bottom: -1px;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: var(--primary-color);
+        }
+
+        .basket-tab-count {
+            margin-left: 8px;
+            background: #dee2e6;
+            color: #495057;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 0.8rem;
+        }
+
+        .basket-tab.active .basket-tab-count {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        /* Basket Items */
+        .basket-items {
+            padding: 0;
+        }
+
+        .empty-basket {
+            padding: 60px 20px;
+            text-align: center;
+            color: #6c757d;
+        }
+
+        .empty-basket i {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            opacity: 0.3;
+        }
+
+        .basket-item {
+            padding: 20px;
+            border-bottom: 1px solid #e9ecef;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            transition: background 0.3s ease;
+        }
+
+        .basket-item:hover {
+            background: #f8f9fa;
+        }
+
+        .item-checkbox {
+            flex-shrink: 0;
+        }
+
+        .item-content {
+            flex-grow: 1;
+            min-width: 0;
+        }
+
+        .item-code {
+            font-family: 'Courier New', monospace;
+            background: #f8f9fa;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            color: #495057;
+            display: inline-block;
+            margin-bottom: 5px;
+        }
+
+        .item-name {
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: var(--secondary-color);
+        }
+
+        .item-meta {
+            display: flex;
+            gap: 15px;
+            font-size: 0.85rem;
+            color: #6c757d;
+        }
+
+        .item-institution {
+            color: var(--primary-color);
+            font-weight: 500;
+        }
+
+        .item-actions {
+            flex-shrink: 0;
+            display: flex;
+            gap: 10px;
+        }
+
+        .action-btn {
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .action-btn-remove {
+            background: #fee;
+            color: var(--danger-color);
+            border: 1px solid #fcc;
+        }
+
+        .action-btn-remove:hover {
+            background: var(--danger-color);
+            color: white;
+        }
+
+        .action-btn-priority {
+            background: #f0f8ff;
+            color: var(--primary-color);
+            border: 1px solid #d0e6ff;
+        }
+
+        .action-btn-priority:hover {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        /* Action Bar */
+        .action-bar {
+            background: white;
+            padding: 20px;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .bulk-actions {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .primary-btn {
+            background: linear-gradient(135deg, var(--primary-color), #2980b9);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .primary-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(52, 152, 219, 0.3);
+        }
+
+        .primary-btn-success {
+            background: linear-gradient(135deg, var(--success-color), #27ae60);
+        }
+
+        .primary-btn-success:hover {
+            box-shadow: 0 6px 20px rgba(46, 204, 113, 0.3);
+        }
+
+        .primary-btn-danger {
+            background: linear-gradient(135deg, var(--danger-color), #c0392b);
+        }
+
+        .primary-btn-danger:hover {
+            box-shadow: 0 6px 20px rgba(231, 76, 60, 0.3);
+        }
+
+        /* Priority System */
+        .priority-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            margin-left: 10px;
+        }
+
+        .priority-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #dee2e6;
+        }
+
+        .priority-dot.active {
+            background: var(--warning-color);
+        }
+
+        /* Toast Notification */
+        .custom-toast {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            z-index: 99999;
+            width: 90%;
+            max-width: 400px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+            padding: 15px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .custom-toast.show {
+            transform: translateX(-50%) translateY(0);
+        }
+
+        .custom-toast i {
+            font-size: 1.3rem;
+        }
+
+        .custom-toast.success i {
+            color: var(--success-color);
+        }
+
+        .custom-toast.danger i {
+            color: var(--danger-color);
+        }
+
+        /* Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 999999;
+            padding: 20px;
+        }
+
+        .modal-overlay.show {
+            display: flex;
+        }
+
+        .modal {
+            background: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            max-width: 500px;
+            width: 100%;
+            max-height: 90vh;
+            overflow: hidden;
+        }
+
+        .modal-header {
+            padding: 20px;
+            border-bottom: 1px solid #dee2e6;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-title {
+            margin: 0;
+            font-weight: 600;
+            color: var(--secondary-color);
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.2rem;
+            cursor: pointer;
+            color: #6c757d;
+        }
+
+        .modal-body {
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .modal-footer {
+            padding: 20px;
+            border-top: 1px solid #dee2e6;
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .basket-container {
+                padding: 15px;
+            }
+
+            .basket-header {
+                padding: 20px;
+            }
+
+            .basket-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 15px;
+                padding: 15px;
+            }
+
+            .item-checkbox {
+                align-self: flex-start;
+            }
+
+            .item-actions {
+                width: 100%;
+                justify-content: flex-start;
+            }
+
+            .action-bar {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .bulk-actions {
+                justify-content: space-between;
+            }
+
+            .basket-tabs {
+                flex-wrap: wrap;
+            }
+
+            .basket-tab {
+                flex: 1;
+                min-width: 120px;
+                text-align: center;
+                padding: 12px 15px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .basket-tabs {
+                flex-direction: column;
+            }
+
+            .basket-tab {
+                width: 100%;
+                text-align: left;
+            }
+        }
+
+        /* Selection Summary */
+        .selection-summary {
+            background: #e8f4fc;
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .selection-summary.show {
+            display: block;
+        }
+
+        .summary-text {
+            font-weight: 500;
+            color: var(--primary-color);
+        }
+
+        .summary-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="basket-container">
+        <!-- Header -->
+        <div class="basket-header">
+            <div class="header-content">
+                <h1 style="margin: 0 0 10px 0; font-size: 2.2rem; font-weight: 700;">
+                    <i class="bi bi-basket"></i> My Course Basket
+                </h1>
+                <p style="margin: 0; opacity: 0.9; font-size: 1.1rem;">
+                    Manage your selected courses and create application lists
+                </p>
+
+                <!-- STATS GRID - HIDDEN FROM USER BUT STILL IN CODE -->
+                <div class="stats-grid" aria-hidden="true">
+                    <div class="stat-card">
+                        <div class="stat-value" id="totalCourses">0</div>
+                        <div class="stat-label">Total Courses</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="selectedCount">0</div>
+                        <div class="stat-label">Selected</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="degreeCount">0</div>
+                        <div class="stat-label">Degree</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="diplomaCount">0</div>
+                        <div class="stat-label">Diploma</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Selection Summary -->
+        <div class="selection-summary" id="selectionSummary">
+            <div class="summary-text">
+                <span id="selectedSummary">0</span> course(s) selected
+            </div>
+            <div class="summary-actions">
+                <button class="action-btn action-btn-priority" onclick="setPriorityForSelected()">
+                    <i class="bi bi-star"></i> Set Priority
+                </button>
+                <button class="action-btn action-btn-remove" onclick="removeSelected()">
+                    <i class="bi bi-trash"></i> Remove Selected
+                </button>
+            </div>
+        </div>
+
+        <!-- Action Bar -->
+        <div class="action-bar">
+            <div class="bulk-actions">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="selectAll">
+                    <label class="form-check-label" for="selectAll">
+                        Select All
+                    </label>
+                </div>
+                <button class="primary-btn primary-btn-danger" onclick="clearBasket()">
+                    <i class="bi bi-trash"></i> Clear All
+                </button>
+            </div>
+            
+            <div>
+                <button class="primary-btn primary-btn-success" onclick="generateApplicationList()">
+                    <i class="bi bi-list-check"></i> Generate Application List
+                </button>
+                <button class="primary-btn" onclick="shareBasket()" style="margin-left: 10px;">
+                    <i class="bi bi-share"></i> Share Basket
+                </button>
+            </div>
+        </div>
+
+        <!-- Basket Content -->
+        <div class="basket-content">
+            <div class="basket-tabs">
+                <button class="basket-tab active" onclick="switchTab('all')">
+                    All Courses
+                    <span class="basket-tab-count" id="countAll">0</span>
+                </button>
+                <button class="basket-tab" onclick="switchTab('degree')">
+                    Degree
+                    <span class="basket-tab-count" id="countDegree">0</span>
+                </button>
+                <button class="basket-tab" onclick="switchTab('diploma')">
+                    Diploma
+                    <span class="basket-tab-count" id="countDiploma">0</span>
+                </button>
+                <button class="basket-tab" onclick="switchTab('certificate')">
+                    Certificate
+                    <span class="basket-tab-count" id="countCertificate">0</span>
+                </button>
+                <button class="basket-tab" onclick="switchTab('priority')">
+                    <i class="bi bi-star"></i> Priority
+                    <span class="basket-tab-count" id="countPriority">0</span>
+                </button>
+            </div>
+
+            <div class="basket-items" id="basketItems">
+                <!-- Basket items will be loaded here -->
+                <div class="empty-basket">
+                    <i class="bi bi-basket"></i>
+                    <h4>Your basket is empty</h4>
+                    <p>Start adding courses from your search results</p>
+                    <a href="/" class="primary-btn" style="margin-top: 20px;">
+                        <i class="bi bi-search"></i> Find Courses
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Student Info Footer -->
+        <div class="student-footer">
+            <div class="row">
+                <div class="col-md-6">
+                    <h6><i class="bi bi-person-circle"></i> Student Information</h6>
+                    <p class="mb-1"><strong>Email:</strong> 
+                        <span class="student-name" id="studentEmail">
+                            {{ email if email else 'Not provided' }}
+                        </span>
+                    </p>
+                    <p class="mb-0"><strong>Index Number:</strong> 
+                        <span id="studentIndex">{{ index_number if index_number else 'Not provided' }}</span>
+                    </p>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <h6><i class="bi bi-info-circle"></i> Basket Info</h6>
+                    <p class="mb-1"><strong>Last Updated:</strong> <span id="lastUpdated">Just now</span></p>
+                    <p class="mb-0"><strong>Storage:</strong> <span id="storageStatus">Local browser</span></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Priority Modal -->
+    <div class="modal-overlay" id="priorityModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title"><i class="bi bi-star"></i> Set Priority</h3>
+                <button class="modal-close" onclick="closeModal('priorityModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p>Set priority level for selected courses (1 = highest priority):</p>
+                <div class="priority-options">
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="radio" name="priority" id="priority1" value="1">
+                        <label class="form-check-label" for="priority1">
+                            Priority 1 (Highest)
+                        </label>
+                    </div>
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="radio" name="priority" id="priority2" value="2">
+                        <label class="form-check-label" for="priority2">
+                            Priority 2
+                        </label>
+                    </div>
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="radio" name="priority" id="priority3" value="3">
+                        <label class="form-check-label" for="priority3">
+                            Priority 3
+                        </label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="priority" id="priorityNone" value="0" checked>
+                        <label class="form-check-label" for="priorityNone">
+                            No Priority
+                        </label>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="primary-btn" onclick="applyPriority()">
+                    <i class="bi bi-check-circle"></i> Apply Priority
+                </button>
+                <button class="primary-btn primary-btn-danger" onclick="closeModal('priorityModal')">
+                    Cancel
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Application List Modal -->
+    <div class="modal-overlay" id="applicationModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title"><i class="bi bi-list-check"></i> Application List</h3>
+                <button class="modal-close" onclick="closeModal('applicationModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="applicationListContent">
+                    <!-- Application list will be generated here -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="primary-btn primary-btn-success" onclick="downloadApplicationList()">
+                    <i class="bi bi-download"></i> Download PDF
+                </button>
+                <button class="primary-btn" onclick="printApplicationList()">
+                    <i class="bi bi-printer"></i> Print
+                </button>
+                <button class="primary-btn primary-btn-danger" onclick="closeModal('applicationModal')">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div class="custom-toast" id="toast">
+        <i class="bi bi-check-circle-fill"></i>
+        <div style="flex-grow: 1;">
+            <div style="font-size: 0.9rem;" id="toastMessage">Operation successful!</div>
+        </div>
+        <button type="button" class="btn-close" onclick="hideToast()"></button>
+    </div>
+
+    <script src="{{ url_for('static', filename='basket.js') }}"></script>
+    
+    <!-- FORCE BASKET RENDER SCRIPT -->
+    <script>
+    // Basket page functionality
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('=== BASKET PAGE LOADED ===');
+        
+        // Initialize variables
+        let selectedItems = new Set();
+        let currentTab = 'all';
+        
+        // Force basket render
+        function forceBasketRender() {
+            if (window.basketManager) {
+                console.log('✅ basketManager found, rendering basket...');
+                
+                // Set user from URL params
+                const urlParams = new URLSearchParams(window.location.search);
+                const email = urlParams.get('email');
+                const index = urlParams.get('index');
+                
+                if (email && index) {
+                    window.basketManager.setUser(email, index);
+                }
+                
+                // Render basket items
+                renderBasketItems();
+                
+                // Update UI
+                updateLastUpdated();
+                updateTabCounts();
+                updateSelectionSummary();
+                
+                // Setup tab switching
+                setupTabSwitching();
+                
+                // Setup event listeners
+                setupEventListeners();
+            } else {
+                console.log('Waiting for basketManager...');
+                setTimeout(forceBasketRender, 100);
+            }
+        }
+        
+        // Render basket items
+        function renderBasketItems() {
+            if (!window.basketManager) return;
+            
+            const container = document.getElementById('basketItems');
+            if (!container) return;
+            
+            const basket = window.basketManager.getBasket();
+            console.log('Rendering', basket.length, 'basket items');
+            
+            // Filter items based on current tab
+            let filteredItems = basket;
+            if (currentTab !== 'all') {
+                filteredItems = filterItemsByTab(basket, currentTab);
+            }
+            
+            // Clear container
+            container.innerHTML = '';
+            
+            if (filteredItems.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-basket">
+                        <i class="bi bi-basket"></i>
+                        <h4>${getEmptyMessage(currentTab)}</h4>
+                        <p>${getEmptySubmessage(currentTab)}</p>
+                        <a href="/" class="primary-btn" style="margin-top: 20px;">
+                            <i class="bi bi-search"></i> Find Courses
+                        </a>
+                    </div>
+                `;
+                return;
+            }
+            
+            // Generate HTML for basket items
+            let html = '';
+            filteredItems.forEach((item) => {
+                const priorityDots = getPriorityDots(item.priority);
+                
+                html += `
+                    <div class="basket-item" id="item-${item.program_code}">
+                        <div class="item-checkbox">
+                            <input class="form-check-input" type="checkbox" 
+                                   id="select-${item.program_code}"
+                                   onchange="toggleSelectItem('${item.program_code}')"
+                                   ${selectedItems.has(item.program_code) ? 'checked' : ''}>
+                        </div>
+                        <div class="item-content">
+                            <div class="item-code">${item.program_code}</div>
+                            <div class="item-name">${item.course_name}</div>
+                            <div class="item-meta">
+                                <span class="item-institution">${item.institution}</span>
+                                <span>${item.program_type ? item.program_type.toUpperCase() : ''}</span>
+                                ${item.cutoff ? `<span>Cutoff: ${item.cutoff}</span>` : ''}
+                                ${priorityDots}
+                            </div>
+                        </div>
+                        <div class="item-actions">
+                            <button class="action-btn action-btn-priority" 
+                                    onclick="setSinglePriority('${item.program_code}')">
+                                <i class="bi bi-star"></i> Priority
+                            </button>
+                            <button class="action-btn action-btn-remove" 
+                                    onclick="removeFromBasket('${item.program_code}')">
+                                <i class="bi bi-trash"></i> Remove
+                            </button>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = html;
+        }
+        
+        // Helper functions
+        function filterItemsByTab(items, tab) {
+            switch(tab) {
+                case 'degree':
+                    return items.filter(item => item.program_type === 'degree');
+                case 'diploma':
+                    return items.filter(item => item.program_type === 'diploma');
+                case 'certificate':
+                    return items.filter(item => 
+                        item.program_type === 'certificate' || item.program_type === 'kmtc'
+                    );
+                case 'priority':
+                    return items.filter(item => item.priority && item.priority > 0);
+                default:
+                    return items;
+            }
+        }
+        
+        function getPriorityDots(priority) {
+            if (!priority || priority === 0) return '';
+            
+            return `
+                <div class="priority-indicator">
+                    ${[1, 2, 3].map(p => 
+                        `<span class="priority-dot ${p <= priority ? 'active' : ''}"></span>`
+                    ).join('')}
+                </div>
+            `;
+        }
+        
+        function getEmptyMessage(tab) {
+            switch(tab) {
+                case 'all': return 'Your basket is empty';
+                case 'degree': return 'No degree courses';
+                case 'diploma': return 'No diploma courses';
+                case 'certificate': return 'No certificate courses';
+                case 'priority': return 'No priority courses';
+                default: return 'Your basket is empty';
+            }
+        }
+        
+        function getEmptySubmessage(tab) {
+            switch(tab) {
+                case 'all': return 'Start adding courses from your search results';
+                case 'degree': return 'Add degree courses to see them here';
+                case 'diploma': return 'Add diploma courses to see them here';
+                case 'certificate': return 'Add certificate courses to see them here';
+                case 'priority': return 'Set priority on courses to see them here';
+                default: return 'Start adding courses from your search results';
+            }
+        }
+        
+        // Update tab counts
+        function updateTabCounts() {
+            if (!window.basketManager) return;
+            
+            const basket = window.basketManager.getBasket();
+            const degreeCount = basket.filter(item => item.program_type === 'degree').length;
+            const diplomaCount = basket.filter(item => item.program_type === 'diploma').length;
+            const certificateCount = basket.filter(item => 
+                item.program_type === 'certificate' || item.program_type === 'kmtc'
+            ).length;
+            const priorityCount = basket.filter(item => item.priority && item.priority > 0).length;
+            
+            // Update tab counts
+            document.getElementById('countAll').textContent = basket.length;
+            document.getElementById('countDegree').textContent = degreeCount;
+            document.getElementById('countDiploma').textContent = diplomaCount;
+            document.getElementById('countCertificate').textContent = certificateCount;
+            document.getElementById('countPriority').textContent = priorityCount;
+            
+            // Update hidden stats
+            document.getElementById('totalCourses').textContent = basket.length;
+            document.getElementById('degreeCount').textContent = degreeCount;
+            document.getElementById('diplomaCount').textContent = diplomaCount;
+            document.getElementById('selectedCount').textContent = selectedItems.size;
+        }
+        
+        // Update last updated time
+        function updateLastUpdated() {
+            const lastUpdatedEl = document.getElementById('lastUpdated');
+            if (lastUpdatedEl) {
+                const lastSaved = localStorage.getItem('kuccps_basket_last_updated');
+                if (lastSaved) {
+                    const date = new Date(lastSaved);
+                    lastUpdatedEl.textContent = date.toLocaleString();
+                }
+            }
+        }
+        
+        // Setup tab switching
+        function setupTabSwitching() {
+            document.querySelectorAll('.basket-tab').forEach(tab => {
+                tab.addEventListener('click', function() {
+                    // Get tab name from onclick attribute
+                    const onclickAttr = this.getAttribute('onclick');
+                    const match = onclickAttr.match(/switchTab\('(.+)'\)/);
+                    if (match) {
+                        const tabName = match[1];
+                        switchTab(tabName);
+                    }
+                });
+            });
+        }
+        
+        // Setup event listeners
+        function setupEventListeners() {
+            // Select all checkbox
+            const selectAllCheckbox = document.getElementById('selectAll');
+            if (selectAllCheckbox) {
+                selectAllCheckbox.addEventListener('change', toggleSelectAll);
+            }
+            
+            // Listen for basket updates
+            window.addEventListener('storage', function(e) {
+                if (e.key === 'kuccps_basket') {
+                    console.log('Basket updated from storage, refreshing...');
+                    renderBasketItems();
+                    updateTabCounts();
+                    updateSelectionSummary();
+                }
+            });
+        }
+        
+        // Tab switching function
+        function switchTab(tabName) {
+            console.log('Switching to tab:', tabName);
+            currentTab = tabName;
+            
+            // Update active tab UI
+            document.querySelectorAll('.basket-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Find and activate the clicked tab
+            document.querySelectorAll('.basket-tab').forEach(tab => {
+                const onclickAttr = tab.getAttribute('onclick');
+                if (onclickAttr && onclickAttr.includes(`switchTab('${tabName}')`)) {
+                    tab.classList.add('active');
+                }
+            });
+            
+            // Re-render items for this tab
+            renderBasketItems();
+        }
+        
+        // Selection functions
+        function toggleSelectAll() {
+            const selectAll = document.getElementById('selectAll').checked;
+            const checkboxes = document.querySelectorAll('.basket-item input[type="checkbox"]');
+            
+            if (!window.basketManager) return;
+            
+            const basket = window.basketManager.getBasket();
+            const filteredItems = filterItemsByTab(basket, currentTab);
+            
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = selectAll;
+                const programCode = checkbox.id.replace('select-', '');
+                
+                if (selectAll) {
+                    // Only add items that are in current filtered view
+                    if (filteredItems.some(item => item.program_code === programCode)) {
+                        selectedItems.add(programCode);
+                    }
+                } else {
+                    selectedItems.delete(programCode);
+                }
+            });
+            
+            updateSelectionSummary();
+        }
+        
+        function toggleSelectItem(programCode) {
+            const checkbox = document.getElementById(`select-${programCode}`);
+            if (!checkbox) return;
+            
+            if (checkbox.checked) {
+                selectedItems.add(programCode);
+            } else {
+                selectedItems.delete(programCode);
+                
+                // Uncheck select all if any item is unchecked
+                const selectAll = document.getElementById('selectAll');
+                if (selectAll) {
+                    selectAll.checked = false;
+                }
+            }
+            
+            updateSelectionSummary();
+        }
+        
+        function updateSelectionSummary() {
+            const selectedCount = selectedItems.size;
+            const summaryEl = document.getElementById('selectionSummary');
+            const summaryText = document.getElementById('selectedSummary');
+            
+            if (summaryText) {
+                summaryText.textContent = selectedCount;
+            }
+            
+            // Update hidden selected count
+            document.getElementById('selectedCount').textContent = selectedCount;
+            
+            if (summaryEl) {
+                if (selectedCount > 0) {
+                    summaryEl.classList.add('show');
+                } else {
+                    summaryEl.classList.remove('show');
+                }
+            }
+        }
+        
+        // Basket operations
+        function removeFromBasket(programCode) {
+            if (!window.basketManager) return;
+            
+            if (confirm('Are you sure you want to remove this course from your basket?')) {
+                window.basketManager.removeFromBasket(programCode).then(() => {
+                    selectedItems.delete(programCode);
+                    renderBasketItems();
+                    updateTabCounts();
+                    updateSelectionSummary();
+                    showToast('Course removed from basket', 'success');
+                });
+            }
+        }
+        
+        function setSinglePriority(programCode) {
+            // Store the program code for single priority setting
+            sessionStorage.setItem('singlePriorityItem', programCode);
+            document.getElementById('priorityModal').classList.add('show');
+        }
+        
+        // Modal functions
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('show');
+            sessionStorage.removeItem('singlePriorityItem');
+        }
+        
+        function applyPriority() {
+            const selectedPriority = document.querySelector('input[name="priority"]:checked').value;
+            const priority = parseInt(selectedPriority);
+            
+            // Check if it's a single item or multiple items
+            const singleItem = sessionStorage.getItem('singlePriorityItem');
+            
+            if (singleItem) {
+                // Update single item priority
+                updateItemPriority(singleItem, priority);
+                sessionStorage.removeItem('singlePriorityItem');
+            } else if (selectedItems.size > 0) {
+                // Update priority for all selected items
+                selectedItems.forEach(programCode => {
+                    updateItemPriority(programCode, priority);
+                });
+            }
+            
+            closeModal('priorityModal');
+            renderBasketItems();
+            updateTabCounts();
+            
+            const message = singleItem ? 
+                'Priority updated for course' : 
+                `Priority updated for ${selectedItems.size} course(s)`;
+            showToast(message, 'success');
+            
+            // Clear selection
+            selectedItems.clear();
+            updateSelectionSummary();
+        }
+        
+        function updateItemPriority(programCode, priority) {
+            if (!window.basketManager) return;
+            
+            const basket = window.basketManager.basket;
+            const index = basket.findIndex(item => item.program_code === programCode);
+            
+            if (index !== -1) {
+                basket[index].priority = priority;
+                basket[index].updated_at = new Date().toISOString();
+                window.basketManager.saveLocal();
+                
+                // Sync with server if user is logged in
+                if (window.basketManager.hasUser()) {
+                    window.basketManager.saveToServer();
+                }
+            }
+        }
+        
+        function setPriorityForSelected() {
+            if (selectedItems.size === 0) {
+                showToast('Please select courses first', 'warning');
+                return;
+            }
+            
+            document.getElementById('priorityModal').classList.add('show');
+        }
+        
+        function removeSelected() {
+            if (selectedItems.size === 0) {
+                showToast('Please select courses first', 'warning');
+                return;
+            }
+            
+            if (confirm(`Are you sure you want to remove ${selectedItems.size} selected course(s) from your basket?`)) {
+                if (!window.basketManager) return;
+                
+                const promises = Array.from(selectedItems).map(programCode => 
+                    window.basketManager.removeFromBasket(programCode)
+                );
+                
+                Promise.all(promises).then(() => {
+                    selectedItems.clear();
+                    renderBasketItems();
+                    updateTabCounts();
+                    updateSelectionSummary();
+                    showToast(`${promises.length} course(s) removed from basket`, 'success');
+                });
+            }
+        }
+        
+        function clearBasket() {
+            const basketCount = window.basketManager ? window.basketManager.getBasketCount() : 0;
+            
+            if (basketCount === 0) {
+                showToast('Basket is already empty', 'info');
+                return;
+            }
+            
+            if (confirm(`Are you sure you want to clear all ${basketCount} courses from your basket? This action cannot be undone.`)) {
+                if (window.basketManager) {
+                    window.basketManager.clearBasket().then(() => {
+                        selectedItems.clear();
+                        renderBasketItems();
+                        updateTabCounts();
+                        updateSelectionSummary();
+                        showToast('Basket cleared successfully', 'success');
+                    });
+                }
+            }
+        }
+        
+        function generateApplicationList() {
+            if (!window.basketManager || window.basketManager.getBasketCount() === 0) {
+                showToast('Your basket is empty', 'warning');
+                return;
+            }
+            
+            const basket = window.basketManager.getBasket();
+            const modal = document.getElementById('applicationModal');
+            const content = document.getElementById('applicationListContent');
+            
+            // Sort by priority, then program type
+            const sortedBasket = [...basket].sort((a, b) => {
+                if (a.priority && b.priority) return a.priority - b.priority;
+                if (a.priority) return -1;
+                if (b.priority) return 1;
+                return 0;
+            });
+            
+            let html = `
+                <div style="padding: 10px;">
+                    <h5 style="color: var(--primary-color); margin-bottom: 20px; border-bottom: 2px solid var(--primary-color); padding-bottom: 10px;">
+                        <i class="bi bi-list-check"></i> Application List
+                    </h5>
+                    <div style="margin-bottom: 15px; font-size: 0.9rem; color: #666;">
+                        <p><strong>Generated:</strong> ${new Date().toLocaleString()}</p>
+                        <p><strong>Total Courses:</strong> ${sortedBasket.length}</p>
+                    </div>
+                    <div style="max-height: 400px; overflow-y: auto;">
+            `;
+            
+            sortedBasket.forEach((item, index) => {
+                const priorityText = item.priority ? 
+                    `<span style="background: var(--warning-color); color: white; padding: 2px 8px; border-radius: 12px; font-size: 0.8rem;">Priority ${item.priority}</span>` : 
+                    '';
+                
+                html += `
+                    <div style="border: 1px solid #e0e0e0; border-radius: 8px; padding: 15px; margin-bottom: 12px; background: #f9f9f9;">
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+                            <div style="font-weight: 600; color: var(--secondary-color); font-size: 1.1rem;">
+                                ${index + 1}. ${item.course_name}
+                            </div>
+                            ${priorityText}
+                        </div>
+                        <div style="font-size: 0.9rem; color: #666; margin-top: 8px;">
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 8px;">
+                                <div><strong><i class="bi bi-code"></i> Code:</strong> ${item.program_code}</div>
+                                <div><strong><i class="bi bi-building"></i> Institution:</strong> ${item.institution}</div>
+                                <div><strong><i class="bi bi-tag"></i> Type:</strong> ${item.program_type.toUpperCase()}</div>
+                                ${item.cutoff ? `<div><strong><i class="bi bi-graph-up"></i> Cutoff:</strong> ${item.cutoff}</div>` : ''}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            html += `
+                    </div>
+                </div>
+            `;
+            
+            content.innerHTML = html;
+            modal.classList.add('show');
+        }
+        
+        function shareBasket() {
+            if (!window.basketManager || window.basketManager.getBasketCount() === 0) {
+                showToast('Your basket is empty', 'warning');
+                return;
+            }
+            
+            const basketCount = window.basketManager.getBasketCount();
+            const shareText = `I have selected ${basketCount} courses in my KUCCPS basket. View my selection at: ${window.location.href}`;
+            
+            if (navigator.share) {
+                navigator.share({
+                    title: 'My KUCCPS Course Basket',
+                    text: shareText,
+                    url: window.location.href
+                }).catch(error => {
+                    if (error.name !== 'AbortError') {
+                        copyToClipboard(shareText);
+                    }
+                });
+            } else {
+                copyToClipboard(shareText);
+            }
+        }
+        
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text)
+                .then(() => {
+                    showToast('Basket link copied to clipboard!', 'success');
+                })
+                .catch(err => {
+                    console.error('Failed to copy:', err);
+                    showToast('Failed to copy link', 'danger');
+                });
+        }
+        
+        function downloadApplicationList() {
+            showToast('PDF download started', 'success');
+            // Implement PDF download functionality here
+            // You can use libraries like jsPDF or html2pdf
+        }
+        
+        function printApplicationList() {
+            window.print();
+        }
+        
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            if (!toast) return;
+            
+            // Update toast content
+            toast.className = `custom-toast ${type}`;
+            document.getElementById('toastMessage').textContent = message;
+            
+            // Update icon based on type
+            const icon = toast.querySelector('i');
+            if (icon) {
+                icon.className = type === 'success' ? 
+                    'bi bi-check-circle-fill' : 
+                    'bi bi-exclamation-circle-fill';
+            }
+            
+            // Show toast
+            toast.classList.add('show');
+            
+            // Auto-hide after 3 seconds
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+        
+        function hideToast() {
+            const toast = document.getElementById('toast');
+            if (toast) {
+                toast.classList.remove('show');
+            }
+        }
+        
+        // Initialize everything
+        setTimeout(forceBasketRender, 200);
+        
+        // Make functions available globally
+        window.toggleSelectItem = toggleSelectItem;
+        window.setSinglePriority = setSinglePriority;
+        window.removeFromBasket = removeFromBasket;
+        window.setPriorityForSelected = setPriorityForSelected;
+        window.removeSelected = removeSelected;
+        window.clearBasket = clearBasket;
+        window.generateApplicationList = generateApplicationList;
+        window.shareBasket = shareBasket;
+        window.closeModal = closeModal;
+        window.applyPriority = applyPriority;
+        window.downloadApplicationList = downloadApplicationList;
+        window.printApplicationList = printApplicationList;
+        window.hideToast = hideToast;
+        window.switchTab = switchTab;
+        
+        console.log('✅ Basket page functions initialized');
+    });
+</script>
+</body>
+</html>

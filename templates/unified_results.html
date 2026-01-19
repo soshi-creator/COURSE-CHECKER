@@ -1,0 +1,1900 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your Course Results - KUCCPS</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='bootstrap.min.css') }}">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Add this in the header section -->
+<div data-user-email="{{ email }}" data-user-index="{{ index_number }}" style="display: none;"></div>
+    <style>
+        :root {
+            --primary-color: #3498db;
+            --secondary-color: #2c3e50;
+            --success-color: #2ecc71;
+            --danger-color: #e74c3c;
+            --warning-color: #f39c12;
+            --info-color: #3498db;
+            --light-color: #f8f9fa;
+            --dark-color: #343a40;
+            --gray-color: #95a5a6;
+            --border-radius: 12px;
+            --box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+            --gradient-primary: linear-gradient(135deg, var(--secondary-color), var(--primary-color));
+            --degree-color: #3498db;
+            --diploma-color: #2ecc71;
+            --certificate-color: #f39c12;
+            --kmtc-color: #9b59b6;
+        }
+
+        * {
+            font-family: 'Inter', sans-serif;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4e8f0 100%);
+            min-height: 100vh;
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+        }
+        /* Add this rule for collapsed state */
+.cluster-header .collapse-icon {
+    transform: rotate(-180deg);
+}
+
+.cluster-header.expanded .collapse-icon {
+    transform: rotate(0deg);
+}
+/* Ensure cluster content starts collapsed */
+.cluster-content {
+    max-height: 0;
+    padding: 0;
+}
+
+        .results-container {
+            max-width: 100%;
+            width: 100%;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        @media (min-width: 1200px) {
+            .results-container {
+                max-width: 1400px;
+            }
+        }
+
+        /* Header */
+        .results-header {
+            background: var(--gradient-primary);
+            color: white;
+            padding: 35px 30px;
+            border-radius: var(--border-radius);
+            margin-bottom: 30px;
+            box-shadow: var(--box-shadow);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .results-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320"><path fill="rgba(255,255,255,0.05)" d="M0,96L48,112C96,128,192,160,288,160C384,160,480,128,576,112C672,96,768,96,864,112C960,128,1056,160,1152,160C1248,160,1344,128,1392,112L1440,96L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path></svg>');
+            background-size: cover;
+            opacity: 0.3;
+        }
+
+        .header-content {
+            position: relative;
+            z-index: 2;
+        }
+
+        .program-badge {
+            display: inline-block;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 8px 20px;
+            border-radius: 25px;
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 15px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 25px;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        /* Action Bar */
+        .action-bar {
+            background: white;
+            padding: 25px 30px;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+            border: 1px solid rgba(0,0,0,0.05);
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .action-btn {
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .action-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.6s;
+        }
+
+        .action-btn:hover::before {
+            left: 100%;
+        }
+
+        .action-btn-primary {
+            background: linear-gradient(135deg, var(--primary-color), #2980b9);
+            color: white;
+            border: none;
+            box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
+        }
+
+        .action-btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(52, 152, 219, 0.4);
+            color: white;
+        }
+
+        .action-btn-outline {
+            background: white;
+            border: 2px solid var(--primary-color);
+            color: var(--primary-color);
+        }
+
+        .action-btn-outline:hover {
+            background: var(--primary-color);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(52, 152, 219, 0.2);
+        }
+
+        .action-btn-success {
+            background: linear-gradient(135deg, var(--success-color), #27ae60);
+            color: white;
+            border: none;
+            box-shadow: 0 4px 15px rgba(46, 204, 113, 0.3);
+        }
+
+        .action-btn-success:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(46, 204, 113, 0.4);
+            color: white;
+        }
+
+        /* Cluster Accordion */
+        .cluster-accordion {
+            background: white;
+            border-radius: var(--border-radius);
+            margin-bottom: 20px;
+            box-shadow: var(--box-shadow);
+            border: 1px solid rgba(0,0,0,0.05);
+            overflow: hidden;
+            max-height: 600px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .cluster-header {
+            padding: 20px 25px;
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.3s ease;
+            border-left: 5px solid;
+            flex-shrink: 0;
+        }
+
+        .cluster-header:hover {
+            background: linear-gradient(135deg, #e9ecef, #dee2e6);
+        }
+
+        .cluster-header.degree { border-left-color: var(--degree-color); }
+        .cluster-header.diploma { border-left-color: var(--diploma-color); }
+        .cluster-header.certificate { border-left-color: var(--certificate-color); }
+
+        .cluster-title {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: var(--secondary-color);
+            margin: 0;
+        }
+
+        .cluster-icon {
+            font-size: 1.5rem;
+        }
+
+        .cluster-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .course-count {
+            background: white;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--secondary-color);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            border: 2px solid;
+        }
+
+        .course-count.degree { border-color: var(--degree-color); }
+        .course-count.diploma { border-color: var(--diploma-color); }
+        .course-count.certificate { border-color: var(--certificate-color); }
+
+        .collapse-icon {
+            transition: transform 0.3s ease;
+            font-size: 1.2rem;
+            color: var(--gray-color);
+        }
+
+        /* TO THIS: */
+.cluster-header.expanded .collapse-icon {
+    transform: rotate(0deg);
+}
+        /* Scrollable Cluster Content */
+        .cluster-content {
+            padding: 0;
+            overflow: hidden;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+        }
+
+        .cluster-content.expanded {
+            max-height: 500px;
+            padding: 0;
+            overflow: hidden;
+        }
+
+        .cluster-content-wrapper {
+            padding: 25px;
+            overflow-y: auto;
+            max-height: 100%;
+            flex: 1;
+            scrollbar-width: thin;
+            scrollbar-color: var(--primary-color) #f0f0f0;
+        }
+
+        .cluster-content-wrapper::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .cluster-content-wrapper::-webkit-scrollbar-track {
+            background: #f0f0f0;
+            border-radius: 4px;
+        }
+
+        .cluster-content-wrapper::-webkit-scrollbar-thumb {
+            background: var(--primary-color);
+            border-radius: 4px;
+        }
+
+        .cluster-content-wrapper::-webkit-scrollbar-thumb:hover {
+            background: var(--secondary-color);
+        }
+
+        /* Course Cards */
+        .courses-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 20px;
+            min-height: 0;
+        }
+
+        .course-card {
+            border: 1px solid rgba(0,0,0,0.08);
+            border-radius: 10px;
+            padding: 20px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            background: white;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .course-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+            border-color: var(--primary-color);
+        }
+
+        .course-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: var(--primary-color);
+        }
+
+        .course-card.degree::before { background: var(--degree-color); }
+        .course-card.diploma::before { background: var(--diploma-color); }
+        .course-card.certificate::before { background: var(--certificate-color); }
+        .course-card.kmtc::before { background: var(--kmtc-color); }
+
+        .program-code-display {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+        }
+
+        .course-code {
+            font-family: 'Courier New', monospace;
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--secondary-color);
+            border: 1px solid rgba(0,0,0,0.05);
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .course-code-label {
+            font-size: 0.8rem;
+            color: var(--gray-color);
+            font-weight: 500;
+        }
+
+        .course-name {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--secondary-color);
+            margin-bottom: 12px;
+            line-height: 1.4;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .course-meta {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .meta-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9rem;
+            color: var(--gray-color);
+        }
+
+        .meta-item i {
+            width: 16px;
+            color: var(--primary-color);
+            font-size: 0.9rem;
+        }
+
+        .meta-item strong {
+            color: var(--secondary-color);
+            font-weight: 600;
+        }
+
+        .course-cutoff {
+            background: linear-gradient(135deg, #e3f2fd, #bbdefb);
+            padding: 8px 14px;
+            border-radius: 6px;
+            font-weight: 600;
+            color: #1565c0;
+            margin-top: 8px;
+            display: inline-block;
+            font-size: 0.9rem;
+            border: 1px solid rgba(21, 101, 192, 0.1);
+        }
+
+        /* Course Actions */
+        .course-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 1px solid rgba(0,0,0,0.08);
+        }
+
+        .course-btn {
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            transition: all 0.3s ease;
+            flex: 1;
+            justify-content: center;
+            min-height: 36px;
+        }
+
+        .course-btn-primary {
+            background: linear-gradient(135deg, var(--primary-color), #2980b9);
+            color: white;
+            border: none;
+        }
+
+        .course-btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 3px 10px rgba(52, 152, 219, 0.3);
+            color: white;
+        }
+
+        .course-btn-secondary {
+            background: white;
+            border: 1px solid var(--gray-color);
+            color: var(--gray-color);
+        }
+
+        .course-btn-secondary:hover {
+            background: var(--gray-color);
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        /* Basket Button States */
+        .basket-btn.added {
+            background: linear-gradient(135deg, var(--success-color), #27ae60) !important;
+            border-color: var(--success-color) !important;
+            color: white !important;
+        }
+
+        .basket-btn.added:hover {
+            background: #27ae60 !important;
+            border-color: #27ae60 !important;
+            transform: translateY(-2px);
+        }
+
+        /* KMTC View */
+        .kmtc-header {
+            background: linear-gradient(135deg, var(--kmtc-color), #8e44ad);
+            color: white;
+            padding: 25px;
+            border-radius: var(--border-radius);
+            margin-bottom: 30px;
+            box-shadow: var(--box-shadow);
+            text-align: center;
+        }
+
+        .flat-courses-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(330px, 1fr));
+            gap: 20px;
+        }
+
+        /* Requirements List */
+        .requirements-list {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid rgba(0,0,0,0.08);
+        }
+
+        .requirements-list h6 {
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: var(--secondary-color);
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .requirements-list ul {
+            margin: 0;
+            padding-left: 18px;
+            font-size: 0.85rem;
+            color: var(--gray-color);
+        }
+
+        .requirements-list li {
+            margin-bottom: 4px;
+            line-height: 1.4;
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 80px 20px;
+            background: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            margin-top: 30px;
+            border: 2px dashed rgba(0,0,0,0.1);
+        }
+
+        .empty-icon {
+            font-size: 4rem;
+            background: linear-gradient(135deg, #f0f0f0, #e0e0e0);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 20px;
+        }
+
+        /* Student Info Footer */
+        .student-footer {
+            background: white;
+            border-radius: var(--border-radius);
+            padding: 20px;
+            margin-top: 30px;
+            box-shadow: var(--box-shadow);
+            border: 1px solid rgba(0,0,0,0.05);
+        }
+
+        .student-name {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--secondary-color);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 100%;
+            display: inline-block;
+        }
+
+        /* Back to Top Button */
+        .back-to-top {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: linear-gradient(135deg, var(--primary-color), #2980b9);
+            color: white;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            text-decoration: none;
+            box-shadow: 0 5px 15px rgba(52, 152, 219, 0.4);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 1000;
+            border: 2px solid white;
+            opacity: 0;
+            visibility: hidden;
+        }
+
+        .back-to-top.visible {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .back-to-top:hover {
+            transform: translateY(-3px) scale(1.1);
+            color: white;
+            box-shadow: 0 8px 20px rgba(52, 152, 219, 0.5);
+        }
+
+        /* Toast Notification */
+        .custom-toast {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            z-index: 99999;
+            width: 90%;
+            max-width: 400px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+            padding: 15px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .custom-toast.show {
+            transform: translateX(-50%) translateY(0);
+        }
+
+        .custom-toast i {
+            font-size: 1.3rem;
+        }
+
+        .custom-toast.success i {
+            color: var(--success-color);
+        }
+
+        .custom-toast.danger i {
+            color: var(--danger-color);
+        }
+
+        /* Cluster Management */
+        .cluster-management {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .cluster-manage-btn {
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            border: 1px solid var(--gray-color);
+            background: white;
+            color: var(--gray-color);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .cluster-manage-btn:hover {
+            background: var(--gray-color);
+            color: white;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1200px) {
+            .courses-grid,
+            .flat-courses-grid {
+                grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            }
+            
+            .cluster-accordion {
+                max-height: 550px;
+            }
+            
+            .cluster-content.expanded {
+                max-height: 450px;
+            }
+        }
+
+        @media (max-width: 992px) {
+            .courses-grid,
+            .flat-courses-grid {
+                grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            }
+            
+            .cluster-accordion {
+                max-height: 500px;
+            }
+            
+            .cluster-content.expanded {
+                max-height: 400px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .results-container {
+                padding: 15px;
+            }
+
+            .results-header {
+                padding: 25px 20px;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .action-bar {
+                flex-direction: column;
+                gap: 15px;
+                padding: 20px;
+            }
+
+            .action-buttons {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .courses-grid,
+            .flat-courses-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .cluster-header {
+                flex-direction: column;
+                gap: 10px;
+                padding: 15px;
+            }
+
+            .cluster-info {
+                width: 100%;
+                justify-content: space-between;
+            }
+
+            .cluster-content-wrapper {
+                padding: 15px;
+            }
+
+            .course-actions {
+                flex-direction: column;
+            }
+
+            .course-btn {
+                width: 100%;
+            }
+
+            .back-to-top {
+                bottom: 20px;
+                right: 20px;
+                width: 45px;
+                height: 45px;
+            }
+
+            .custom-toast {
+                width: 95%;
+                max-width: 95%;
+                bottom: 20px;
+            }
+
+            .cluster-management {
+                justify-content: center;
+                flex-wrap: wrap;
+            }
+            
+            .cluster-accordion {
+                max-height: 450px;
+            }
+            
+            .cluster-content.expanded {
+                max-height: 350px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .action-btn {
+                padding: 8px 16px;
+                font-size: 0.9rem;
+            }
+            
+            .course-card {
+                padding: 15px;
+            }
+
+            .course-name {
+                font-size: 1rem;
+            }
+
+            .course-btn {
+                padding: 8px;
+                font-size: 0.8rem;
+            }
+            
+            .cluster-accordion {
+                max-height: 400px;
+            }
+            
+            .cluster-content.expanded {
+                max-height: 300px;
+            }
+        }
+
+        /* Animation */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .course-card {
+            animation: fadeIn 0.3s ease forwards;
+        }
+
+        @keyframes slideDown {
+            from { max-height: 0; opacity: 0; }
+            to { max-height: 500px; opacity: 1; }
+        }
+
+        .cluster-content.expanded {
+            animation: slideDown 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        html, body {
+            max-width: 100%;
+            overflow-x: hidden;
+        }
+
+        .results-container {
+            width: 100%;
+        }
+        
+        .cluster-content-wrapper {
+            border-top: 1px solid rgba(0,0,0,0.08);
+        }
+        /* Updated CSS for responsive design */
+
+/* For the stats grid on mobile - display as 2 columns */
+@media (max-width: 768px) {
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+    }
+    
+    /* Make stat cards smaller on mobile */
+    .stat-card {
+        padding: 12px 8px;
+    }
+    
+    .stat-value {
+        font-size: 1.4rem; /* Smaller font for values */
+        margin-bottom: 3px;
+    }
+    
+    .stat-label {
+        font-size: 0.75rem; /* Smaller label text */
+    }
+    
+    /* Adjust the student name display */
+    .stat-card:last-child .stat-value {
+        font-size: 1.1rem; /* Even smaller for student name */
+    }
+}
+
+/* For very small phones */
+@media (max-width: 480px) {
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 8px;
+    }
+    
+    .stat-card {
+        padding: 10px 6px;
+    }
+    
+    .stat-value {
+        font-size: 1.3rem;
+    }
+    
+    .stat-label {
+        font-size: 0.7rem;
+    }
+}
+
+/* Adjust cluster accordion scrolling area on mobile */
+@media (max-width: 768px) {
+    .cluster-accordion {
+        max-height: none; /* Remove fixed max-height on mobile */
+        min-height: auto;
+    }
+    
+   .cluster-content.expanded {
+        max-height: 80vh !important; /* Increased from 70vh to 80vh */
+        min-height: 350px; /* Increased minimum height */
+    }
+    
+    .cluster-content-wrapper {
+        max-height: calc(80vh - 65px) !important;
+        padding: 15px;
+    }
+}
+@media (max-width: 480px) {
+    .cluster-content.expanded {
+        max-height: 75vh !important;
+        min-height: 320px;
+    }
+    
+    .cluster-content-wrapper {
+        max-height: calc(75vh - 60px) !important;
+    }
+}
+
+/* Reduce course card height on mobile */
+@media (max-width: 768px) {
+    .course-card {
+        padding: 15px;
+        min-height: auto;
+    }
+    
+    .course-name {
+        font-size: 0.95rem;
+        -webkit-line-clamp: 3; /* Allow more lines on mobile */
+        line-height: 1.3;
+        margin-bottom: 10px;
+    }
+    
+    .program-code-display {
+        margin-bottom: 8px;
+    }
+    
+    .course-code {
+        padding: 4px 8px;
+        font-size: 0.8rem;
+    }
+    
+    .course-meta {
+        margin-bottom: 10px;
+        gap: 6px;
+    }
+    
+    .meta-item {
+        font-size: 0.8rem;
+        gap: 6px;
+    }
+    
+    .course-actions {
+        margin-top: 15px;
+        padding-top: 12px;
+        gap: 8px;
+    }
+    
+    .course-btn {
+        padding: 6px 10px;
+        font-size: 0.8rem;
+        min-height: 32px;
+    }
+    
+    .requirements-list {
+        margin-top: 10px;
+        padding-top: 10px;
+    }
+    
+    .requirements-list h6 {
+        font-size: 0.85rem;
+        margin-bottom: 5px;
+    }
+    
+    .requirements-list ul {
+        font-size: 0.75rem;
+        padding-left: 15px;
+    }
+    
+    .requirements-list li {
+        margin-bottom: 3px;
+    }
+}
+
+/* For even smaller screens */
+@media (max-width: 480px) {
+    .cluster-content.expanded {
+        max-height: 65vh;
+        min-height: 280px;
+    }
+    
+    .cluster-content-wrapper {
+        padding: 12px;
+        max-height: calc(65vh - 65px);
+    }
+    
+    .course-card {
+        padding: 12px;
+    }
+    
+    .course-name {
+        font-size: 0.9rem;
+    }
+    
+    .course-btn {
+        font-size: 0.75rem;
+        padding: 5px 8px;
+    }
+}
+
+/* Adjust cluster header on mobile */
+@media (max-width: 768px) {
+    .cluster-header {
+        padding: 12px 15px;
+    }
+    
+    .cluster-title {
+        font-size: 1.1rem;
+    }
+    
+    .cluster-icon {
+        font-size: 1.3rem;
+    }
+    
+    .course-count {
+        padding: 4px 12px;
+        font-size: 0.85rem;
+    }
+}
+
+/* Make action buttons more compact on mobile */
+@media (max-width: 768px) {
+    .action-bar {
+        padding: 15px;
+        gap: 12px;
+    }
+    
+    .action-btn {
+        padding: 8px 14px;
+        font-size: 0.9rem;
+    }
+    
+    .action-buttons {
+        gap: 8px;
+    }
+}
+
+/* Adjust results header on mobile */
+@media (max-width: 768px) {
+    .results-header {
+        padding: 20px 15px;
+    }
+    
+    .program-badge {
+        padding: 6px 16px;
+        font-size: 0.9rem;
+        margin-bottom: 12px;
+    }
+    
+    h1 {
+        font-size: 1.8rem !important;
+        margin-bottom: 8px !important;
+    }
+    
+    .results-header p {
+        font-size: 1rem !important;
+        margin-bottom: 15px !important;
+    }
+}
+
+/* Fix for student footer on mobile */
+@media (max-width: 768px) {
+    .student-footer {
+        padding: 15px;
+    }
+    
+    .student-footer h6 {
+        font-size: 0.9rem;
+    }
+    
+    .student-footer p {
+        font-size: 0.85rem;
+        margin-bottom: 5px;
+    }
+}
+/* Add these specific styles to reduce course card height on mobile */
+
+@media (max-width: 768px) {
+    .course-card {
+        padding: 12px 15px; /* Reduced vertical padding */
+        min-height: auto;
+        height: auto;
+        margin-bottom: 10px;
+    }
+    
+    /* Reduce spacing between elements */
+    .program-code-display {
+        margin-bottom: 8px !important;
+    }
+    
+    .course-name {
+        font-size: 0.95rem;
+        line-height: 1.3;
+        margin-bottom: 8px !important;
+        min-height: 2.6em; /* Limit to 2 lines */
+        max-height: 2.6em;
+        overflow: hidden;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+    }
+    
+    .course-meta {
+        margin-bottom: 8px !important;
+        gap: 5px;
+    }
+    
+    .meta-item {
+        font-size: 0.8rem;
+        gap: 5px;
+        margin-bottom: 3px;
+        min-height: auto;
+        line-height: 1.2;
+    }
+    
+    .meta-item i {
+        font-size: 0.8rem;
+        min-width: 16px;
+    }
+    
+    /* Make requirements list more compact */
+    .requirements-list {
+        margin-top: 8px !important;
+        padding-top: 8px !important;
+    }
+    
+    .requirements-list h6 {
+        font-size: 0.8rem;
+        margin-bottom: 4px;
+        line-height: 1.2;
+    }
+    
+    .requirements-list ul {
+        font-size: 0.75rem;
+        padding-left: 15px;
+        margin-bottom: 0;
+    }
+    
+    .requirements-list li {
+        margin-bottom: 2px;
+        line-height: 1.2;
+    }
+    
+    /* Reduce course actions size */
+    .course-actions {
+        margin-top: 10px !important;
+        padding-top: 10px !important;
+        gap: 6px;
+    }
+    
+    .course-btn {
+        padding: 5px 8px !important;
+        font-size: 0.75rem;
+        min-height: 30px;
+        height: 30px;
+    }
+    
+    .course-btn i {
+        font-size: 0.8rem;
+    }
+    
+    /* Remove some spacing from course cutoff */
+    .course-cutoff {
+        padding: 5px 10px;
+        font-size: 0.8rem;
+        margin-top: 5px;
+    }
+    
+    /* Make course code smaller */
+    .course-code {
+        padding: 3px 8px;
+        font-size: 0.75rem;
+        border-radius: 4px;
+    }
+    
+    .course-code-label {
+        font-size: 0.7rem;
+    }
+}
+
+/* For very small phones - even more compact */
+@media (max-width: 480px) {
+    .course-card {
+        padding: 10px 12px;
+    }
+    
+    .course-name {
+        font-size: 0.9rem;
+        line-height: 1.25;
+        min-height: 2.5em;
+        max-height: 2.5em;
+    }
+    
+    .course-meta {
+        margin-bottom: 6px !important;
+    }
+    
+    .meta-item {
+        font-size: 0.75rem;
+    }
+    
+    .course-actions {
+        margin-top: 8px !important;
+        padding-top: 8px !important;
+    }
+    
+    .course-btn {
+        padding: 4px 6px !important;
+        font-size: 0.7rem;
+        min-height: 28px;
+        height: 28px;
+    }
+    
+    /* Reduce grid gap */
+    .courses-grid,
+    .flat-courses-grid {
+        gap: 12px;
+    }
+    
+    /* Make the colored left border thinner */
+    .course-card::before {
+        width: 3px;
+    }
+}
+
+/* Optional: Reduce line height for all text in course card */
+@media (max-width: 768px) {
+    .course-card * {
+        line-height: 1.3 !important;
+    }
+}
+
+/* Make sure no fixed heights are set */
+@media (max-width: 768px) {
+    .course-card,
+    .course-name,
+    .course-meta,
+    .requirements-list,
+    .course-actions {
+        max-height: none !important;
+    }
+}
+
+/* For tablet screens - medium compact */
+@media (min-width: 768px) and (max-width: 992px) {
+    .course-card {
+        padding: 15px;
+    }
+    
+    .course-name {
+        font-size: 1rem;
+        line-height: 1.35;
+    }
+    
+    .course-actions {
+        margin-top: 15px;
+        padding-top: 12px;
+    }
+    
+    .course-btn {
+        padding: 6px 10px;
+        font-size: 0.85rem;
+    }
+}
+    </style>
+</head>
+<body>
+    <!-- Include Navbar -->
+    {% if navbar %}
+        {{ navbar|safe }}
+    {% else %}
+        {% include 'navbar.html' %}
+    {% endif %}
+
+    <!-- Basket Manager Script -->
+    <script src="{{ url_for('static', filename='js/basket.js') }}"></script>
+
+    <div class="results-container">
+        <!-- Header -->
+        <div class="results-header">
+            <div class="header-content">
+                <span class="program-badge">
+                    <i class="bi bi-{{ 'mortarboard' if program_type == 'degree' else 'file-earmark-text' if program_type == 'diploma' else 'award' if program_type == 'certificate' else 'heart-pulse' }}"></i>
+                    {{ program_type|title }} Program Results
+                </span>
+                
+                <h1 style="margin: 0 0 10px 0; font-size: 2.2rem; font-weight: 700;">
+                    Your Qualified Courses
+                </h1>
+                <p style="margin: 0; opacity: 0.9; font-size: 1.1rem;">
+                    Based on your KCSE grades and preferences
+                </p>
+
+                <!-- Simple version -->
+{% set total_courses = [] %}
+{% set total_clusters = [] %}
+
+{% if result_type == 'clustered' %}
+  {% for cluster in results_data %}
+    {% if cluster.courses and cluster.courses|length > 0 %}
+      {% if total_clusters.append(1) %}{% endif %}
+      {% for course in cluster.courses %}
+        {% if total_courses.append(1) %}{% endif %}
+      {% endfor %}
+    {% endif %}
+  {% endfor %}
+{% else %}
+  {% if results_data and results_data|length > 0 %}
+    {% if total_clusters.append(1) %}{% endif %}
+    {% for course in results_data %}
+      {% if total_courses.append(1) %}{% endif %}
+    {% endfor %}
+  {% endif %}
+{% endif %}
+
+{{ total_courses|length }} course{{ 's' if total_courses|length != 1 else '' }} found
+
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-value">{{ total_courses|length }}</div>
+                        <div class="stat-label">Total Courses</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">{{ program_type|title }}</div>
+                        <div class="stat-label">Program Type</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">{{ total_clusters|length }}</div>
+                        <div class="stat-label">
+                            {% if result_type == 'clustered' %}
+                                {% if program_type == 'degree' %}Clusters{% else %}Categories{% endif %}
+                            {% else %}
+                                Category
+                            {% endif %}
+                        </div>
+                    </div>
+                    <!-- In your HTML, update the student card -->
+<div class="stat-card">
+    <div class="stat-value" style="font-size: 1.2rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+        {% if email and '@' in email %}
+            {{ email.split('@')[0] }}
+        {% elif email %}
+            {{ email }}
+        {% else %}
+            Student
+        {% endif %}
+    </div>
+    <div class="stat-label">Student</div>
+</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Action Bar -->
+        <div class="action-bar">
+            <div class="action-buttons">
+                <a href="/" class="btn action-btn action-btn-outline">
+                    <i class="bi bi-arrow-left"></i> Back to Home
+                </a>
+                <!-- Change this line: -->
+<a href="/basket" class="btn action-btn action-btn-success" id="basketLink">
+
+<!-- To this: -->
+<a href="/basket?email={{ email|urlencode }}&index={{ index_number|urlencode }}" 
+   class="btn action-btn action-btn-success" 
+   id="basketLink">
+    <i class="bi bi-basket"></i> View Basket 
+    <span id="basketBadge" class="badge bg-danger ms-1" style="display: none;">0</span>
+</a>
+            </div>
+            
+            <div class="action-buttons">
+                {% if pdf_data_id %}
+                <a href="/download-pdf/{{ pdf_data_id }}" class="btn action-btn action-btn-primary">
+                    <i class="bi bi-download"></i> Download PDF
+                </a>
+                {% endif %}
+                <button onclick="shareResults()" class="btn action-btn action-btn-outline">
+                    <i class="bi bi-share"></i> Share Results
+                </button>
+            </div>
+        </div>
+
+        <!-- Results Content -->
+        <div class="results-content">
+            {% if result_type == 'clustered' and results_data %}
+                <!-- Clustered View (Degree/Diploma/Certificate) -->
+                {% if results_data|length > 1 %}
+                <div class="cluster-management">
+                    <button class="cluster-manage-btn" onclick="expandAllClusters()">
+                        <i class="bi bi-chevron-double-down"></i> Expand All
+                    </button>
+                    <button class="cluster-manage-btn" onclick="collapseAllClusters()">
+                        <i class="bi bi-chevron-double-up"></i> Collapse All
+                    </button>
+                </div>
+                {% endif %}
+                
+                {% for cluster in results_data %}
+                <div class="cluster-accordion">
+                    <div class="cluster-header {{ program_type }}" 
+                         onclick="toggleCluster(this)"
+                         data-cluster-id="cluster-{{ loop.index }}">
+                        <div class="cluster-title">
+                            <i class="bi bi-{{ 'diagram-3' if program_type == 'degree' else 'collection' if program_type == 'diploma' else 'folder' }} cluster-icon"></i>
+                            <span>{{ cluster.label|default('Cluster ' ~ loop.index) }}</span>
+                        </div>
+                        <div class="cluster-info">
+                            <span class="course-count {{ program_type }}">
+                                {{ cluster.courses|length if cluster.courses else 0 }} 
+                                course{% if cluster.courses|length != 1 %}s{% endif %}
+                            </span>
+                            <i class="bi bi-chevron-up collapse-icon"></i>
+                        </div>
+                    </div>
+                    <div class="cluster-content" id="content-cluster-{{ loop.index }}">
+                        <div class="cluster-content-wrapper">
+                            {% if cluster.courses %}
+                            <div class="courses-grid">
+                                {% for course in cluster.courses %}
+                                {% set safe_course_name = course.name | replace('"', '&quot;') | replace("'", "&#39;") %}
+                                {% set safe_institution = course.institution | replace('"', '&quot;') | replace("'", "&#39;") %}
+                                <div class="course-card {{ program_type }}" 
+                                     data-course-id="{{ course.program_code }}"
+                                     id="course-{{ course.program_code }}">
+                                    <div class="program-code-display">
+                                        <div class="course-code">
+                                            <span class="course-code-label">Code:</span>
+                                            <span>{{ course.program_code }}</span>
+                                        </div>
+                                    </div>
+                                    <h3 class="course-name">{{ course.name }}</h3>
+                                    
+                                    <div class="course-meta">
+                                        <div class="meta-item">
+                                            <i class="bi bi-building"></i>
+                                            <span>{{ course.institution }}</span>
+                                        </div>
+                                        
+                                        {% if course.cutoff is defined and course.cutoff is not none %}
+                                        <div class="meta-item">
+                                            <i class="bi bi-graph-up"></i>
+                                            <span>Cutoff: <strong>{{ course.cutoff }}</strong></span>
+                                        </div>
+                                        {% endif %}
+                                        
+                                        {% if program_type == 'degree' and course.cluster %}
+                                        <div class="meta-item">
+                                            <i class="bi bi-diagram-3"></i>
+                                            <span>Cluster: <strong>{{ course.cluster }}</strong></span>
+                                        </div>
+                                        {% endif %}
+                                        
+                                        {% if course.duration %}
+                                        <div class="meta-item">
+                                            <i class="bi bi-clock"></i>
+                                            <span>Duration: {{ course.duration }}</span>
+                                        </div>
+                                        {% endif %}
+                                    </div>
+
+                                    {% if course.requirements %}
+                                    <div class="requirements-list">
+                                        <h6><i class="bi bi-list-check"></i> Requirements:</h6>
+                                        <ul>
+                                            {% for req in course.requirements %}
+                                            <li>
+                                                {% if req.subject %}
+                                                    {{ req.subject }}: {{ req.minGrade }}
+                                                {% elif req.condition %}
+                                                    {% for cond in req.condition %}
+                                                        {{ cond.subject }}: {{ cond.minGrade }}{% if not loop.last %} OR {% endif %}
+                                                    {% endfor %}
+                                                {% endif %}
+                                            </li>
+                                            {% endfor %}
+                                        </ul>
+                                    </div>
+                                    {% endif %}
+
+                                    <div class="course-actions">
+                                        <button class="btn course-btn course-btn-primary basket-btn"
+                                                onclick="addToBasket(
+                                                    '{{ course.program_code }}',
+                                                    '{{ safe_course_name }}',
+                                                    '{{ safe_institution }}',
+                                                    '{{ program_type }}',
+                                                    {{ course.cutoff|tojson if course.cutoff is defined else 'null' }},
+                                                    '{{ course.cluster if course.cluster else "" }}'
+                                                )">
+                                            <i class="bi bi-basket"></i> Add to Basket
+                                        </button>
+                                        
+                                        <button onclick="copyCourseInfo('{{ course.program_code }}', '{{ safe_course_name }}', '{{ safe_institution }}')"
+                                                class="btn course-btn course-btn-secondary">
+                                            <i class="bi bi-clipboard"></i> Copy
+                                        </button>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+
+            {% elif result_type == 'flat' and results_data %}
+                <!-- Flat View (KMTC) -->
+                <div class="kmtc-header">
+                    <h2><i class="bi bi-heart-pulse"></i> KMTC Course Results</h2>
+                    <p>Medical Training College Programs</p>
+                </div>
+                
+                <div class="flat-courses-grid">
+                    {% for course in results_data %}
+                    {% set safe_course_name = course.name | replace('"', '&quot;') | replace("'", "&#39;") %}
+                    {% set safe_institution = course.institution | replace('"', '&quot;') | replace("'", "&#39;") %}
+                    <div class="course-card kmtc" 
+                         data-course-id="{{ course.program_code }}"
+                         id="course-{{ course.program_code }}">
+                        <div class="program-code-display">
+                            <div class="course-code">
+                                <span class="course-code-label">Program Code:</span>
+                                <span>{{ course.program_code }}</span>
+                            </div>
+                        </div>
+                        <h3 class="course-name">{{ course.name }}</h3>
+                        
+                        <div class="course-meta">
+                            <div class="meta-item">
+                                <i class="bi bi-building"></i>
+                                <span>{{ course.institution }}</span>
+                            </div>
+                            
+                            {% if course.duration %}
+                            <div class="meta-item">
+                                <i class="bi bi-clock"></i>
+                                <span>Duration: {{ course.duration }}</span>
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        {% if course.requirements %}
+                        <div class="requirements-list">
+                            <h6><i class="bi bi-list-check"></i> Requirements:</h6>
+                            <ul>
+                                {% for req in course.requirements %}
+                                <li>{{ req.subject }}: {{ req.minGrade }}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                        {% endif %}
+
+                        <div class="course-actions">
+                            <button class="btn course-btn course-btn-primary basket-btn"
+                                    onclick="addToBasket(
+                                        '{{ course.program_code }}',
+                                        '{{ safe_course_name }}',
+                                        '{{ safe_institution }}',
+                                        'kmtc'
+                                    )">
+                                <i class="bi bi-basket"></i> Add to Basket
+                            </button>
+                            
+                            <button onclick="copyCourseInfo('{{ course.program_code }}', '{{ safe_course_name }}', '{{ safe_institution }}')"
+                                    class="btn course-btn course-btn-secondary">
+                                <i class="bi bi-clipboard"></i> Copy
+                            </button>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+
+            {% else %}
+                <!-- Empty State -->
+                <div class="empty-state">
+                    <div class="empty-icon">
+                        <i class="bi bi-emoji-frown"></i>
+                    </div>
+                    <h3 style="color: var(--secondary-color); margin-bottom: 15px;">
+                        No Courses Found
+                    </h3>
+                    <p style="color: var(--gray-color); max-width: 500px; margin: 0 auto 25px;">
+                        No courses match your current grades. Try different programs or check your grade entries.
+                    </p>
+                    <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
+                        <a href="/" class="btn action-btn action-btn-primary">
+                            <i class="bi bi-house-door"></i> Back to Home
+                        </a>
+                        <a href="/checker" class="btn action-btn action-btn-outline">
+                            <i class="bi bi-search"></i> Try Different Program
+                        </a>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Student Info Footer -->
+        <div class="student-footer">
+            <div class="row">
+                <div class="col-md-6">
+                    <h6><i class="bi bi-person-circle"></i> Student Information</h6>
+                    <p class="mb-1"><strong>Email:</strong> 
+                        <span class="student-name" title="{{ email if email else 'Not provided' }}">
+                            {{ email if email else 'Not provided' }}
+                        </span>
+                    </p>
+                    <p class="mb-0"><strong>Index Number:</strong> {{ index_number if index_number else 'Not provided' }}</p>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <h6><i class="bi bi-info-circle"></i> Results Info</h6>
+                    <p class="mb-1"><strong>Generated:</strong> <span id="generated-time">{{ generated_time if generated_time else '' }}</span></p>
+                    <p class="mb-0"><strong>Program:</strong> {{ program_type|title }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Back to Top Button -->
+    <a href="#" class="back-to-top" id="backToTop">
+        <i class="bi bi-arrow-up"></i>
+    </a>
+
+    <script>
+        // Set current date/time
+        document.addEventListener('DOMContentLoaded', function() {
+            const generatedTimeElement = document.getElementById('generated-time');
+            if (generatedTimeElement && !generatedTimeElement.textContent.trim()) {
+                const now = new Date();
+                generatedTimeElement.textContent = now.toISOString().split('T')[0] + ' ' + 
+                    now.getHours().toString().padStart(2, '0') + ':' + 
+                    now.getMinutes().toString().padStart(2, '0');
+            }
+
+            // Check basket status
+            setTimeout(() => {
+                if (window.basketManager) {
+                    window.basketManager.checkAllCourses();
+                }
+            }, 1000);
+
+            // Back to top button
+            const backToTop = document.getElementById('backToTop');
+            window.addEventListener('scroll', function() {
+                if (window.pageYOffset > 300) {
+                    backToTop.classList.add('visible');
+                } else {
+                    backToTop.classList.remove('visible');
+                }
+            });
+
+            backToTop.addEventListener('click', function(e) {
+                e.preventDefault();
+                window.scrollTo({
+                    top: 0,
+                    behavior: 'smooth'
+                });
+            });
+
+            // Initialize clusters as closed
+            initClusters();
+        });
+
+        // Cluster accordion functionality
+        // Also update the toggle function to be more explicit:
+function toggleCluster(header) {
+    const isExpanded = header.classList.contains('expanded');
+    const content = header.nextElementSibling;
+    
+    if (isExpanded) {
+        header.classList.remove('expanded');
+        content.classList.remove('expanded');
+        console.log('Cluster collapsed');
+    } else {
+        header.classList.add('expanded');
+        content.classList.add('expanded');
+        console.log('Cluster expanded');
+    }
+}
+
+        function expandAllClusters() {
+            document.querySelectorAll('.cluster-header').forEach(header => {
+                header.classList.add('expanded');
+                header.nextElementSibling.classList.add('expanded');
+            });
+        }
+
+        function collapseAllClusters() {
+            document.querySelectorAll('.cluster-header').forEach(header => {
+                header.classList.remove('expanded');
+                header.nextElementSibling.classList.remove('expanded');
+            });
+        }
+
+       // Initialize all clusters as closed - FIXED VERSION
+function initClusters() {
+    const clusterHeaders = document.querySelectorAll('.cluster-header');
+    clusterHeaders.forEach((header) => {
+        const content = header.nextElementSibling;
+        // Ensure no expanded class exists
+        header.classList.remove('expanded');
+        content.classList.remove('expanded');
+        
+        // Log for debugging
+        console.log('Cluster initialized as collapsed:', header.classList.contains('expanded'));
+    });
+}
+
+       // Basket functionality - FIXED VERSION
+       // Basket functionality - DEBUG VERSION
+// In unified_results.html, replace the addToBasket function with:
+function addToBasket(programCode, courseName, institution, programType, cutoff = null, cluster = '') {
+    if (window.basketManager) {
+        window.basketManager.addToBasket(
+            programCode,
+            decodeHtmlEntities(courseName),
+            decodeHtmlEntities(institution),
+            programType,
+            cutoff,
+            cluster
+        ).then(wasAdded => {
+            const btn = document.querySelector(`#course-${programCode} .basket-btn`);
+            if (btn) {
+                btn.classList.add('added');
+                btn.innerHTML = '<i class="bi bi-check-circle"></i> Added';
+                
+                const message = wasAdded ? 'Course added to basket!' : 'Course updated in basket!';
+                showToast(message, 'success');
+            }
+        }).catch(error => {
+            console.error('Error adding to basket:', error);
+            showToast('Failed to add to basket', 'danger');
+        });
+    }
+}
+        // Copy course info
+        function copyCourseInfo(programCode, courseName, institution) {
+            const decodedCourseName = decodeHtmlEntities(courseName);
+            const decodedInstitution = decodeHtmlEntities(institution);
+            const text = `Program Code: ${programCode}\nCourse Name: ${decodedCourseName}\nInstitution: ${decodedInstitution}`;
+            
+            navigator.clipboard.writeText(text)
+                .then(() => {
+                    showToast('Course information copied to clipboard!', 'success');
+                })
+                .catch(err => {
+                    console.error('Failed to copy:', err);
+                    showToast('Failed to copy. Please try again.', 'danger');
+                });
+        }
+
+        // Helper function
+        function decodeHtmlEntities(text) {
+            const textArea = document.createElement('textarea');
+            textArea.innerHTML = text;
+            return textArea.value;
+        }
+
+        // Toast notification
+        function showToast(message, type = 'success') {
+            document.querySelectorAll('.custom-toast').forEach(toast => toast.remove());
+            
+            const toast = document.createElement('div');
+            toast.className = `custom-toast ${type}`;
+            toast.innerHTML = `
+                <i class="bi bi-${type === 'success' ? 'check-circle-fill' : 'exclamation-circle-fill'}"></i>
+                <div style="flex-grow: 1;">
+                    <div style="font-size: 0.9rem;">${message}</div>
+                </div>
+                <button type="button" class="btn-close" onclick="this.parentElement.remove()"></button>
+            `;
+            
+            document.body.appendChild(toast);
+            
+            setTimeout(() => toast.classList.add('show'), 10);
+            
+            setTimeout(() => {
+                if (toast.parentElement) {
+                    toast.classList.remove('show');
+                    setTimeout(() => toast.remove(), 400);
+                }
+            }, 5000);
+        }
+
+        // Share results
+        function shareResults() {
+            const programType = '{{ program_type|title }}';
+            const totalCourses = {{ total_courses }};
+            const shareText = `I found ${totalCourses} qualified courses for ${programType} programs on KUCCPS Course Checker!`;
+            
+            if (navigator.share) {
+                navigator.share({
+                    title: `My ${programType} Course Results - KUCCPS`,
+                    text: shareText,
+                    url: window.location.href
+                }).catch(error => {
+                    if (error.name !== 'AbortError') {
+                        copyResultsToClipboard();
+                    }
+                });
+            } else {
+                copyResultsToClipboard();
+            }
+        }
+
+        function copyResultsToClipboard() {
+            const text = `KUCCPS Course Results\nProgram: {{ program_type|title }}\nTotal Courses: {{ total_courses }}\nView results: ${window.location.href}`;
+            
+            navigator.clipboard.writeText(text)
+                .then(() => {
+                    showToast('Results link copied to clipboard!', 'success');
+                })
+                .catch(err => {
+                    console.error('Failed to copy:', err);
+                    showToast('Failed to copy link.', 'danger');
+                });
+        }
+
+        // Print results
+        function printResults() {
+            const backToTop = document.getElementById('backToTop');
+            const originalDisplay = backToTop.style.display;
+            backToTop.style.display = 'none';
+            window.print();
+            setTimeout(() => {
+                backToTop.style.display = originalDisplay;
+            }, 100);
+        }
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            if ((e.ctrlKey || e.metaKey) && e.key === 'p') {
+                e.preventDefault();
+                printResults();
+            }
+            
+            if ((e.ctrlKey || e.metaKey) && e.key === 'c' && !e.target.matches('input, textarea')) {
+                const firstCourse = document.querySelector('.course-card');
+                if (firstCourse) {
+                    const code = firstCourse.querySelector('.course-code span:last-child').textContent;
+                    const name = firstCourse.querySelector('.course-name').textContent;
+                    const institution = firstCourse.querySelector('.meta-item span').textContent;
+                    copyCourseInfo(code, name, institution);
+                }
+            }
+        });
+       
+    </script>
+    <script src="{{ url_for('static', filename='basket.js') }}"></script>
+</body>
+</html>
