@@ -1,6 +1,6 @@
 {
   "name": "KUCCPS Course Checker",
-  "short_name": "KUCCPS Checker",
+  "short_name": "Course Checker",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
