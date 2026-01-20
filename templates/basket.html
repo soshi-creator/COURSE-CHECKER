@@ -9,6 +9,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
+        
             --primary-color: #3498db;
             --secondary-color: #2c3e50;
             --success-color: #2ecc71;
@@ -24,6 +25,54 @@
         * {
             font-family: 'Inter', sans-serif;
         }
+        /* Add this to your existing CSS */
+#careerModal .modal {
+    max-width: 700px;
+    max-height: 90vh; /* Limit maximum height */
+    display: flex;
+    flex-direction: column;
+}
+
+#careerModal .modal-body {
+    flex: 1;
+    overflow-y: auto; /* Enable vertical scrolling */
+    max-height: 60vh; /* Constrain height */
+    padding: 20px;
+}
+
+#careerModal .modal-content {
+    max-height: calc(100vh - 100px); /* Responsive height */
+}
+
+/* Ensure career info content scrolls properly */
+#careerInfoContent {
+    max-height: 100%;
+    overflow-y: visible;
+}
+
+/* Better scrolling for content */
+.career-info-container {
+    padding-right: 5px; /* Prevent content from touching scrollbar */
+}
+
+/* Scrollbar styling */
+#careerModal .modal-body::-webkit-scrollbar {
+    width: 8px;
+}
+
+#careerModal .modal-body::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+
+#careerModal .modal-body::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 4px;
+}
+
+#careerModal .modal-body::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
 
         body {
             background: linear-gradient(135deg, #f5f7fa 0%, #e4e8f0 100%);
@@ -64,6 +113,193 @@
             position: relative;
             z-index: 2;
         }
+        /* AI Career Info Styles */
+.ai-generated-badge {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.marketability-card {
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 10px;
+}
+
+.marketability-card.kenya {
+    background: #e8f5e9;
+    border-left: 4px solid #2e7d32;
+}
+
+.marketability-card.global {
+    background: #e3f2fd;
+    border-left: 4px solid #1565c0;
+}
+
+.job-roles-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 10px;
+}
+
+.job-role-card {
+    background: white;
+    border: 1px solid #dee2e6;
+    padding: 12px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    transition: all 0.3s ease;
+}
+
+.job-role-card:hover {
+    background: #f8f9fa;
+    border-color: #3498db;
+}
+
+.salary-progression {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.salary-stage {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 15px;
+    background: #f8f9fa;
+    border-radius: 6px;
+    border-left: 4px solid #3498db;
+}
+
+.stage-label {
+    font-weight: 600;
+    color: var(--secondary-color);
+}
+
+.stage-salary {
+    background: var(--primary-color);
+    color: white;
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.salary-disclaimer {
+    margin-top: 15px;
+    padding: 10px;
+    background: #fff3cd;
+    border-radius: 6px;
+    color: #856404;
+}
+
+.skills-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.skill-badge {
+    background: #e3f2fd;
+    color: #1565c0;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    border: 1px solid #bbdefb;
+}
+
+.certifications-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.cert-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    background: #f8f9fa;
+    border-radius: 6px;
+}
+
+.cert-item i {
+    color: var(--success-color);
+}
+
+.growth-timeline {
+    position: relative;
+    padding-left: 30px;
+}
+
+.timeline-step {
+    position: relative;
+    margin-bottom: 20px;
+    padding-bottom: 20px;
+}
+
+.timeline-step:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    left: -23px;
+    top: 35px;
+    bottom: -5px;
+    width: 2px;
+    background: #dee2e6;
+}
+
+.step-number {
+    position: absolute;
+    left: -30px;
+    top: 0;
+    width: 24px;
+    height: 24px;
+    background: var(--primary-color);
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.step-content {
+    padding-left: 10px;
+}
+
+.reality-check-card {
+    display: flex;
+    gap: 15px;
+    padding: 15px;
+    background: #fff3cd;
+    border-radius: 8px;
+    border: 1px solid #ffeaa7;
+}
+
+.reality-icon {
+    color: #f39c12;
+    font-size: 1.5rem;
+}
+
+.career-tips {
+    background: #e8f4fc;
+    padding: 15px;
+    border-radius: 8px;
+    margin-top: 20px;
+}
+
+.career-tips ul {
+    margin: 10px 0 0 20px;
+}
+
+.ai-source-footer {
+    margin-top: 20px;
+    padding-top: 15px;
+    border-top: 1px solid #eee;
+}
 
         /* HIDDEN STATS GRID - Still in code but not visible */
         .stats-grid {
@@ -696,6 +932,28 @@
             </div>
         </div>
     </div>
+    <!-- Career Info Modal -->
+<div class="modal-overlay" id="careerModal">
+    <div class="modal" style="max-width: 700px;">
+        <div class="modal-header">
+            <h3 class="modal-title"><i class="bi bi-briefcase"></i> Career Information</h3>
+            <button class="modal-close" onclick="closeModal('careerModal')">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div id="careerInfoContent">
+                <!-- AI-generated content will appear here -->
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="primary-btn" onclick="printCareerInfo()">
+                <i class="bi bi-printer"></i> Print
+            </button>
+            <button class="primary-btn primary-btn-danger" onclick="closeModal('careerModal')">
+                Close
+            </button>
+        </div>
+    </div>
+</div>
 
     <!-- Application List Modal -->
     <div class="modal-overlay" id="applicationModal">
@@ -1355,6 +1613,249 @@
         
         console.log('✅ Basket page functions initialized');
     });
+
+    // Career Info Function with OpenAI
+async function showCareerInfo(programCode, courseName, programType) {
+    console.log('Fetching AI career info for:', courseName);
+    
+    // Show modal immediately
+    document.getElementById('careerModal').classList.add('show');
+    
+    // Show loading state
+    document.getElementById('careerInfoContent').innerHTML = `
+        <div class="loading-career-info" style="text-align: center; padding: 40px;">
+            <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p style="margin-top: 20px; color: #666;">
+                <i class="bi bi-robot"></i> AI Assistant analyzing...<br>
+                <strong>${courseName}</strong>
+            </p>
+            <p style="font-size: 0.9rem; color: #888;">
+                Powered by AI
+            </p>
+        </div>
+    `;
+    
+    try {
+        // Call your backend API which uses OpenAI
+        const response = await fetch('/api/career-info', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                course_name: courseName,
+                program_type: programType,
+                program_code: programCode
+            })
+        });
+        
+        if (!response.ok) {
+            throw new Error(`API error: ${response.status}`);
+        }
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            // Display AI-generated career information
+            displayCareerInfo(result.data);
+            
+            // Add source attribution
+            const content = document.getElementById('careerInfoContent');
+            const footer = document.createElement('div');
+            footer.className = 'ai-source-footer';
+            footer.innerHTML = `
+                <hr style="margin: 20px 0;">
+                <p style="font-size: 0.8rem; color: #666; text-align: center;">
+                    <i class="bi bi-robot"></i> AI-generated insights 
+                    <br>
+                    <small>Information is for guidance only. Verify with official sources.</small>
+                </p>
+            `;
+            content.appendChild(footer);
+        } else {
+            throw new Error(result.error || 'API call failed');
+        }
+        
+    } catch (error) {
+        console.error('Error fetching career info:', error);
+        
+        // Show error with option to retry
+        document.getElementById('careerInfoContent').innerHTML = `
+            <div class="error-message" style="text-align: center; padding: 40px;">
+                <i class="bi bi-wifi-off" style="font-size: 3rem; color: #dc3545;"></i>
+                <h4 style="color: #dc3545; margin-top: 20px;">Connection Issue</h4>
+                <p>Unable to fetch AI career insights at the moment.</p>
+                <div style="margin-top: 20px;">
+                    <button onclick="retryCareerInfo('${programCode}', '${courseName}', '${programType}')" 
+                            class="btn btn-primary">
+                        <i class="bi bi-arrow-clockwise"></i> Try Again
+                    </button>
+                    <button onclick="showBasicCareerInfo('${courseName}', '${programType}')" 
+                            class="btn btn-outline-secondary" style="margin-left: 10px;">
+                        <i class="bi bi-info-circle"></i> Show Basic Info
+                    </button>
+                </div>
+            </div>
+        `;
+    }
+}
+
+// Retry function
+function retryCareerInfo(programCode, courseName, programType) {
+    showCareerInfo(programCode, courseName, programType);
+}
+
+// Fallback to basic info
+function showBasicCareerInfo(courseName, programType) {
+    const basicInfo = generateBasicCareerInfo(courseName, programType);
+    displayCareerInfo(basicInfo);
+}
+
+// Generate basic career info (fallback)
+function generateBasicCareerInfo(courseName, programType) {
+    return {
+        overview: `${courseName} provides education in ${programType} programs, preparing students for various professional roles.`,
+        marketability_kenya: "Market demand varies by economic sector and individual skills.",
+        
+    };
+}
+function displayCareerInfo(info) {
+    const container = document.getElementById('careerInfoContent');
+    
+    const html = `
+        <div class="career-info-container">
+            <!-- AI Generated Badge -->
+            <div class="ai-generated-badge">
+                <span class="badge bg-info">
+                    <i class="bi bi-robot"></i> AI-Generated Insights
+                </span>
+            </div>
+            
+            <div class="career-section">
+                <h5><i class="bi bi-card-text"></i> Course Overview</h5>
+                <p>${info.overview}</p>
+            </div>
+            
+            <div class="career-section">
+                <h5><i class="bi bi-globe"></i> Marketability Analysis</h5>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="marketability-card kenya">
+                            <h6><i class="bi bi-geo-alt-fill"></i> Kenyan Market</h6>
+                            <p>${info.marketability_kenya}</p>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="marketability-card global">
+                            <h6><i class="bi bi-airplane-fill"></i> Global Opportunities</h6>
+                            <p>${info.marketability_abroad}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="career-section">
+                <h5><i class="bi bi-briefcase"></i> Potential Career Paths</h5>
+                <div class="job-roles-grid">
+                    ${Array.isArray(info.job_roles) ? 
+                      info.job_roles.map(role => `
+                        <div class="job-role-card">
+                            <i class="bi bi-person-badge"></i>
+                            <span>${role}</span>
+                        </div>
+                      `).join('') : ''}
+                </div>
+            </div>
+            
+            <div class="career-section">
+                <h5><i class="bi bi-cash-stack"></i> Salary Expectations</h5>
+                <div class="salary-progression">
+                    <div class="salary-stage">
+                        <div class="stage-label">Entry Level (0-3 years)</div>
+                        <div class="stage-salary">${info.salary_ranges?.entry }</div>
+                    </div>
+                    <div class="salary-stage">
+                        <div class="stage-label">Mid Career (4-8 years)</div>
+                        <div class="stage-salary">${info.salary_ranges?.mid }</div>
+                    </div>
+                    <div class="salary-stage">
+                        <div class="stage-label">Senior Level (8+ years)</div>
+                        <div class="stage-salary">${info.salary_ranges?.senior}</div>
+                    </div>
+                </div>
+                <div class="salary-disclaimer">
+                    <small><i class="bi bi-info-circle"></i> Figures are estimates. Actual salaries vary based on employer, location, skills, and experience.</small>
+                </div>
+            </div>
+            
+            ${info.key_skills ? `
+            <div class="career-section">
+                <h5><i class="bi bi-tools"></i> Key Skills Needed</h5>
+                <div class="skills-container">
+                    ${Array.isArray(info.key_skills) ? 
+                      info.key_skills.map(skill => `
+                        <span class="skill-badge">${skill}</span>
+                      `).join('') : ''}
+                </div>
+            </div>
+            ` : ''}
+            
+            ${info.certifications ? `
+            <div class="career-section">
+                <h5><i class="bi bi-award"></i> Recommended Certifications</h5>
+                <div class="certifications-list">
+                    ${Array.isArray(info.certifications) ? 
+                      info.certifications.map(cert => `
+                        <div class="cert-item">
+                            <i class="bi bi-check-circle"></i>
+                            <span>${cert}</span>
+                        </div>
+                      `).join('') : ''}
+                </div>
+            </div>
+            ` : ''}
+            
+            <div class="career-section">
+                <h5><i class="bi bi-graph-up"></i> Career Growth Trajectory</h5>
+                <div class="growth-timeline">
+                    ${Array.isArray(info.growth_paths) ? 
+                      info.growth_paths.map((path, index) => `
+                        <div class="timeline-step">
+                            <div class="step-number">${index + 1}</div>
+                            <div class="step-content">${path}</div>
+                        </div>
+                      `).join('') : ''}
+                </div>
+            </div>
+            
+            <div class="career-section reality-check">
+                <h5><i class="bi bi-lightbulb"></i> Reality Check</h5>
+                <div class="reality-check-card">
+                    <div class="reality-icon">
+                        <i class="bi bi-exclamation-triangle-fill"></i>
+                    </div>
+                    <div class="reality-content">
+                        <p><strong>Important Consideration:</strong> ${info.reality_check}</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="career-tips">
+                <h6><i class="bi bi-lightbulb-fill"></i> Pro Tips</h6>
+                <ul>
+                    <li>Network with professionals in your field</li>
+                    <li>Gain practical experience through internships</li>
+                    <li>Stay updated with industry trends</li>
+                    <li>Consider further specialization after graduation</li>
+                </ul>
+            </div>
+        </div>
+    `;
+    
+    container.innerHTML = html;
+}
 </script>
 </body>
 </html>

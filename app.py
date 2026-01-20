@@ -1922,6 +1922,203 @@ def get_basket_stats():
         print(f"Error getting basket stats: {e}")
         return jsonify({"error": str(e)}), 500
     
+from flask import jsonify, request
+import json
+import re
+from groq import Groq
+
+# Initialize Groq client with FREE API
+# Get your key from: https://console.groq.com/keys
+GROQ_API_KEY = "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"  # ⚠️ Replace with your actual key
+
+# Available Groq models (all FREE):
+# - "llama3-70b-8192"        # Llama 3 70B - Most capable
+# - "llama3-8b-8192"         # Llama 3 8B - Fast & efficient
+# - "mixtral-8x7b-32768"     # Mixtral 8x7B - Good balance
+# - "gemma-7b-it"            # Gemma 7B - Lightweight
+
+# Available Groq models (as of Jan 2026):
+AVAILABLE_MODELS = [
+    "llama-3.2-90b-text-preview",      # New Llama 3.2 90B
+    "llama-3.2-11b-text-preview",      # New Llama 3.2 11B
+    "llama-3.2-3b-text-preview",       # New Llama 3.2 3B
+    "llama-3.2-1b-text-preview",       # New Llama 3.2 1B
+    "llama-3.1-70b-versatile",         # Llama 3.1 70B
+    "llama-3.1-8b-instant",            # Llama 3.1 8B
+    "llama-3.2-90b-vision-preview",    # Vision model
+    "gemma2-9b-it",                    # Gemma 2 9B
+    "mixtral-8x7b-32768",              # Mixtral
+]
+
+# Default model to use
+DEFAULT_MODEL = "llama-3.1-8b-instant"  # Fast and available
+
+print(f"Using Groq model: {DEFAULT_MODEL}")
+
+try:
+    client = Groq(api_key=GROQ_API_KEY)
+    print("✅ Groq client initialized")
+except Exception as e:
+    print(f"❌ Groq init error: {e}")
+    client = None
+
+@app.route('/api/career-info', methods=['POST'])
+def get_career_info():
+    if not client:
+        return jsonify({
+            "success": False,
+            "error": "AI service not ready"
+        }), 503
+    
+    try:
+        data = request.json
+        course_name = data.get('course_name', '').strip()
+        program_type = data.get('program_type', '').strip()
+        
+        if not course_name:
+            return jsonify({"success": False, "error": "Course name required"}), 400
+        
+        print(f"📚 Request for: {course_name}")
+        
+        # Optimized prompt for career guidance
+        prompt = f"""As a career guidance expert for Kenyan students, provide information about this course in valid JSON format only.
+
+Course: {course_name}
+Type: {program_type}
+
+Return this exact JSON structure:
+{{
+  "overview": "Brief 2-sentence overview",
+  "marketability_kenya": "Realistic Kenyan job market prospects",
+  "marketability_abroad": "International opportunities",
+  "job_roles": ["Role 1", "Role 2", "Role 3", "Role 4"],
+  "salary_ranges": {{
+    "entry": "KES XX,XXX - XX,XXX monthly",
+    "mid": "KES XX,XXX - XX,XXX monthly", 
+    "senior": "KES XXX,XXX+ monthly"
+  }},
+  "growth_paths": ["Path 1", "Path 2"],
+  "reality_check": "One important consideration",
+  "certifications": ["Cert 1", "Cert 2"],
+  "key_skills": ["Skill 1", "Skill 2", "Skill 3"]
+}}
+
+Be realistic about Kenya context. Use actual Kenyan salary ranges."""
+        
+        # Try the request with available model
+        response = client.chat.completions.create(
+            messages=[
+                {
+                    "role": "system",
+                    "content": "You provide career guidance for Kenyan students. Always respond with valid JSON only."
+                },
+                {"role": "user", "content": prompt}
+            ],
+            model=DEFAULT_MODEL,
+            temperature=0.7,
+            max_tokens=800,
+            response_format={"type": "json_object"}
+        )
+        
+        ai_content = response.choices[0].message.content
+        print(f"✅ AI Response received")
+        
+        # Parse JSON
+        career_data = json.loads(ai_content)
+        
+        # Validate structure
+        career_data = validate_response(career_data)
+        
+        return jsonify({
+            "success": True,
+            "data": career_data,
+            "source": "Groq AI",
+            "model": DEFAULT_MODEL
+        })
+        
+    except json.JSONDecodeError as e:
+        print(f"JSON Error: {e}")
+        # Create basic response if JSON fails
+        return jsonify({
+            "success": True,
+            "source": "Groq AI (parsed)",
+            "model": DEFAULT_MODEL
+        })
+        
+    except Exception as e:
+        print(f"API Error: {e}")
+        return jsonify({
+            "success": False,
+            "error": str(e),
+            "message": "Please try a different course or try again later."
+        }), 503
+
+def validate_response(data):
+    """Ensure response has all required fields"""
+    required = {
+        "overview": "Course information not available.",
+        "marketability_kenya": "Market information not available.",
+        "marketability_abroad": "International information not available.",
+        "job_roles": ["Various professional roles"],
+        "salary_ranges": {
+            "entry": "KES xx monthly",
+            "mid": "KES xx monthly",
+            "senior": "KES xx monthly"
+        },
+        "growth_paths": ["Career progression opportunities"],
+        "reality_check": "Continuous learning and networking are important.",
+        "certifications": ["Industry certifications"],
+        "key_skills": ["Technical skills", "Communication", "Problem-solving"]
+    }
+    
+    for key, default in required.items():
+        if key not in data:
+            data[key] = default
+        elif key == "salary_ranges":
+            for level in ["entry", "mid", "senior"]:
+                if level not in data.get(key, {}):
+                    data[key][level] = default[key][level]
+    
+    return data
+
+
+@app.route('/api/test-models', methods=['GET'])
+def test_models():
+    """Test which Groq models are available"""
+    if not client:
+        return jsonify({"error": "Client not initialized"}), 503
+    
+    results = []
+    
+    # Test a few models
+    test_models = [
+        "llama-3.1-8b-instant",      # Most likely available
+        "llama-3.1-70b-versatile",   # Larger model
+        "gemma2-9b-it",              # Google model
+        "mixtral-8x7b-32768",        # Mixtral
+    ]
+    
+    for model in test_models:
+        try:
+            response = client.chat.completions.create(
+                messages=[{"role": "user", "content": "Say 'OK'"}],
+                model=model,
+                max_tokens=5
+            )
+            results.append({
+                "model": model,
+                "status": "available",
+                "response": response.choices[0].message.content
+            })
+        except Exception as e:
+            results.append({
+                "model": model,
+                "status": "unavailable",
+                "error": str(e)
+            })
+    
+    return jsonify({"results": results})
+    
 
 
 if __name__ == "__main__":

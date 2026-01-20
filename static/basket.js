@@ -1,3 +1,12 @@
+  // Add this helper function at the top of basket.js (after class definition)
+function encodeForJS(str) {
+    return str
+        .replace(/\\/g, '\\\\')
+        .replace(/'/g, "\\'")
+        .replace(/"/g, '\\"')
+        .replace(/\n/g, '\\n')
+        .replace(/\r/g, '\\r');
+}
 // basket.js - COMPLETE basket system with server sync
 class BasketManager {
     constructor() {
@@ -72,6 +81,7 @@ class BasketManager {
                 this.basket = [];
             }
         }
+      
         
         // If we have user info, try to sync with server
         if (this.hasUser() && this.isOnline) {
@@ -335,35 +345,41 @@ class BasketManager {
                     ).join('')}
                 </div>` : '';
             
-            html += `
-                <div class="basket-item" id="item-${item.program_code}">
-                    <div class="item-checkbox">
-                        <input class="form-check-input" type="checkbox" 
-                               id="select-${item.program_code}"
-                               onchange="window.basketManager.toggleSelectItem('${item.program_code}')">
-                    </div>
-                    <div class="item-content">
-                        <div class="item-code">${item.program_code}</div>
-                        <div class="item-name">${item.course_name}</div>
-                        <div class="item-meta">
-                            <span class="item-institution">${item.institution}</span>
-                            <span>${item.program_type ? item.program_type.toUpperCase() : ''}</span>
-                            ${item.cutoff ? `<span>Cutoff: ${item.cutoff}</span>` : ''}
-                            ${priorityDots}
-                        </div>
-                    </div>
-                    <div class="item-actions">
-                        <button class="action-btn action-btn-priority" 
-                                onclick="window.basketManager.setSinglePriority('${item.program_code}')">
-                            <i class="bi bi-star"></i> Priority
-                        </button>
-                        <button class="action-btn action-btn-remove" 
-                                onclick="window.basketManager.removeFromBasket('${item.program_code}')">
-                            <i class="bi bi-trash"></i> Remove
-                        </button>
-                    </div>
-                </div>
-            `;
+            // In renderBasketItems() method, update the HTML generation:
+html += `
+    <div class="basket-item" id="item-${item.program_code}">
+        <div class="item-checkbox">
+            <input class="form-check-input" type="checkbox" 
+                   id="select-${item.program_code}"
+                   onchange="toggleSelectItem('${item.program_code}')">
+        </div>
+        <div class="item-content">
+            <div class="item-code">${item.program_code}</div>
+            <div class="item-name">${item.course_name}</div>
+            <div class="item-meta">
+                <span class="item-institution">${item.institution}</span>
+                <span>${item.program_type ? item.program_type.toUpperCase() : ''}</span>
+                ${item.cutoff ? `<span>Cutoff: ${item.cutoff}</span>` : ''}
+                ${priorityDots}
+            </div>
+        </div>
+        <div class="item-actions">
+            <!-- NEW: Career Info Button -->
+            <button class="action-btn action-btn-info" 
+                    onclick="showCareerInfo('${item.program_code}', '${encodeForJS(item.course_name)}', '${item.program_type}')">
+                <i class="bi bi-info-circle"></i> Career Info
+            </button>
+            <button class="action-btn action-btn-priority" 
+                    onclick="window.basketManager.setSinglePriority('${item.program_code}')">
+                <i class="bi bi-star"></i> Priority
+            </button>
+            <button class="action-btn action-btn-remove" 
+                    onclick="window.basketManager.removeFromBasket('${item.program_code}')">
+                <i class="bi bi-trash"></i> Remove
+            </button>
+        </div>
+    </div>
+`;
         });
         
         container.innerHTML = html;
@@ -474,3 +490,138 @@ document.addEventListener('DOMContentLoaded', function() {
         }, 100);
     }
 });
+function displayCareerInfo(info) {
+    const container = document.getElementById('careerInfoContent');
+    
+    const html = `
+        <div class="career-info-container">
+            <!-- AI Generated Badge -->
+            <div class="ai-generated-badge">
+                <span class="badge bg-info">
+                    <i class="bi bi-robot"></i> AI-Generated Insights
+                </span>
+            </div>
+            
+            <div class="career-section">
+                <h5><i class="bi bi-card-text"></i> Course Overview</h5>
+                <p>${info.overview}</p>
+            </div>
+            
+            <div class="career-section">
+                <h5><i class="bi bi-globe"></i> Marketability Analysis</h5>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="marketability-card kenya">
+                            <h6><i class="bi bi-geo-alt-fill"></i> Kenyan Market</h6>
+                            <p>${info.marketability_kenya}</p>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="marketability-card global">
+                            <h6><i class="bi bi-airplane-fill"></i> Global Opportunities</h6>
+                            <p>${info.marketability_abroad}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="career-section">
+                <h5><i class="bi bi-briefcase"></i> Potential Career Paths</h5>
+                <div class="job-roles-grid">
+                    ${Array.isArray(info.job_roles) ? 
+                      info.job_roles.map(role => `
+                        <div class="job-role-card">
+                            <i class="bi bi-person-badge"></i>
+                            <span>${role}</span>
+                        </div>
+                      `).join('') : ''}
+                </div>
+            </div>
+            
+            <div class="career-section">
+                <h5><i class="bi bi-cash-stack"></i> Salary Expectations</h5>
+                <div class="salary-progression">
+                    <div class="salary-stage">
+                        <div class="stage-label">Entry Level (0-3 years)</div>
+                        <div class="stage-salary">${info.salary_ranges?.entry || 'KES 30,000 - 70,000'}</div>
+                    </div>
+                    <div class="salary-stage">
+                        <div class="stage-label">Mid Career (4-8 years)</div>
+                        <div class="stage-salary">${info.salary_ranges?.mid || 'KES 80,000 - 200,000'}</div>
+                    </div>
+                    <div class="salary-stage">
+                        <div class="stage-label">Senior Level (8+ years)</div>
+                        <div class="stage-salary">${info.salary_ranges?.senior || 'KES 250,000+'}</div>
+                    </div>
+                </div>
+                <div class="salary-disclaimer">
+                    <small><i class="bi bi-info-circle"></i> Figures are estimates. Actual salaries vary based on employer, location, skills, and experience.</small>
+                </div>
+            </div>
+            
+            ${info.key_skills ? `
+            <div class="career-section">
+                <h5><i class="bi bi-tools"></i> Key Skills Needed</h5>
+                <div class="skills-container">
+                    ${Array.isArray(info.key_skills) ? 
+                      info.key_skills.map(skill => `
+                        <span class="skill-badge">${skill}</span>
+                      `).join('') : ''}
+                </div>
+            </div>
+            ` : ''}
+            
+            ${info.certifications ? `
+            <div class="career-section">
+                <h5><i class="bi bi-award"></i> Recommended Certifications</h5>
+                <div class="certifications-list">
+                    ${Array.isArray(info.certifications) ? 
+                      info.certifications.map(cert => `
+                        <div class="cert-item">
+                            <i class="bi bi-check-circle"></i>
+                            <span>${cert}</span>
+                        </div>
+                      `).join('') : ''}
+                </div>
+            </div>
+            ` : ''}
+            
+            <div class="career-section">
+                <h5><i class="bi bi-graph-up"></i> Career Growth Trajectory</h5>
+                <div class="growth-timeline">
+                    ${Array.isArray(info.growth_paths) ? 
+                      info.growth_paths.map((path, index) => `
+                        <div class="timeline-step">
+                            <div class="step-number">${index + 1}</div>
+                            <div class="step-content">${path}</div>
+                        </div>
+                      `).join('') : ''}
+                </div>
+            </div>
+            
+            <div class="career-section reality-check">
+                <h5><i class="bi bi-lightbulb"></i> Reality Check</h5>
+                <div class="reality-check-card">
+                    <div class="reality-icon">
+                        <i class="bi bi-exclamation-triangle-fill"></i>
+                    </div>
+                    <div class="reality-content">
+                        <p><strong>Important Consideration:</strong> ${info.reality_check}</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="career-tips">
+                <h6><i class="bi bi-lightbulb-fill"></i> Pro Tips</h6>
+                <ul>
+                    <li>Network with professionals in your field</li>
+                    <li>Gain practical experience through internships</li>
+                    <li>Stay updated with industry trends</li>
+                    <li>Consider further specialization after graduation</li>
+                </ul>
+            </div>
+        </div>
+    `;
+    
+    container.innerHTML = html;
+}
