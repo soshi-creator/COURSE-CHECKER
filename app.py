@@ -80,6 +80,21 @@ baskets_collection.create_index([("last_updated", -1)])
 
 basket_items_collection.create_index([("basket_id", 1), ("program_code", 1)], unique=True)
 basket_items_collection.create_index([("basket_id", 1)])
+
+# Add these with your other MongoDB collections in app.py
+# After your existing collections, add:
+
+# Referral System Collections
+referral_users_collection = db['referral_users']  # Store user referral info
+withdrawals_collection = db['withdrawals']  # Store withdrawal requests
+referral_transactions_collection = db['referral_transactions']  # Track referral earnings
+
+# Create indexes
+referral_users_collection.create_index([("email", 1), ("index_number", 1)], unique=True)
+referral_users_collection.create_index([("referral_code", 1)], unique=True)
+withdrawals_collection.create_index([("user_id", 1), ("created_at", -1)])
+withdrawals_collection.create_index([("status", 1)])
+
 SUBJECT_ALIASES = {
     "English": ["Eng", "ENG", "eng", "English", "english"],
     "Kiswahili": ["Kisw", "KIS", "kisw", "Kiswahili", "kiswahili"],
@@ -154,6 +169,207 @@ def initiate_paystack_payment(email, amount, callback_url):
     }
     response = requests.post("https://api.paystack.co/transaction/initialize", json=data, headers=headers)
     return response.json()
+
+# ==================== REFERRAL SYSTEM HELPER FUNCTIONS ====================
+
+def generate_referral_code():
+    """Generate unique referral code"""
+    import random
+    import string
+    prefix = 'KUCCPS'
+    while True:
+        code = prefix + ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
+        # Check if code already exists
+        if not referral_users_collection.find_one({'referral_code': code}):
+            return code
+
+def get_or_create_referral_user(email, index_number):
+    """Get or create a referral user"""
+    user = referral_users_collection.find_one({
+        'email': email,
+        'index_number': index_number
+    })
+    
+    if not user:
+        # Check if user has paid (from payments collection)
+        paid_user = payments_collection.find_one({
+            'email': email,
+            'index_number': index_number
+        })
+        
+        if paid_user:
+            # Check if they were referred
+            referred_by = None
+            if 'referred_by' in paid_user and paid_user['referred_by']:
+                referred_by = paid_user['referred_by']
+            
+            # Create new referral user
+            user_data = {
+                '_id': str(ObjectId()),
+                'email': email,
+                'index_number': index_number,
+                'referral_code': generate_referral_code(),
+                'referral_count': 0,
+                'referral_balance': 0,
+                'total_earned': 0,
+                'referred_by': referred_by,
+                'is_admin': False,
+                'created_at': datetime.utcnow(),
+                'last_updated': datetime.utcnow()
+            }
+            referral_users_collection.insert_one(user_data)
+            user = user_data
+            
+            # If they were referred, process the referral reward
+            if referred_by:
+                process_referral_reward(referred_by, email, index_number)
+    
+    return user
+
+def process_referral_reward(referrer_code, referred_email, referred_index):
+    """Process referral reward when a new user pays"""
+    # Find referrer
+    referrer = referral_users_collection.find_one({'referral_code': referrer_code})
+    
+    if not referrer:
+        return False
+    
+    # Check if this referral was already rewarded
+    existing = referral_transactions_collection.find_one({
+        'referrer_id': referrer['_id'],
+        'referred_email': referred_email,
+        'referred_index': referred_index
+    })
+    
+    if existing:
+        return False
+    
+    # Amount per successful referral
+    referral_bonus = 50  # KSh 50
+    
+    # Update referrer's balance and count
+    referral_users_collection.update_one(
+        {'_id': referrer['_id']},
+        {
+            '$inc': {
+                'referral_balance': referral_bonus,
+                'referral_count': 1,
+                'total_earned': referral_bonus
+            },
+            '$set': {'last_updated': datetime.utcnow()}
+        }
+    )
+    
+    # Record transaction
+    transaction = {
+        '_id': str(ObjectId()),
+        'referrer_id': referrer['_id'],
+        'referrer_code': referrer_code,
+        'referred_email': referred_email,
+        'referred_index': referred_index,
+        'amount': referral_bonus,
+        'type': 'referral_bonus',
+        'status': 'completed',
+        'created_at': datetime.utcnow()
+    }
+    referral_transactions_collection.insert_one(transaction)
+    
+    return True
+
+def get_user_by_email_index(email, index_number):
+    """Get referral user by email and index"""
+    return referral_users_collection.find_one({
+        'email': email,
+        'index_number': index_number
+    })
+
+def get_user_withdrawals(user_email):
+    """Get all withdrawals for a user"""
+    return list(withdrawals_collection.find(
+        {'user_email': user_email}
+    ).sort('created_at', -1))
+
+def save_withdrawal(withdrawal_data):
+    """Save withdrawal request"""
+    withdrawal_data['_id'] = str(ObjectId())
+    withdrawal_data['created_at'] = datetime.utcnow()
+    withdrawal_data['updated_at'] = datetime.utcnow()
+    withdrawals_collection.insert_one(withdrawal_data)
+    return withdrawal_data
+
+def update_user_balance(user_id, new_balance):
+    """Update user's referral balance"""
+    referral_users_collection.update_one(
+        {'_id': user_id},
+        {
+            '$set': {
+                'referral_balance': new_balance,
+                'last_updated': datetime.utcnow()
+            }
+        }
+    )
+
+def get_withdrawal_by_id(withdrawal_id):
+    """Get withdrawal by ID"""
+    return withdrawals_collection.find_one({'_id': withdrawal_id})
+
+def update_withdrawal_status(withdrawal_id, status, reference=None, completion_date=None):
+    """Update withdrawal status"""
+    update_data = {
+        'status': status,
+        'updated_at': datetime.utcnow()
+    }
+    if reference:
+        update_data['reference'] = reference
+    if completion_date:
+        update_data['completion_date'] = completion_date
+    
+    withdrawals_collection.update_one(
+        {'_id': withdrawal_id},
+        {'$set': update_data}
+    )
+
+def get_all_withdrawals(page=1, per_page=20):
+    """Get all withdrawals with pagination"""
+    skip = (page - 1) * per_page
+    withdrawals = list(withdrawals_collection.find().sort('created_at', -1).skip(skip).limit(per_page))
+    
+    # Enrich with user data
+    for w in withdrawals:
+        user = referral_users_collection.find_one({'_id': w['user_email']})
+        if user:
+            w['user_email'] = user['email']
+            w['user_referral_code'] = user['referral_code']
+    
+    return withdrawals
+
+def get_withdrawal_stats():
+    """Get withdrawal statistics for admin"""
+    total_pending = withdrawals_collection.count_documents({'status': 'Pending'})
+    total_completed = withdrawals_collection.count_documents({'status': 'Completed'})
+    total_rejected = withdrawals_collection.count_documents({'status': 'Rejected'})
+    
+    # Get total pending amount
+    pending_withdrawals = list(withdrawals_collection.find({'status': 'Pending'}))
+    total_pending_amount = sum(w.get('amount', 0) for w in pending_withdrawals)
+    
+    # Get total users
+    total_users = referral_users_collection.count_documents({})
+    
+    # Get total pages
+    total_withdrawals = withdrawals_collection.count_documents({})
+    total_pages = (total_withdrawals + 19) // 20  # Ceiling division
+    
+    return {
+        'pending': total_pending,
+        'completed': total_completed,
+        'rejected': total_rejected,
+        'total_pending_amount': total_pending_amount,
+        'total_users': total_users,
+        'total_withdrawals': total_withdrawals,
+        'total_pages': total_pages
+    }
+
 # ---------- Home Routes ----------
 @app.route('/static/manifest.json')
 def manifest():
@@ -163,9 +379,14 @@ def manifest():
 def sw():
     return send_file('static/sw.js', mimetype='application/javascript')
 
-@app.route('/')
+@app.route("/")
 def home():
-    return render_template('index.html')
+    ref_code = request.args.get("ref")
+
+    if ref_code:
+        session["referrer"] = ref_code
+
+    return render_template("index.html")
 
 @app.route('/input')
 def input_form():
@@ -822,7 +1043,7 @@ def payment_page():
 
         # Determine amount
         already_paid_for = existing.get('program_type') if existing else None
-        amount = 199 if not already_paid_for else 99
+        amount = 1 if not already_paid_for else 1
         session['amount'] = amount
 
         # Initiate Paystack
@@ -873,31 +1094,52 @@ def verify_payment():
         results = run_kmtc_eligibility(grades)
     else:
         return "Invalid program type."
+
     data_id = str(uuid.uuid4())
     cluster_name_map = {doc['number']: doc['name'] for doc in clusters_collection.find()}
 
     qualified_courses_data[data_id] = {
-     'qualified_courses': results,
-     'cluster_name_map': cluster_name_map
-}
-
-
+        'qualified_courses': results,
+        'cluster_name_map': cluster_name_map
+    }
     session['pdf_data_id'] = data_id  # optional: pass to frontend
-    # Save to DB
+
+    # -----------------------------
+    # REFERRAL LOGIC STARTS HERE
+    # -----------------------------
+    # Capture referrer from session
+    referrer_code = session.get("referrer")  # from ?ref=CODE
+
+    # Generate new user's own referral code
+    new_user_referral_code = "CC" + str(uuid.uuid4())[-6:]
+
+    # Prevent self-referral
+    if referrer_code == new_user_referral_code:
+        referrer_code = None
+
+    # Build payment document
     doc = {
-    "email": email,
-    "index_number": index,
-    "program_type": program,
-    "amount": amount,
-    "paystack_ref": ref,
-    "paid_at": datetime.utcnow(),
-    "grades": grades
-}
+        "email": email,
+        "index_number": index,
+        "program_type": program,
+        "amount": amount,
+        "paystack_ref": ref,
+        "paid_at": datetime.utcnow(),
+        "grades": grades,
+        "referral_code": new_user_referral_code,
+        "referred_by": referrer_code,
+        "referral_rewarded": False,
+        "referral_balance": 0,
+        "referral_count": 0
+    }
 
     if program == 'degree' and cluster_points:
-      doc["cluster_points"] = {str(k): v for k, v in cluster_points.items()}
+        doc["cluster_points"] = {str(k): v for k, v in cluster_points.items()}
 
+    # Insert payment document
     payments_collection.insert_one(doc)
+
+    # Insert eligibility results
     results_collection.insert_one({
         "email": email,
         "index_number": index,
@@ -905,11 +1147,91 @@ def verify_payment():
         "results": results,
         "generated_at": datetime.utcnow()
     })
+
+    # -----------------------------
+    # REWARD REFERRER IF APPLICABLE
+    # -----------------------------
+    if referrer_code:
+        referrer = payments_collection.find_one({"referral_code": referrer_code})
+        if referrer:
+            # Increment referrer's balance and count
+            payments_collection.update_one(
+                {"_id": referrer["_id"]},
+                {"$inc": {"referral_balance": 30, "referral_count": 1}}  # KSh 50 per referral
+            )
+            # Mark this new user's referral as rewarded
+            payments_collection.update_one(
+                {"_id": doc["_id"]},
+                {"$set": {"referral_rewarded": True}}
+            )
+
     print("Session at verify_payment:", dict(session))
 
     # Store results in session for rendering
     session['results'] = results
+
     return redirect(url_for('unified_results'))
+@app.route('/referral_dashboard', methods=['GET', 'POST'])
+def referral_dashboard():
+    if request.method == 'POST':
+        email = request.form.get('email')
+        index = request.form.get('index_number')
+
+        if not email or not index:
+            return "Email and Index Number are required."
+
+        # Check if paid user exists
+        user = payments_collection.find_one({
+            "email": email,
+            "index_number": index
+        })
+
+        if not user:
+            return "No paid user found with this email and index."
+
+        # Save in session
+        session['dashboard_email'] = email
+        session['dashboard_index'] = index
+
+        return redirect(url_for('referral_dashboard'))
+
+    # -----------------------
+    # GET METHOD
+    # -----------------------
+    email = session.get('dashboard_email')
+    index = session.get('dashboard_index')
+
+    user = None
+    withdrawals = []
+
+    if email and index:
+        # Get paid user
+        user = payments_collection.find_one({
+            "email": email,
+            "index_number": index
+        })
+
+        if user:
+            # 🔥 Fetch withdrawals ONLY for this user
+            withdrawals = list(withdrawals_collection.find({
+                "user_email": email,
+                "user_index": index
+            }).sort("created_at", -1))
+
+            # Format withdrawals
+            for w in withdrawals:
+                w['date'] = w.get('created_at').strftime("%Y-%m-%d")
+                w['amount'] = w.get('amount', 0)
+                w['phone'] = w.get('phone', '—')
+                w['status'] = w.get('status', 'Pending')
+                w['reference'] = w.get('reference', '—')
+
+    return render_template(
+        'referral_dashboard.html',
+        user=user,
+        withdrawals=withdrawals
+    )
+
 
 @app.route('/unified-results')
 def unified_results():
@@ -2118,8 +2440,316 @@ def test_models():
             })
     
     return jsonify({"results": results})
-    
+from flask import Flask, render_template, request, jsonify, session
+from datetime import datetime
+import uuid
 
+@app.route('/api/request-withdrawal', methods=['POST'])
+def request_withdrawal():
+    data = request.json
+    email = data.get('email', '').strip().lower()
+    index = data.get('index_number', '').strip()  # keep slashes intact
+    amount = int(data.get('amount', 0))
+    phone = data.get('phone', '').strip()
+
+    # --- 1️⃣ Find paid user ---
+    # Normalize index for flexible matching (remove spaces, ignore case)
+    def normalize_index(idx):
+        return idx.replace(" ", "").lower()
+
+    normalized_index = normalize_index(index)
+
+    user = payments_collection.find_one({
+        "email": email,
+        "$expr": {
+            "$eq": [
+                {"$toLower": {"$replaceAll": {"input": "$index_number", "find": " ", "replacement": ""}}},
+                normalized_index
+            ]
+        }
+    })
+
+    if not user:
+        return jsonify({'success': False, 'message': 'Paid user not found'}), 404
+
+    # --- 2️⃣ Initialize referral fields if missing ---
+    if 'referral_balance' not in user:
+        payments_collection.update_one(
+            {"_id": user['_id']},
+            {"$set": {
+                "referral_balance": 0,
+                "referral_count": 0,
+                "total_earned": 0
+            }}
+        )
+        user['referral_balance'] = 0
+        user['referral_count'] = 0
+        user['total_earned'] = 0
+
+    # --- 3️⃣ Validate withdrawal ---
+    if amount < 300:
+        return jsonify({'success': False, 'message': 'Minimum withdrawal is KSh 300'})
+    
+    if amount > user.get('referral_balance', 0):
+        return jsonify({'success': False, 'message': 'Insufficient balance'})
+    
+    if not phone or len(phone) < 10:
+        return jsonify({'success': False, 'message': 'Invalid phone number'})
+
+    # --- 4️⃣ Normalize phone number ---
+    if not phone.startswith('0') and not phone.startswith('+254'):
+        if phone.startswith('254'):
+            phone = '+' + phone
+        else:
+            phone = '0' + phone[-9:] if len(phone) >= 9 else phone
+
+    # --- 5️⃣ Create withdrawal record ---
+    withdrawal_id = str(uuid.uuid4())[:8].upper()
+    withdrawal = {
+        '_id': withdrawal_id,
+        'user_email': email,
+        'user_index': index,
+        'amount': amount,
+        'phone': phone,
+        'status': 'Pending',
+        'created_at': datetime.utcnow(),
+        'updated_at': datetime.utcnow()
+    }
+    withdrawals_collection.insert_one(withdrawal)
+
+    # --- 6️⃣ Deduct referral balance ---
+    new_balance = user['referral_balance'] - amount
+    payments_collection.update_one(
+        {"_id": user['_id']},
+        {"$set": {"referral_balance": new_balance}}
+    )
+
+    # --- 7️⃣ Record transaction ---
+    transaction = {
+        '_id': str(ObjectId()),
+        'user_email': email,
+        'user_index': index,
+        'amount': -amount,
+        'type': 'withdrawal',
+        'status': 'pending',
+        'withdrawal_id': withdrawal_id,
+        'created_at': datetime.utcnow()
+    }
+    referral_transactions_collection.insert_one(transaction)
+
+    return jsonify({
+        'success': True,
+        'withdrawal_id': withdrawal_id,
+        'new_balance': new_balance,
+        'message': 'Withdrawal request submitted successfully'
+    })
+
+
+
+# Admin: Get all withdrawals
+@app.route('/admin/withdrawals')
+def admin_withdrawals():
+    # Simple admin check (you can enhance this)
+    admin_key = request.args.get('key')
+    if admin_key != os.getenv('kuccps-admin-2026'):
+        return "Unauthorized", 401
+    
+    page = int(request.args.get('page', 1))
+    per_page = 20
+    
+    withdrawals = get_all_withdrawals(page, per_page)
+    stats = get_withdrawal_stats()
+    
+    return render_template('admin_withdrawals.html', 
+                         withdrawals=withdrawals,
+                         stats=stats,
+                         page=page,
+                         total_pages=stats['total_pages'])
+
+# Admin: Complete withdrawal
+@app.route('/admin/withdrawals/complete', methods=['POST'])
+def complete_withdrawal():
+    admin_key = request.json.get('admin_key')
+    if admin_key != os.getenv('kuccps-admin-2026'):
+        return jsonify({'success': False, 'message': 'Unauthorized'}), 403
+
+    # Normalize ID
+    withdrawal_id = request.json.get('withdrawal_id', '').strip().upper()
+
+    withdrawal_id = request.json.get('withdrawal_id', '')
+    print("Withdrawal ID received:", repr(withdrawal_id))  # Shows hidden characters
+    withdrawal_id = withdrawal_id.strip().upper()
+    print("Normalized ID:", repr(withdrawal_id))
+
+    withdrawal = withdrawals_collection.find_one({'_id': withdrawal_id})
+    print("Found withdrawal:", withdrawal)
+
+    reference = request.json.get('reference')
+    completion_date = request.json.get('completion_date', datetime.utcnow())
+
+    if not reference:
+        return jsonify({'success': False, 'message': 'M-PESA reference required'}), 400
+
+    # ✅ Find withdrawal by normalized ID
+    withdrawal = withdrawals_collection.find_one({'_id': withdrawal_id})
+    if not withdrawal:
+        return jsonify({'success': False, 'message': 'Withdrawal not found'}), 404
+
+    # Update withdrawal
+    withdrawals_collection.update_one(
+        {'_id': withdrawal_id},
+        {'$set': {
+            'status': 'Completed',
+            'reference': reference,
+            'completion_date': completion_date,
+            'updated_at': datetime.utcnow()
+        }}
+    )
+
+    # Record transaction
+    transaction = {
+        '_id': str(ObjectId()),
+        'user_email': withdrawal['user_email'],
+        'user_index': withdrawal['user_index'],
+        'amount': withdrawal['amount'],
+        'type': 'withdrawal_completed',
+        'status': 'completed',
+        'withdrawal_id': withdrawal_id,
+        'reference': reference,
+        'completed_at': datetime.utcnow()
+    }
+    referral_transactions_collection.insert_one(transaction)
+
+    return jsonify({'success': True, 'message': 'Withdrawal marked as completed'})
+
+
+# Admin: Reject withdrawal
+@app.route('/admin/withdrawals/reject', methods=['POST'])
+def reject_withdrawal():
+    admin_key = request.json.get('admin_key')
+    if admin_key != os.getenv('kuccps-admin-2026'):
+        return jsonify({'success': False, 'message': 'Unauthorized'}), 403
+
+    withdrawal_id = request.json.get('withdrawal_id', '').strip().upper()
+    withdrawal = withdrawals_collection.find_one({'_id': withdrawal_id})
+    if not withdrawal:
+        return jsonify({'success': False, 'message': 'Withdrawal not found'}), 404
+
+    # Refund balance
+    user = payments_collection.find_one({
+        'email': withdrawal['user_email'],
+        'index_number': withdrawal['user_index']
+    })
+    if user:
+        new_balance = user.get('referral_balance', 0) + withdrawal['amount']
+        payments_collection.update_one(
+            {'email': withdrawal['user_email'], 'index_number': withdrawal['user_index']},
+            {'$set': {'referral_balance': new_balance}}
+        )
+
+    # Update withdrawal status
+    withdrawals_collection.update_one(
+        {'_id': withdrawal_id},
+        {'$set': {'status': 'Rejected', 'updated_at': datetime.utcnow()}}
+    )
+
+    # Record transaction
+    transaction = {
+        '_id': str(ObjectId()),
+        'user_email': withdrawal['user_email'],
+        'user_index': withdrawal['user_index'],
+        'amount': withdrawal['amount'],
+        'type': 'withdrawal_rejected',
+        'status': 'rejected',
+        'withdrawal_id': withdrawal_id,
+        'created_at': datetime.utcnow()
+    }
+    referral_transactions_collection.insert_one(transaction)
+
+    return jsonify({'success': True, 'message': 'Withdrawal rejected and amount refunded'})
+
+
+# Admin: Export to CSV
+@app.route('/admin/withdrawals/export')
+def export_withdrawals_csv():
+    admin_key = request.args.get('key')
+    if admin_key != os.getenv('kuccps-admin-2026'):
+        return "Unauthorized", 401
+    
+    withdrawals = list(withdrawals_collection.find().sort('created_at', -1))
+    
+    # Enrich with user data
+    for w in withdrawals:
+        user = referral_users_collection.find_one({'_id': w['user_id']})
+        if user:
+            w['user_email'] = user['email']
+            w['user_referral_code'] = user['referral_code']
+    
+    import csv
+    from io import StringIO
+    
+    si = StringIO()
+    cw = csv.writer(si)
+    cw.writerow(['Date', 'User Email', 'Referral Code', 'Amount', 'Phone', 'Status', 'Reference', 'Completion Date'])
+    
+    for w in withdrawals:
+        created = w.get('created_at', datetime.utcnow())
+        date_str = created.strftime('%Y-%m-%d %H:%M') if hasattr(created, 'strftime') else str(created)
+        completion = w.get('completion_date', '')
+        
+        cw.writerow([
+            date_str,
+            w.get('user_email', 'N/A'),
+            w.get('user_referral_code', 'N/A'),
+            w.get('amount', 0),
+            w.get('phone', 'N/A'),
+            w.get('status', 'Pending'),
+            w.get('reference', ''),
+            completion
+        ])
+    
+    output = si.getvalue()
+    
+    response = make_response(output)
+    response.headers["Content-Disposition"] = "attachment; filename=withdrawals.csv"
+    response.headers["Content-type"] = "text/csv"
+    
+    return response
+
+# Add a route to check referral balance
+@app.route('/api/referral-balance', methods=['POST'])
+def get_referral_balance():
+    data = request.json
+    email = data.get('email')
+    index = data.get('index_number')
+
+    if not email or not index:
+        return jsonify({'success': False, 'message': 'Email and index required'}), 400
+
+    user = payments_collection.find_one({
+        'email': email,
+        'index_number': index
+    })
+
+    if not user:
+        return jsonify({'success': False, 'message': 'User not found'}), 404
+
+    return jsonify({
+        'success': True,
+        'balance': user.get('referral_balance', 0),
+        'count': user.get('referral_count', 0),
+        'total_earned': user.get('referral_total_earned', 0)
+    })
+
+
+@app.route('/logout')
+def logout():
+    # Clear the session
+    session.clear()
+    # Flash a success message
+    flash('You have been successfully logged out.', 'success')
+    # Redirect to home page or login page
+    return redirect(url_for('home'))  # or redirect to your home route
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True)

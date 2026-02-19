@@ -1,0 +1,1428 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Referral Dashboard - KUCCPS Course Checker</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='navbar.css') }}">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <style>
+        /* Dashboard specific styles - matching navbar theme */
+        :root {
+            --primary-dark: #2c3e50;
+            --primary-blue: #3498db;
+            --primary-gradient: linear-gradient(135deg, #2c3e50, #3498db);
+            --success-green: #27ae60;
+            --warning-orange: #f39c12;
+            --danger-red: #e74c3c;
+            --card-shadow: 0 10px 30px rgba(0,0,0,0.08);
+        }
+
+        body {
+            background: #f8fafc;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+        }
+
+        /* Dashboard Container */
+        .dashboard-container {
+            max-width: 1000px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+
+        /* Access Form */
+        .access-card {
+            background: white;
+            border-radius: 24px;
+            padding: 40px;
+            box-shadow: var(--card-shadow);
+            border: 1px solid rgba(52, 152, 219, 0.1);
+            max-width: 500px;
+            margin: 40px auto;
+        }
+
+        .access-card h2 {
+            color: var(--primary-dark);
+            font-size: 28px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .access-card p {
+            color: #64748b;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #475569;
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 14px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            font-size: 15px;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--primary-blue);
+            box-shadow: 0 0 0 4px rgba(52, 152, 219, 0.1);
+        }
+
+        .btn-access {
+            width: 100%;
+            padding: 14px;
+            background: var(--primary-gradient);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .btn-access:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(52, 152, 219, 0.3);
+        }
+
+        .btn-access i {
+            font-size: 18px;
+        }
+
+        /* Dashboard Content */
+        .dashboard-content {
+            background: white;
+            border-radius: 24px;
+            padding: 40px;
+            box-shadow: var(--card-shadow);
+            border: 1px solid rgba(52, 152, 219, 0.1);
+        }
+
+        .welcome-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #f1f5f9;
+        }
+
+        .welcome-icon {
+            width: 60px;
+            height: 60px;
+            background: var(--primary-gradient);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 28px;
+        }
+
+        .welcome-text h2 {
+            color: var(--primary-dark);
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .welcome-text p {
+            color: #64748b;
+            font-size: 14px;
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #f8fafc, #ffffff);
+            border-radius: 20px;
+            padding: 20px;
+            border: 1px solid #e2e8f0;
+            transition: all 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(52, 152, 219, 0.1);
+            border-color: var(--primary-blue);
+        }
+
+        .stat-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 10px;
+        }
+
+        .stat-icon {
+            width: 50px;
+            height: 50px;
+            background: var(--primary-gradient);
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 24px;
+        }
+
+        .stat-title {
+            color: #64748b;
+            font-size: 13px;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .stat-value {
+            color: var(--primary-dark);
+            font-size: 28px;
+            font-weight: 700;
+            margin-top: 5px;
+        }
+
+        /* Referral Code Section */
+        .referral-section {
+            background: linear-gradient(135deg, #f0f9ff, #e6f3ff);
+            border-radius: 16px;
+            padding: 25px;
+            margin: 30px 0;
+            border: 1px solid rgba(52, 152, 219, 0.2);
+        }
+
+        .referral-label {
+            color: var(--primary-dark);
+            font-size: 14px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .referral-code-box {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            background: white;
+            border-radius: 12px;
+            padding: 5px;
+            border: 2px solid #e2e8f0;
+        }
+
+        .referral-code-box input {
+            flex: 1;
+            padding: 12px 16px;
+            border: none;
+            background: transparent;
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--primary-dark);
+            letter-spacing: 1px;
+        }
+
+        .referral-code-box input:focus {
+            outline: none;
+        }
+
+        .btn-copy {
+            background: var(--primary-gradient);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+            margin-right: 5px;
+        }
+
+        .btn-copy:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(52, 152, 219, 0.3);
+        }
+
+        .referral-link-note {
+            color: #64748b;
+            font-size: 13px;
+            margin-top: 10px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        /* Withdraw Button */
+        .withdraw-section {
+            margin: 30px 0;
+            padding: 25px;
+            background: linear-gradient(135deg, #fef9e7, #fff3e0);
+            border-radius: 16px;
+            border: 1px solid #ffe0b2;
+        }
+
+        .withdraw-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .withdraw-icon {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, #f39c12, #e67e22);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 24px;
+        }
+
+        .withdraw-header h3 {
+            color: #2c3e50;
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        .btn-withdraw {
+            background: linear-gradient(135deg, #27ae60, #2ecc71);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.3s ease;
+            width: 100%;
+            justify-content: center;
+        }
+
+        .btn-withdraw:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(46, 204, 113, 0.3);
+        }
+
+        .btn-withdraw:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            background: linear-gradient(135deg, #95a5a6, #7f8c8d);
+        }
+
+        .min-withdraw-note {
+            color: #7f8c8d;
+            font-size: 13px;
+            margin-top: 10px;
+            text-align: center;
+        }
+
+        /* Withdrawal History Table */
+        .history-section {
+            margin-top: 40px;
+        }
+
+        .history-section h3 {
+            color: var(--primary-dark);
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .history-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+        }
+
+        .history-table th {
+            background: var(--primary-gradient);
+            color: white;
+            padding: 15px;
+            text-align: left;
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        .history-table td {
+            padding: 15px;
+            border-bottom: 1px solid #ecf0f1;
+            color: #34495e;
+        }
+
+        .history-table tr:hover {
+            background: #f8f9fa;
+        }
+
+        .status-badge {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            display: inline-block;
+        }
+
+        .status-pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .status-completed {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-rejected {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        /* Modal */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 9999;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .withdraw-modal {
+            background: white;
+            border-radius: 24px;
+            padding: 30px;
+            width: 90%;
+            max-width: 450px;
+            animation: modalSlideIn 0.3s ease;
+        }
+
+        @keyframes modalSlideIn {
+            from {
+                transform: translateY(-50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .modal-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .modal-header i {
+            font-size: 30px;
+            color: #27ae60;
+        }
+
+        .modal-header h3 {
+            color: var(--primary-dark);
+            font-size: 22px;
+            font-weight: 600;
+        }
+
+        .modal-body {
+            margin-bottom: 25px;
+        }
+
+        .balance-info {
+            background: #f0f9ff;
+            padding: 15px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .balance-info span {
+            color: #64748b;
+            font-size: 14px;
+        }
+
+        .balance-info strong {
+            color: var(--primary-dark);
+            font-size: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #475569;
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 14px;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #27ae60;
+            box-shadow: 0 0 0 4px rgba(39, 174, 96, 0.1);
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 15px;
+        }
+
+        .btn-modal {
+            flex: 1;
+            padding: 14px;
+            border: none;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-confirm {
+            background: #27ae60;
+            color: white;
+        }
+
+        .btn-confirm:hover {
+            background: #219a52;
+            transform: translateY(-2px);
+        }
+
+        .btn-cancel {
+            background: #ecf0f1;
+            color: #7f8c8d;
+        }
+
+        .btn-cancel:hover {
+            background: #dfe6e9;
+        }
+
+        /* Info Box */
+        .info-box {
+            background: #f8fafc;
+            border-radius: 12px;
+            padding: 15px;
+            margin-top: 20px;
+            border: 1px dashed #cbd5e1;
+        }
+
+        .info-box p {
+            color: #475569;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .info-box i {
+            color: var(--primary-blue);
+            font-size: 18px;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .dashboard-container {
+                margin: 20px auto;
+            }
+
+            .dashboard-content,
+            .access-card {
+                padding: 25px;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .history-table {
+                display: block;
+                overflow-x: auto;
+            }
+
+            .withdraw-modal {
+                width: 95%;
+                padding: 20px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .welcome-header {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .referral-code-box {
+                flex-direction: column;
+            }
+
+            .btn-copy {
+                width: 100%;
+                margin-right: 0;
+            }
+
+            .modal-actions {
+                flex-direction: column;
+            }
+        }
+
+        /* Animation */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .dashboard-content, .access-card {
+            animation: fadeInUp 0.5s ease;
+        }
+        /* Add to your existing styles */
+.logout-btn {
+    background: linear-gradient(135deg, #e74c3c, #c0392b);
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    font-size: 14px;
+    box-shadow: 0 4px 15px rgba(231, 76, 60, 0.2);
+}
+
+.logout-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(231, 76, 60, 0.3);
+    background: linear-gradient(135deg, #c0392b, #e74c3c);
+    color: white;
+}
+
+.logout-btn i {
+    font-size: 16px;
+}
+
+/* Header action buttons container */
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+/* Profile button style */
+.profile-btn {
+    background: linear-gradient(135deg, #2c3e50, #3498db);
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    font-size: 14px;
+}
+
+.profile-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(52, 152, 219, 0.3);
+}
+
+/* User avatar style */
+.user-avatar {
+    width: 40px;
+    height: 40px;
+    background: linear-gradient(135deg, #2c3e50, #3498db);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 18px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: 2px solid rgba(255,255,255,0.2);
+}
+
+.user-avatar:hover {
+    transform: scale(1.05);
+    border-color: rgba(255,255,255,0.5);
+}
+
+/* Dropdown menu */
+.user-dropdown {
+    position: relative;
+    display: inline-block;
+}
+
+.dropdown-menu {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+    min-width: 220px;
+    display: none;
+    z-index: 1000;
+    margin-top: 10px;
+    border: 1px solid #ecf0f1;
+    overflow: hidden;
+}
+
+.dropdown-menu.show {
+    display: block;
+    animation: slideDown 0.2s ease;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.dropdown-header {
+    padding: 15px;
+    background: linear-gradient(135deg, #f8f9fa, #ecf0f1);
+    border-bottom: 1px solid #dee2e6;
+}
+
+.dropdown-header h6 {
+    margin: 0;
+    color: #2c3e50;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.dropdown-header small {
+    color: #7f8c8d;
+    font-size: 12px;
+}
+
+.dropdown-item {
+    padding: 12px 15px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: #34495e;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.dropdown-item:hover {
+    background: #f8f9fa;
+    color: #2c3e50;
+    padding-left: 20px;
+}
+
+.dropdown-item i {
+    width: 20px;
+    color: #3498db;
+    font-size: 16px;
+}
+
+.dropdown-item.logout-item {
+    color: #e74c3c;
+}
+
+.dropdown-item.logout-item i {
+    color: #e74c3c;
+}
+
+.dropdown-item.logout-item:hover {
+    background: #fee;
+}
+
+/* Confirmation Modal */
+.confirm-modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 10000;
+    align-items: center;
+    justify-content: center;
+}
+
+.confirm-modal {
+    background: white;
+    border-radius: 24px;
+    padding: 30px;
+    width: 90%;
+    max-width: 400px;
+    animation: modalSlideIn 0.3s ease;
+}
+
+.confirm-modal-header {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.confirm-modal-header i {
+    font-size: 50px;
+    color: #e74c3c;
+    margin-bottom: 15px;
+}
+
+.confirm-modal-header h3 {
+    color: #2c3e50;
+    font-size: 24px;
+    font-weight: 600;
+    margin-bottom: 10px;
+}
+
+.confirm-modal-header p {
+    color: #7f8c8d;
+    font-size: 14px;
+}
+
+.confirm-modal-actions {
+    display: flex;
+    gap: 15px;
+}
+
+.confirm-btn {
+    flex: 1;
+    padding: 14px;
+    border: none;
+    border-radius: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: all 0.3s ease;
+}
+
+.confirm-btn.logout {
+    background: #e74c3c;
+    color: white;
+}
+
+.confirm-btn.logout:hover {
+    background: #c0392b;
+    transform: translateY(-2px);
+}
+
+.confirm-btn.cancel {
+    background: #ecf0f1;
+    color: #7f8c8d;
+}
+
+.confirm-btn.cancel:hover {
+    background: #dfe6e9;
+}
+
+/* Toast notification */
+.toast-notification {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: white;
+    border-radius: 12px;
+    padding: 15px 25px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    z-index: 10001;
+    animation: slideInRight 0.3s ease;
+    border-left: 4px solid #2ecc71;
+}
+
+.toast-notification.error {
+    border-left-color: #e74c3c;
+}
+
+.toast-notification i {
+    font-size: 20px;
+}
+
+.toast-notification.success i {
+    color: #2ecc71;
+}
+
+.toast-notification.error i {
+    color: #e74c3c;
+}
+
+.toast-notification span {
+    color: #2c3e50;
+    font-weight: 500;
+}
+
+@keyframes slideInRight {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+    </style>
+</head>
+<body>
+    <!-- Include Navbar -->
+    {% include 'navbar.html' %}
+
+    <!-- Floating Notifications Icon -->
+    <div class="floating-notifications">
+        <button class="notification-floating-btn" id="floatingNotificationBtn">
+            <i class="bi bi-bell-fill"></i>
+            <span class="notification-floating-badge" id="floatingNotificationBadge" style="display: none;">0</span>
+        </button>
+        <div class="notification-floating-label">Notifications</div>
+        
+        <div class="floating-notification-dropdown" id="floatingNotificationDropdown">
+            <div class="floating-notification-header">
+                <h6>Recent Notifications</h6>
+                <button onclick="markAllAsRead()" class="btn btn-sm btn-outline-light" style="font-size: 11px; padding: 3px 8px;">
+                    Mark All Read
+                </button>
+            </div>
+            <div class="floating-notification-list" id="floatingNotificationList">
+                <div class="text-center py-4 text-muted">
+                    <div class="spinner-border spinner-border-sm" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="mt-2 small">Loading notifications...</p>
+                </div>
+            </div>
+            <div class="floating-notification-footer">
+                <a href="/notifications" class="view-all-notifications">
+                    <i class="bi bi-list-ul"></i> View All Notifications
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Withdrawal Modal -->
+    <div class="modal-overlay" id="withdrawModal">
+        <div class="withdraw-modal">
+            <div class="modal-header">
+                <i class="bi bi-cash-stack"></i>
+                <h3>Withdraw Earnings</h3>
+            </div>
+            <div class="modal-body">
+                <div class="balance-info">
+                    <span>Available Balance:</span>
+                    <strong>KSh {{ user.referral_balance if user else 0 }}</strong>
+                </div>
+                <div class="form-group">
+                    <label><i class="bi bi-currency-dollar"></i> Amount to Withdraw (Min: KSh 300)</label>
+                    <input type="number" id="withdrawAmount" min="300" step="50" placeholder="Enter amount" value="300">
+                    <small style="color: #7f8c8d; display: block; margin-top: 5px;">
+                        <i class="bi bi-info-circle"></i> Minimum withdrawal is KSh 300. Withdrawals are processed within 24-48 hours.
+                    </small>
+                </div>
+                <div class="form-group">
+                    <label><i class="bi bi-phone"></i> M-PESA Phone Number</label>
+                    <input type="tel" id="mpesaNumber" placeholder="0712345678" value="07" pattern="[0-9]{10}">
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button class="btn-modal btn-cancel" onclick="closeWithdrawModal()">
+                    <i class="bi bi-x-lg"></i> Cancel
+                </button>
+                <button class="btn-modal btn-confirm" onclick="submitWithdrawal()">
+                    <i class="bi bi-send"></i> Request Withdrawal
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Dashboard Content -->
+    <div class="dashboard-container">
+        {% if not user %}
+            <!-- Access Form -->
+            <div class="access-card">
+                <h2>Welcome Back! 👋</h2>
+                <p>Enter your details to access your referral dashboard</p>
+                <form method="POST">
+                    <div class="form-group">
+                        <label><i class="bi bi-envelope-fill" style="margin-right: 5px; color: #3498db;"></i>Email Address</label>
+                        <input type="email" name="email" placeholder="your@email.com" required>
+                    </div>
+                    <div class="form-group">
+                        <label><i class="bi bi-person-badge-fill" style="margin-right: 5px; color: #3498db;"></i>Index Number</label>
+                        <input type="text" name="index_number" placeholder="e.g., 12345678901" required>
+                    </div>
+                    <button type="submit" class="btn-access">
+                        <i class="bi bi-box-arrow-in-right"></i>
+                        Access Dashboard
+                    </button>
+                </form>
+                <div class="info-box" style="margin-top: 25px;">
+                    <p><i class="bi bi-shield-check"></i> Your information is secure and only used for referral tracking.</p>
+                </div>
+            </div>
+        {% else %}
+            <!-- Dashboard Content -->
+            <div class="dashboard-content">
+                <div class="welcome-header">
+                    <div class="welcome-icon">
+                        <i class="bi bi-person-circle"></i>
+                    </div>
+                    <div class="welcome-text">
+                        <h2>Welcome, {{ user.email }}! 🎉</h2>
+                        <p><i class="bi bi-dot"></i> Your referral dashboard is ready</p>
+                        <a href="/logout" class="logout-btn">
+                <i class="bi bi-box-arrow-right"></i>
+                Logout
+            </a>
+                    </div>
+                </div>
+
+                <!-- Stats Grid -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <div class="stat-icon">
+                                <i class="bi bi-qr-code"></i>
+                            </div>
+                            <div>
+                                <div class="stat-title">Your Code</div>
+                                <div class="stat-value" style="font-size: 24px;">{{ user.referral_code }}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <div class="stat-icon">
+                                <i class="bi bi-people-fill"></i>
+                            </div>
+                            <div>
+                                <div class="stat-title">Referrals</div>
+                                <div class="stat-value">{{ user.referral_count }}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <div class="stat-icon">
+                                <i class="bi bi-cash-stack"></i>
+                            </div>
+                            <div>
+                                <div class="stat-title">Balance</div>
+                                <div class="stat-value">KSh {{ user.referral_balance }}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <div class="stat-icon">
+                                <i class="bi bi-trophy-fill"></i>
+                            </div>
+                            <div>
+                                <div class="stat-title">Total Earned</div>
+                                <div class="stat-value">KSh {{ user.total_earned|default(user.referral_balance) }}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Referral Code & Link Section -->
+                <div class="referral-section">
+                    <div class="referral-label">
+                        <i class="bi bi-share-fill"></i>
+                        Your Referral Link
+                    </div>
+                    <div class="referral-code-box">
+                        <input type="text" value="{{ url_for('home', ref=user.referral_code, _external=True) }}" id="refLink" readonly>
+                        <button class="btn-copy" onclick="copyLink()">
+                            <i class="bi bi-files"></i>
+                            Copy
+                        </button>
+                    </div>
+                    <div class="referral-link-note">
+                        <i class="bi bi-info-circle-fill"></i>
+                        Share this link with friends. You'll earn KSh 50 for each successful referral!
+                    </div>
+                </div>
+
+                <!-- Withdraw Section -->
+                <div class="withdraw-section">
+                    <div class="withdraw-header">
+                        <div class="withdraw-icon">
+                            <i class="bi bi-cash"></i>
+                        </div>
+                        <h3>Withdraw Your Earnings</h3>
+                    </div>
+                    
+                    <button class="btn-withdraw" onclick="openWithdrawModal()" 
+                            {% if user.referral_balance < 300 %}disabled{% endif %}>
+                        <i class="bi bi-send-check"></i>
+                        Withdraw to M-PESA
+                    </button>
+                    
+                    {% if user.referral_balance < 300 %}
+                        <div class="min-withdraw-note">
+                            <i class="bi bi-exclamation-triangle-fill" style="color: #f39c12;"></i>
+                            You need at least KSh 300 to withdraw. Current balance: KSh {{ user.referral_balance }}
+                        </div>
+                    {% else %}
+                        <div class="min-withdraw-note">
+                            <i class="bi bi-check-circle-fill" style="color: #27ae60;"></i>
+                            You can withdraw up to KSh {{ user.referral_balance }}
+                        </div>
+                    {% endif %}
+                </div>
+
+               <!-- Withdrawal History -->
+<div class="history-section">
+    <h3>
+        <i class="bi bi-clock-history"></i>
+        Withdrawal History
+    </h3>
+    
+    {% if withdrawals and withdrawals|length > 0 %}
+        <table class="history-table">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Amount</th>
+                    <th>Phone</th>
+                    <th>Status</th>
+                    <th>Reference</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for withdrawal in withdrawals %}
+                <tr>
+                    <td>
+                        {% if withdrawal.created_at %}
+                            {{ withdrawal.created_at.strftime('%Y-%m-%d') }}
+                        {% else %}
+                            —
+                        {% endif %}
+                    </td>
+                    <td><strong>KSh {{ withdrawal.amount }}</strong></td>
+                    <td>{{ withdrawal.phone }}</td>
+                    <td>
+                        <span class="status-badge status-{{ withdrawal.status.lower() }}">
+                            {{ withdrawal.status }}
+                        </span>
+                    </td>
+                    <td>
+                        {% if withdrawal.reference %}
+                            {{ withdrawal.reference }}
+                        {% else %}
+                            —
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <div class="info-box" style="text-align: center; padding: 30px;">
+            <i class="bi bi-inbox" style="font-size: 40px; color: #bdc3c7;"></i>
+            <p style="margin-top: 15px;">No withdrawal history yet. Make your first withdrawal!</p>
+        </div>
+    {% endif %}
+</div>
+            </div>
+        {% endif %} 
+
+    <!-- Admin Link (only visible to admin users) -->
+    {% if user and user.is_admin %}
+    <div style="position: fixed; bottom: 20px; right: 20px; z-index: 1000;">
+        <a href="/admin/withdrawals" class="btn-access" style="width: auto; padding: 12px 25px; background: linear-gradient(135deg, #8e44ad, #9b59b6);">
+            <i class="bi bi-shield-lock-fill"></i> Admin: Withdrawals
+        </a>
+    </div>
+    {% endif %}
+
+    <!-- Copy Link Script -->
+    <script>
+        function copyLink() {
+            var copyText = document.getElementById("refLink");
+            copyText.select();
+            copyText.setSelectionRange(0, 99999);
+            document.execCommand("copy");
+            
+            // Show visual feedback
+            var btn = event.currentTarget;
+            var originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="bi bi-check-lg"></i> Copied!';
+            btn.style.background = 'linear-gradient(135deg, #27ae60, #2ecc71)';
+            
+            setTimeout(function() {
+                btn.innerHTML = originalText;
+                btn.style.background = 'linear-gradient(135deg, #2c3e50, #3498db)';
+            }, 2000);
+        }
+
+        // Withdraw Modal Functions
+        function openWithdrawModal() {
+            document.getElementById('withdrawModal').style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+            
+            // Set default values
+            document.getElementById('withdrawAmount').value = '300';
+            document.getElementById('mpesaNumber').value = '07';
+        }
+
+        function closeWithdrawModal() {
+            document.getElementById('withdrawModal').style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
+
+        function submitWithdrawal() {
+            const amount = document.getElementById('withdrawAmount').value;
+            const phone = document.getElementById('mpesaNumber').value;
+            const balance = {{ user.referral_balance if user else 0 }};
+            
+            // Validation
+            if (!amount || amount < 300) {
+                alert('Minimum withdrawal amount is KSh 300');
+                return;
+            }
+            
+            if (amount > balance) {
+                alert('Insufficient balance. You have KSh ' + balance);
+                return;
+            }
+            
+            if (!phone || phone.length < 10) {
+                alert('Please enter a valid M-PESA phone number');
+                return;
+            }
+            
+            // Submit withdrawal request via AJAX
+            fetch('/api/request-withdrawal', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+               body: JSON.stringify({ 
+    amount: amount,
+    phone: phone,
+    email: "{{ user.email if user else '' }}",
+    index_number: "{{ user.index_number if user else '' }}"
+})
+
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('✅ Withdrawal request submitted successfully! You will receive payment within 24-48 hours.');
+                    closeWithdrawModal();
+                    // Reload page to show updated balance and history
+                    location.reload();
+                } else {
+                    alert('❌ Error: ' + data.message);
+                }
+            })
+            .catch(error => {
+                alert('Error submitting withdrawal request. Please try again.');
+                console.error('Error:', error);
+            });
+        }
+
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            var modal = document.getElementById('withdrawModal');
+            if (event.target == modal) {
+                closeWithdrawModal();
+            }
+        }
+
+        // Notification functions
+        function markAllAsRead() {
+            fetch('/api/notifications/mark-all-read', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const badge = document.getElementById('floatingNotificationBadge');
+                    badge.style.display = 'none';
+                    badge.textContent = '0';
+                    loadFloatingNotifications();
+                }
+            })
+            .catch(error => console.error('Error:', error));
+        }
+
+        function loadFloatingNotifications() {
+            fetch('/api/notifications/recent')
+                .then(response => response.json())
+                .then(data => {
+                    const listContainer = document.getElementById('floatingNotificationList');
+                    
+                    if (data.notifications && data.notifications.length > 0) {
+                        let html = '';
+                        data.notifications.forEach(notif => {
+                            const timeAgo = getTimeAgo(new Date(notif.created_at));
+                            html += `
+                            <a href="/notifications" class="floating-notification-item ${!notif.is_read ? 'unread' : ''}">
+                                <div class="d-flex w-100">
+                                    <div class="me-2" style="font-size: 1.2rem;">
+                                        <i class="bi bi-bell-fill text-primary"></i>
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <h6 class="mb-1" style="font-size: 13px;">${escapeHtml(notif.title)}</h6>
+                                        <p class="mb-1 small text-muted">${escapeHtml(notif.message.substring(0, 60))}...</p>
+                                        <small class="text-muted">${timeAgo}</small>
+                                    </div>
+                                </div>
+                            </a>`;
+                        });
+                        listContainer.innerHTML = html;
+                    } else {
+                        listContainer.innerHTML = `
+                        <div class="text-center py-4">
+                            <i class="bi bi-bell-slash text-muted" style="font-size: 2rem;"></i>
+                            <p class="mt-2 small text-muted">No notifications</p>
+                        </div>`;
+                    }
+                })
+                .catch(error => console.error('Error loading notifications:', error));
+        }
+
+        function getTimeAgo(date) {
+            const seconds = Math.floor((new Date() - date) / 1000);
+            if (seconds < 60) return 'Just now';
+            const minutes = Math.floor(seconds / 60);
+            if (minutes < 60) return minutes + 'm ago';
+            const hours = Math.floor(minutes / 60);
+            if (hours < 24) return hours + 'h ago';
+            const days = Math.floor(hours / 24);
+            return days + 'd ago';
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize notifications
+            if (typeof loadFloatingNotifications === 'function') {
+                loadFloatingNotifications();
+            }
+            
+            // Update notification badge
+            setInterval(function() {
+                fetch('/api/notifications/unread-count')
+                    .then(response => response.json())
+                    .then(data => {
+                        const badge = document.getElementById('floatingNotificationBadge');
+                        if (data.count > 0) {
+                            badge.textContent = data.count;
+                            badge.style.display = 'flex';
+                        } else {
+                            badge.style.display = 'none';
+                        }
+                    })
+                    .catch(error => console.error('Error:', error));
+            }, 30000);
+        });
+
+        // Modal functions for degree modal
+        function openDegreeModal() {
+            const modal = document.getElementById('degreeModal');
+            if (modal) modal.style.display = 'flex';
+        }
+        
+        function closeDegreeModal() {
+            const modal = document.getElementById('degreeModal');
+            if (modal) modal.style.display = 'none';
+        }
+    </script>
+</body>
+</html>

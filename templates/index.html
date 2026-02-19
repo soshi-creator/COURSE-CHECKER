@@ -61,8 +61,6 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
    <!-- Add this right after the navbar include -->
 {% include 'navbar.html' %}
 
-
-
   <!-- Collapsible Contact Details -->
 <div class="contact-details-container">
   <!-- Support Tooltip Popup -->
@@ -156,8 +154,25 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     <div class="stat-label">Accuracy</div>
   </div>
 </div>
+   <!-- Referral Banner - Place this right after stats -->
+<div class="referral-banner">
+  <div class="referral-content">
+    <div class="referral-icon">
+      <i class="bi bi-gift-fill"></i>
     </div>
+    <div class="referral-text">
+      <h3>Invite Friends & Earn Rewards!</h3>
+      <p>Share KUCCPS Course Checker with friends and get exclusive benefits</p>
+    </div>
+    <a href="{{ url_for('referral_dashboard') }}" class="referral-button">
+      <i class="bi bi-star-fill me-1"></i>
+      Go to Dashboard
+      <i class="bi bi-arrow-right-short"></i>
+    </a>
   </div>
+</div>
+</div>
+</div>
 
  <!-- Main Action Buttons - Now at Top -->
 <div class="main-action-container">

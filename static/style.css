@@ -1564,3 +1564,199 @@
     right: 25px;
   }
 }
+/* Option 1: Referral Banner Styles */
+.referral-banner {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 15px;
+  margin: 20px 15px;
+  padding: 20px;
+  box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+  animation: slideInUp 0.5s ease;
+}
+
+.referral-content {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  flex-wrap: wrap;
+}
+
+.referral-icon {
+  width: 50px;
+  height: 50px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.referral-icon i {
+  font-size: 24px;
+  color: white;
+  animation: bounce 2s infinite;
+}
+
+.referral-text {
+  flex: 1;
+  min-width: 200px;
+}
+
+.referral-text h3 {
+  color: white;
+  margin: 0 0 5px 0;
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+
+.referral-text p {
+  color: rgba(255, 255, 255, 0.9);
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+.referral-button {
+  background: white;
+  color: #667eea;
+  padding: 12px 25px;
+  border-radius: 50px;
+  text-decoration: none;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  transition: all 0.3s ease;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+.referral-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+  color: #764ba2;
+}
+
+/* Option 2: Referral Card Styles */
+.main-btn-card.main-btn-referral {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+}
+
+.main-btn-card.main-btn-referral i {
+  color: white;
+}
+
+.main-btn-card.main-btn-referral .btn-title {
+  color: white;
+}
+
+.main-btn-card.main-btn-referral .btn-subtitle {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+/* Option 3: Floating Action Button */
+.referral-fab {
+  position: fixed;
+  bottom: 30px;
+  right: 30px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 15px 25px;
+  border-radius: 50px;
+  text-decoration: none;
+  box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+  z-index: 9999;
+  animation: slideInRight 0.5s ease;
+}
+
+.fab-content {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.fab-content i {
+  font-size: 20px;
+}
+
+.fab-text {
+  font-weight: 600;
+}
+
+.fab-pulse {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border-radius: 50px;
+  background: inherit;
+  animation: pulse 2s infinite;
+  z-index: -1;
+}
+
+/* Animations */
+@keyframes slideInUp {
+  from {
+    transform: translateY(30px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideInRight {
+  from {
+    transform: translateX(30px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes bounce {
+  0%, 20%, 50%, 80%, 100% {transform: translateY(0);}
+  40% {transform: translateY(-10px);}
+  60% {transform: translateY(-5px);}
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1.2);
+    opacity: 0;
+  }
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+  .referral-content {
+    flex-direction: column;
+    text-align: center;
+  }
+  
+  .referral-button {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .referral-fab {
+    bottom: 20px;
+    right: 20px;
+    padding: 12px 20px;
+  }
+  
+  .fab-text {
+    display: none; /* Hide text on mobile, show only icon */
+  }
+  
+  .referral-fab i {
+    font-size: 24px;
+    margin: 0;
+  }
+}

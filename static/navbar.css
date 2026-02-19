@@ -29,15 +29,14 @@
         }
 
         .navbar > .container {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0 15px;
-            height: 70px;
-            width: 100%;
-            margin: 0 auto;
-            position: relative;
-        }
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 15px;
+    height: 70px;
+    max-width: 100%;
+}
+
 
         /* Brand Logo - Smaller on desktop */
         .navbar-brand {
@@ -78,17 +77,16 @@
 
         /* Desktop Navigation - Compact Design */
         .desktop-nav {
-            display: flex;
-            align-items: center;
-            gap: 0.1rem;
-            margin: 0 auto;
-            height: 100%;
-            flex-wrap: nowrap;
-            overflow-x: auto;
-            max-width: calc(100% - 450px);
-            scrollbar-width: none;
-            -ms-overflow-style: none;
-        }
+    display: flex;
+    align-items: center;
+    gap: 0.2rem;
+    margin: 0 auto;
+    height: 100%;
+    flex-wrap: nowrap;
+    flex: 1;
+    justify-content: center;
+}
+
 
         .desktop-nav::-webkit-scrollbar {
             display: none;
