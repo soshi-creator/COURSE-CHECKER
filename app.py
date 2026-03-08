@@ -61,6 +61,7 @@ certificate_collection = db['certificate']
 payments_collection = db['payments']
 results_collection = db['results']
 kmtc_collection = db['kmtc']
+artisan_collection = db['artisan']
 # In your app.py, add these near other collection definitions
 notifications_collection = db['notifications']
 user_notifications_collection = db['user_notifications']
@@ -402,6 +403,9 @@ def certificate_form():
 @app.route('/kmtc')
 def kmtc_form():
     return render_template('kmtc.html')
+@app.route('/artisan')
+def artisan_form():
+    return render_template('artisan.html')
 @app.route('/userguide')
 def user_guide():
     return render_template('userguide.html')
@@ -990,6 +994,55 @@ def run_kmtc_eligibility(grades):
 
     return qualified_sorted
 
+def run_artisan_eligibility(grades):
+    main_grade = grades.get('main_grade')
+    main_points = grade_to_points(main_grade) if main_grade else 0.0
+    qualified = []
+
+    for course in artisan_collection.find():
+        requirements = course.get('requirements', [])
+        institutions = course.get('institutions', [])
+        meets_all = True
+
+        for req in requirements:
+            req_subject = req.get('subject')
+            req_min = grade_to_points(req.get('minGrade'))
+            scores = []
+
+            for alias in req_subject.split('/'):
+                grade = resolve_grade_from_alias(grades, alias)
+                score = grade_to_points(grade)
+                scores.append(score)
+
+            user_score = max(scores) if scores else 0.0
+            if user_score < req_min:
+                meets_all = False
+                break
+
+        min_required = grade_to_points(course.get('min_grade'))
+        if meets_all and main_points >= min_required:
+            for inst in institutions:
+                qualified.append({
+                    'name': course.get('name', 'N/A'),
+                    'cluster': course.get('cluster', 'N/A'),
+                    'requirements': requirements,
+                    'institution': inst.get('name', 'N/A'),
+                    'program_code': inst.get('program_code', 'N/A')
+                })
+
+    grouped = defaultdict(list)
+    for item in qualified:
+        grouped[item['cluster']].append(item)
+
+    named_clusters = []
+    for cluster_name, items in grouped.items():
+        named_clusters.append({
+            'label': cluster_name,
+            'courses': items
+        })
+
+    return named_clusters
+
 def normalize_mongo_grades(raw_grades):
     normalized = {}
     for key, value in raw_grades.items():
@@ -1092,6 +1145,8 @@ def verify_payment():
         results = run_certificate_eligibility(grades)
     elif program == 'kmtc':
         results = run_kmtc_eligibility(grades)
+    elif program == 'artisan':
+        results = run_artisan_eligibility(grades)
     else:
         return "Invalid program type."
 
@@ -1258,6 +1313,9 @@ def unified_results():
         result_type = 'clustered'
     elif program == 'certificate':
         raw_results = run_certificate_eligibility(grades)
+        result_type = 'clustered'
+    elif program == 'artisan':
+        raw_results = run_artisan_eligibility(grades)
         result_type = 'clustered'
     elif program == 'kmtc':
         raw_results = run_kmtc_eligibility(grades)

@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Artisan Course Checker</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+
+  <link rel="stylesheet" href="{{ url_for('static', filename='certificate.css') }}">
+  <!-- subtle colour touch: keep original but add a style hint -->
+  <style>
+    /* minimal colour addition: button gets a warm artisan tone */
+    .btn-artisan {
+      background-color: #8B6B4D !important;  /* earthy brown */
+      border-color: #6b4f38 !important;
+      color: white !important;
+    }
+    .btn-artisan:hover {
+      background-color: #6b4f38 !important;
+      border-color: #4f3b2a !important;
+      color: white !important;
+    }
+    /* optional: section title hint */
+    .section-title {
+      color: #5a3e2b;
+    }
+  </style>
+</head>
+<body class="bg-light">
+ {% include 'navbar.html' %}
+
+
+  <div class="container py-5">
+    <div class="row justify-content-center">
+      <div class="col-lg-10">
+        <div class="card main-card">
+          <div class="card-body p-4 p-lg-5">
+            <!-- changed title & description: Artisan version -->
+            <h3 class="text-center mb-4" style="color: #7B5A3E;">Artisan Course Eligibility Checker</h3>
+            <p class="text-center text-muted mb-4">Enter your KCSE examination details to check eligible artisan courses</p>
+            
+            <form method="post" action="/start-check">
+              <!-- Main Grade Section -->
+              <div class="form-section">
+                <h5 class="section-title">Main KCSE Grade</h5>
+                <div class="row">
+                  <div class="col-md-6">
+                    <label for="main_grade" class="form-label">
+                      Overall KCSE Grade<span class="required-asterisk">*</span>
+                    </label>
+                    <select class="form-select" id="main_grade" name="main_grade" required>
+                      <option value="">Select grade</option>
+                      {% for grade in ['A', 'A-', 'B+', 'B', 'B-', 'C+', 'C', 'C-', 'D+', 'D', 'D-', 'E'] %}
+                        <option value="{{ grade }}">{{ grade }}</option>
+                      {% endfor %}
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Core Subjects Section -->
+              <div class="form-section">
+                <h5 class="section-title">Core Subjects <span class="required-asterisk">*</span></h5>
+                <div class="subject-grid">
+                  {% for subject in ['mathematics', 'english', 'kiswahili'] %}
+                  <div class="mb-3">
+                    <label for="{{ subject }}" class="form-label">
+                      {{ subject.capitalize() }}<span class="required-asterisk">*</span>
+                    </label>
+                    <select class="form-select" id="{{ subject }}" name="grades[{{ subject }}]" required>
+                      <option value="">Select grade</option>
+                      {% for grade in ['A', 'A-', 'B+', 'B', 'B-', 'C+', 'C', 'C-', 'D+', 'D', 'D-', 'E'] %}
+                        <option value="{{ grade }}">{{ grade }}</option>
+                      {% endfor %}
+                    </select>
+                  </div>
+                  {% endfor %}
+                </div>
+              </div>
+
+              <!-- Sciences Section -->
+              <div class="form-section">
+                <h5 class="section-title">Sciences <span class="optional-badge">Optional</span></h5>
+                <div class="subject-grid">
+                  {% for subject in ['chemistry', 'biology', 'physics'] %}
+                  <div class="mb-3">
+                    <label for="{{ subject }}" class="form-label">{{ subject.capitalize() }}</label>
+                    <select class="form-select" id="{{ subject }}" name="grades[{{ subject }}]">
+                      <option value="">Select grade</option>
+                      {% for grade in ['A', 'A-', 'B+', 'B', 'B-', 'C+', 'C', 'C-', 'D+', 'D', 'D-', 'E'] %}
+                        <option value="{{ grade }}">{{ grade }}</option>
+                      {% endfor %}
+                    </select>
+                  </div>
+                  {% endfor %}
+                </div>
+              </div>
+
+              <!-- Humanities Section -->
+              <div class="form-section">
+                <h5 class="section-title">Humanities <span class="optional-badge">Optional</span></h5>
+                <div class="subject-grid">
+                  {% for subject in ['geography', 'history', 'cre', 'ire', 'hre'] %}
+                  <div class="mb-3">
+                    <label for="{{ subject }}" class="form-label">{{ subject.upper() }}</label>
+                    <select class="form-select" id="{{ subject }}" name="grades[{{ subject }}]">
+                      <option value="">Select grade</option>
+                      {% for grade in ['A', 'A-', 'B+', 'B', 'B-', 'C+', 'C', 'C-', 'D+', 'D', 'D-', 'E'] %}
+                        <option value="{{ grade }}">{{ grade }}</option>
+                      {% endfor %}
+                    </select>
+                  </div>
+                  {% endfor %}
+                </div>
+              </div>
+
+              <!-- Technical Subjects Section -->
+              <div class="form-section">
+                <h5 class="section-title">Technical Subjects <span class="optional-badge">Optional</span></h5>
+                <div class="subject-grid">
+                  {% for subject in ['agriculture', 'computer studies', 'art and design', 'woodwork', 'homescience', 'business studies', 'music'] %}
+                  <div class="mb-3">
+                    <label for="{{ subject }}" class="form-label">{{ subject.title() }}</label>
+                    <select class="form-select" id="{{ subject }}" name="grades[{{ subject }}]">
+                      <option value="">Select grade</option>
+                      {% for grade in ['A', 'A-', 'B+', 'B', 'B-', 'C+', 'C', 'C-', 'D+', 'D', 'D-', 'E'] %}
+                        <option value="{{ grade }}">{{ grade }}</option>
+                      {% endfor %}
+                    </select>
+                  </div>
+                  {% endfor %}
+                </div>
+              </div>
+
+              <!-- Other Subjects Section -->
+              <div class="form-section">
+                <h5 class="section-title">Other Subjects <span class="optional-badge">Optional</span></h5>
+                <div class="subject-grid">
+                  {% for subject in ['building and construction', 'electricity and electronics', 'metalwork', 'french', 'german', 'aviation'] %}
+                  <div class="mb-3">
+                    <label for="{{ subject }}" class="form-label">{{ subject.title() }}</label>
+                    <select class="form-select" id="{{ subject }}" name="grades[{{ subject }}]">
+                      <option value="">Select grade</option>
+                      {% for grade in ['A', 'A-', 'B+', 'B', 'B-', 'C+', 'C', 'C-', 'D+', 'D', 'D-', 'E'] %}
+                        <option value="{{ grade }}">{{ grade }}</option>
+                      {% endfor %}
+                    </select>
+                  </div>
+                  {% endfor %}
+                </div>
+              </div>
+              <!-- Hidden field to specify program type — now artisan -->
+              <input type="hidden" name="program_type" value="artisan">
+              <div class="text-center mt-4">
+                <!-- button class changed to btn-artisan (earthy colour) but keep same icon & structure -->
+                <button type="submit" class="btn btn-artisan">
+                  <i class="bi bi-check-circle-fill me-2"></i>Check Eligibility
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+{% include 'footer.html' %}
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

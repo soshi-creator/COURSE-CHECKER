@@ -241,6 +241,21 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         Get Started
       </a>
     </div>
+    <!-- artisan Card -->
+    <div class="main-btn-card main-btn-artisan">
+      <div class="card-content">
+        <span class="click-indicator"></span>
+        <i class="bi bi-tools"></i>
+        <div class="btn-content">
+          <span class="btn-title">Artisan Programs</span>
+          <span class="btn-subtitle">Technical & vocational courses</span>
+        </div>
+      </div>
+      <a href="{{ url_for('artisan_form') }}" class="card-action-btn">
+        Get Started
+      </a>
+    </div>
+
 
     <!-- Short Courses Card -->
     <div class="main-btn-card main-btn-short">
@@ -392,6 +407,56 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     </div>
   </div>
 
+
+  <!-- Follow Us Popup -->
+<div id="followUsModal" class="follow-us-modal" style="display: none;">
+  <div class="follow-us-content">
+    <button class="follow-us-close" onclick="closeFollowUsModal()">
+      <i class="bi bi-x-lg"></i>
+    </button>
+    
+    <div class="follow-us-icon">
+      <i class="bi bi-heart-fill"></i>
+    </div>
+    
+    <h3 class="follow-us-title">Follow Us</h3>
+    <p class="follow-us-message">
+      Stay connected with us on social media for updates, tips, and exclusive content!
+    </p>
+    
+    <div class="follow-us-buttons">
+      <!-- WhatsApp Button -->
+      <a href="https://chat.whatsapp.com/I56pOz6gEk6GGvYW4lCTrh?mode=gi_t" target="_blank" class="follow-btn follow-btn-whatsapp">
+        <i class="bi bi-whatsapp"></i>
+        <div class="follow-btn-content">
+          <span class="follow-btn-title">WhatsApp</span>
+          <span class="follow-btn-subtitle">Join our community</span>
+        </div>
+        <span class="follow-btn-badge">New</span>
+      </a>
+      
+      <!-- Facebook Button -->
+      <a href="https://www.facebook.com/profile.php?id=61583675553292" target="_blank" class="follow-btn follow-btn-facebook">
+        <i class="bi bi-facebook"></i>
+        <div class="follow-btn-content">
+          <span class="follow-btn-title">Facebook Page</span>
+          <span class="follow-btn-subtitle">Like & follow us</span>
+        </div>
+        <span class="follow-btn-badge">Follow</span>
+      </a>
+      
+    </div>
+    
+  </div>
+</div>
+
+<!-- Follow Us Floating Button -->
+<!-- Follow Us Floating Button - Now on LEFT side -->
+<button class="follow-us-floating-btn" onclick="openFollowUsModal()">
+  <i class="bi bi-plus-circle-fill"></i>
+  <span>Follow Us</span>
+  <span class="follow-us-pulse"></span>
+</button>
   <!-- PWA Install Modal -->
   <div id="pwaInstallModal" class="pwa-install-modal">
     <div class="pwa-install-content">

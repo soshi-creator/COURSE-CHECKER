@@ -732,3 +732,98 @@ document.addEventListener('DOMContentLoaded', function() {
   // Show support tooltip
   setTimeout(showSupportTooltip, 1000);
 });
+
+// Follow Us Modal Functions
+function openFollowUsModal() {
+  // Check if user has dismissed follow modal
+  const followDismissed = localStorage.getItem('followUsDismissed');
+  if (followDismissed === 'true') return;
+  
+  // Close PWA modal if open (to avoid collision)
+  const pwaModal = document.getElementById('pwaInstallModal');
+  if (pwaModal && pwaModal.style.display === 'flex') {
+    pwaModal.style.display = 'none';
+  }
+  
+  // Open follow modal
+  const modal = document.getElementById('followUsModal');
+  if (modal) {
+    modal.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+  }
+}
+
+function closeFollowUsModal() {
+  const modal = document.getElementById('followUsModal');
+  if (modal) {
+    modal.style.display = 'none';
+    document.body.style.overflow = 'auto';
+  }
+}
+
+function dontRemindMe(checkbox) {
+  if (checkbox.checked) {
+    localStorage.setItem('followUsDismissed', 'true');
+    // Close modal after a short delay
+    setTimeout(closeFollowUsModal, 300);
+  } else {
+    localStorage.removeItem('followUsDismissed');
+  }
+}
+
+// Auto-show follow modal once per user
+document.addEventListener('DOMContentLoaded', function() {
+  // Check if user is new (first visit)
+  const hasVisited = localStorage.getItem('hasVisited');
+  const followDismissed = localStorage.getItem('followUsDismissed');
+  
+  if (!hasVisited && !followDismissed) {
+    // New user - show follow modal after a short delay
+    setTimeout(() => {
+      // Check if PWA modal is not showing
+      const pwaModal = document.getElementById('pwaInstallModal');
+      if (!pwaModal || pwaModal.style.display !== 'flex') {
+        openFollowUsModal();
+      }
+    }, 3000); // Show after 3 seconds
+    
+    // Mark as visited
+    localStorage.setItem('hasVisited', 'true');
+  }
+  
+  // Show follow modal after user interaction (scroll to bottom)
+  let followShown = false;
+  window.addEventListener('scroll', function() {
+    if (followShown) return;
+    
+    const scrollPosition = window.scrollY + window.innerHeight;
+    const documentHeight = document.documentElement.scrollHeight;
+    
+    if (documentHeight - scrollPosition < 100) {
+      // User reached near bottom
+      const followDismissed = localStorage.getItem('followUsDismissed');
+      if (!followDismissed) {
+        openFollowUsModal();
+        followShown = true;
+      }
+    }
+  });
+});
+
+// Close modal when clicking outside
+window.addEventListener('click', function(e) {
+  const modal = document.getElementById('followUsModal');
+  if (e.target === modal) {
+    closeFollowUsModal();
+  }
+});
+
+// Prevent modal from opening when PWA modal is open
+const originalOpenFollowUs = openFollowUsModal;
+openFollowUsModal = function() {
+  const pwaModal = document.getElementById('pwaInstallModal');
+  if (pwaModal && pwaModal.style.display === 'flex') {
+    return; // Don't open if PWA modal is showing
+  }
+  originalOpenFollowUs();
+};

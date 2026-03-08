@@ -264,6 +264,34 @@
     .main-btn-kmtc .card-action-btn:hover { 
       background: #16a085;
     }
+    
+
+   :root {
+  --accent-blue: #2196F3;
+}
+
+.main-btn-artisan { 
+  border-top: 8px solid var(--accent-blue);
+  border-bottom: 3px solid var(--accent-blue);
+}
+
+.main-btn-artisan:hover { 
+  background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+  box-shadow: 0 15px 30px rgba(33, 150, 243, 0.2);
+}
+
+.main-btn-artisan i { 
+  color: var(--accent-blue); 
+}
+
+.main-btn-artisan .card-action-btn { 
+  background: var(--accent-blue);
+  color: white;
+}
+
+.main-btn-artisan .card-action-btn:hover { 
+  background: #1976d2;
+}
 
     .main-btn-short { 
       border-top: 8px solid var(--accent-yellow);
@@ -1758,5 +1786,388 @@
   .referral-fab i {
     font-size: 24px;
     margin: 0;
+  }
+}
+
+/* Follow Us Modal Styles */
+.follow-us-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(5px);
+  z-index: 15000; /* Higher than PWA modal (10000) */
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.follow-us-content {
+  background: white;
+  border-radius: 24px;
+  max-width: 450px;
+  width: 100%;
+  padding: 30px 25px 25px;
+  position: relative;
+  animation: modalSlideIn 0.3s ease;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+}
+
+.follow-us-close {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  background: #f8f9fa;
+  border: none;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #666;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.follow-us-close:hover {
+  background: #e9ecef;
+  color: #dc3545;
+  transform: rotate(90deg);
+}
+
+.follow-us-icon {
+  width: 70px;
+  height: 70px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 20px;
+}
+
+.follow-us-icon i {
+  font-size: 30px;
+  color: white;
+  animation: heartbeat 1.5s ease infinite;
+}
+
+.follow-us-title {
+  text-align: center;
+  font-size: 24px;
+  font-weight: 700;
+  color: #2c3e50;
+  margin-bottom: 10px;
+}
+
+.follow-us-message {
+  text-align: center;
+  color: #6c757d;
+  margin-bottom: 25px;
+  font-size: 15px;
+}
+
+.follow-us-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.follow-btn {
+  display: flex;
+  align-items: center;
+  padding: 12px 18px;
+  border-radius: 16px;
+  text-decoration: none;
+  color: white;
+  position: relative;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.follow-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  color: white;
+}
+
+.follow-btn i {
+  font-size: 28px;
+  margin-right: 15px;
+}
+
+.follow-btn-content {
+  flex: 1;
+}
+
+.follow-btn-title {
+  display: block;
+  font-weight: 600;
+  font-size: 16px;
+}
+
+.follow-btn-subtitle {
+  display: block;
+  font-size: 13px;
+  opacity: 0.9;
+}
+
+.follow-btn-badge {
+  background: rgba(255, 255, 255, 0.2);
+  padding: 4px 10px;
+  border-radius: 30px;
+  font-size: 12px;
+  font-weight: 500;
+  backdrop-filter: blur(4px);
+}
+
+.follow-btn-whatsapp {
+  background: linear-gradient(135deg, #25D366 0%, #128C7E 100%);
+}
+
+.follow-btn-facebook {
+  background: linear-gradient(135deg, #1877f2 0%, #0e5a9c 100%);
+}
+
+.follow-btn-twitter {
+  background: linear-gradient(135deg, #000000 0%, #333333 100%);
+}
+
+.follow-us-footer {
+  text-align: center;
+  padding-top: 15px;
+  border-top: 1px solid #e9ecef;
+}
+
+.follow-reminder {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #6c757d;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.follow-reminder input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}
+
+/* Updated Follow Us Floating Button - Now on LEFT side */
+.follow-us-floating-btn {
+  position: fixed;
+  bottom: 100px;
+  left: 20px; /* Changed from right: 20px to left: 20px */
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 50px;
+  padding: 12px 25px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 600;
+  font-size: 15px;
+  box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+  cursor: pointer;
+  transition: all 0.3s;
+  z-index: 14000;
+  animation: float 3s ease infinite;
+}
+
+.follow-us-floating-btn:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 25px rgba(102, 126, 234, 0.6);
+  padding-left: 30px; /* Changed from padding-right to padding-left */
+}
+
+.follow-us-floating-btn i {
+  font-size: 18px;
+  transition: transform 0.3s;
+}
+
+.follow-us-floating-btn:hover i {
+  transform: rotate(90deg);
+}
+
+/* Responsive adjustments for mobile */
+@media (max-width: 768px) {
+  .follow-us-floating-btn {
+    bottom: 80px;
+    left: 15px; /* Keep on left side */
+    padding: 10px 18px;
+    font-size: 14px;
+  }
+  
+  /* Make it more compact on very small screens */
+  @media (max-width: 480px) {
+    .follow-us-floating-btn {
+      bottom: 70px;
+      left: 10px;
+      padding: 8px 16px;
+    }
+    
+    .follow-us-floating-btn span {
+      display: inline-block; /* Keep text visible */
+    }
+    
+    /* Optional: If screen is too small, you can hide text and show only icon */
+    @media (max-width: 360px) {
+      .follow-us-floating-btn span {
+        display: none; /* Hide text on very small screens */
+      }
+      
+      .follow-us-floating-btn {
+        padding: 12px;
+        border-radius: 50px;
+      }
+      
+      .follow-us-floating-btn i {
+        font-size: 20px;
+        margin: 0;
+      }
+    }
+  }
+}
+
+/* Adjust for devices with notches/safe areas */
+@supports (padding: max(0px)) {
+  .follow-us-floating-btn {
+    left: max(20px, env(safe-area-inset-left));
+    bottom: max(100px, env(safe-area-inset-bottom));
+  }
+  
+  @media (max-width: 768px) {
+    .follow-us-floating-btn {
+      left: max(15px, env(safe-area-inset-left));
+      bottom: max(80px, env(safe-area-inset-bottom));
+    }
+  }
+}
+
+/* Keep the support button on the right as is */
+.contact-details-container {
+  position: fixed;
+  bottom: 20px;
+  right: 20px; /* Support button stays on right */
+  z-index: 10000;
+}
+
+/* Ensure buttons don't overlap on medium screens */
+@media (max-width: 768px) {
+  .contact-details-container {
+    bottom: 15px;
+    right: 15px;
+  }
+}
+
+/* For very small screens, adjust both buttons to be higher */
+@media (max-width: 480px) {
+  .follow-us-floating-btn {
+    bottom: 90px; /* Move higher to avoid bottom navigation */
+  }
+  
+  .contact-details-container {
+    bottom: 90px; /* Match height for consistency */
+  }
+}
+
+/* Animations */
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes heartbeat {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+    opacity: 0.5;
+  }
+  100% {
+    transform: scale(1.5);
+    opacity: 0;
+  }
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+  .follow-us-content {
+    padding: 20px 15px;
+  }
+  
+  .follow-btn {
+    padding: 10px 15px;
+  }
+  
+  .follow-btn i {
+    font-size: 24px;
+    margin-right: 12px;
+  }
+  
+  .follow-btn-title {
+    font-size: 14px;
+  }
+  
+  .follow-btn-subtitle {
+    font-size: 11px;
+  }
+  
+  .follow-us-floating-btn {
+    bottom: 80px;
+    padding: 10px 20px;
+    font-size: 14px;
+  }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .follow-us-content {
+    background: #1a1a1a;
+  }
+  
+  .follow-us-title {
+    color: #fff;
+  }
+  
+  .follow-us-message {
+    color: #b0b0b0;
+  }
+  
+  .follow-us-close {
+    background: #2d2d2d;
+    color: #b0b0b0;
+  }
+  
+  .follow-us-close:hover {
+    background: #3d3d3d;
+  }
+  
+  .follow-us-footer {
+    border-top-color: #2d2d2d;
+  }
+  
+  .follow-reminder {
+    color: #b0b0b0;
   }
 }
