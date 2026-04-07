@@ -240,10 +240,10 @@
           </a>
           
           <!-- Degree Button with Modal -->
-          <button class="nav-link degree-modal-btn" onclick="openDegreeModal()">
+          <a class="nav-link degree-modal-btn" href="{{ url_for('input_form') }}">
             <i class="bi bi-search nav-icon"></i>
             <span class="nav-text">Degrees</span>
-          </button>
+          </a>
           
           <a class="nav-link {% if request.endpoint == 'diploma_form' %}active{% endif %}" href="{{ url_for('diploma_form') }}">
             <i class="bi bi-file-earmark-text nav-icon"></i>
@@ -329,10 +329,10 @@
         </a>
         
         <!-- Mobile Degree Button with Modal -->
-        <button class="mobile-nav-item degree-modal-btn" onclick="openDegreeModal()">
-          <i class="bi bi-search mobile-nav-icon"></i>
-          <span class="mobile-nav-text">Degrees</span>
-        </button>
+        <a href="{{ url_for('input_form') }}" class="mobile-nav-item">
+  <i class="bi bi-search mobile-nav-icon"></i>
+  <span class="mobile-nav-text">Degrees</span>
+</a>
         
         <a class="mobile-nav-item {% if request.endpoint == 'diploma_form' %}active{% endif %}" href="{{ url_for('diploma_form') }}">
           <i class="bi bi-file-earmark-text mobile-nav-icon"></i>
