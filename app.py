@@ -1061,7 +1061,7 @@ def start_check():
     if program_type == 'degree':
         # Store cluster points
         cluster_points = {}
-        for i in range(1, 21):
+        for i in range(1, 19):
             val = request.form.get(f'clusters[{i}]')
             try:
                 cluster_points[i] = float(val)
