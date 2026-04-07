@@ -33,6 +33,11 @@
             background-position: right calc(0.375em + 0.1875rem) center;
             background-size: calc(0.75em + 0.375rem) calc(0.75em + 0.375rem);
         }
+        .verify-payment-box {
+    background: #f8f9fa;
+    padding: 20px;
+    border-radius: 10px;
+}
         
         .invalid-feedback {
             display: none;
@@ -105,6 +110,28 @@
                     
                 </div>
             </form>
+            <hr class="my-4">
+
+<div class="verify-payment-box text-center">
+    <h5 class="mb-3">
+        <i class="bi bi-check-circle me-2 text-success"></i>
+        Already Paid?
+    </h5>
+
+    <p class="text-muted small">
+        If you completed payment but didn’t receive results, enter your Paystack reference below.
+    </p>
+
+    <div class="input-group mb-3">
+        <input type="text" id="paymentReference" class="form-control" 
+               placeholder="Enter Paystack Reference (e.g. PSK_XXXXXX)">
+        <button class="btn btn-success" onclick="verifyPayment()" id="verifyBtn">
+            Verify Payment
+        </button>
+    </div>
+
+    <div id="verifyMessage" class="small"></div>
+</div>
         </div>
         
         <div class="payment-info">
@@ -267,6 +294,53 @@
                 exampleIndex = (exampleIndex + 1) % examples.length;
             }, 3000);
         });
+        async function verifyPayment() {
+    const ref = document.getElementById("paymentReference").value.trim();
+    const email = document.getElementById("email").value.trim();
+    const index = document.getElementById("index_number").value.trim();
+
+    const button = document.getElementById("verifyBtn");
+    const message = document.getElementById("verifyMessage");
+
+    if (!ref || !email || !index) {
+        message.innerHTML = "<span class='text-danger'>Fill email, index number and reference</span>";
+        return;
+    }
+
+    button.innerHTML = "<span class='spinner-border spinner-border-sm'></span>";
+    button.disabled = true;
+
+    try {
+        const res = await fetch("/verify_manual", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                reference: ref,
+                email: email,
+                index_number: index
+            })
+        });
+
+        const data = await res.json();
+
+        if (data.status === "success") {
+            message.innerHTML = "<span class='text-success'>Verified! Loading results...</span>";
+            setTimeout(() => {
+                window.location.href = data.redirect;
+            }, 1200);
+        } else {
+            message.innerHTML = "<span class='text-danger'>" + data.message + "</span>";
+        }
+
+    } catch (err) {
+        message.innerHTML = "<span class='text-danger'>Network error</span>";
+    }
+
+    button.innerHTML = "Verify Payment";
+    button.disabled = false;
+}
     </script>
 </body>
 </html>

@@ -1108,26 +1108,32 @@ def payment_page():
             return "Payment initiation failed. Please try again."
 
     return render_template('payment.html', program_type=program_type)
+
+    # REFERRAL LOGIC STARTS HERE
+    # -----------------------------
+    # Capture referrer from session
+    referrer_code = session.get("referrer")  # from ?ref=CODE
 @app.route('/verify_payment')
 def verify_payment():
+    # 1. Get and validate payment reference
     ref = request.args.get('reference')
     if not ref:
         return "Missing payment reference."
-
-    # Verify with Paystack
+    
+    # 2. Verify with Paystack
     headers = {
         "Authorization": f"Bearer {PAYSTACK_SECRET_KEY}"
     }
     response = requests.get(f"https://api.paystack.co/transaction/verify/{ref}", headers=headers)
     data = response.json()
-
+    
     if not data.get('status') or data['data']['status'] != 'success':
         return "Payment verification failed."
-
-    # Mark session as paid
+    
+    # 3. Mark session as paid
     session['payment_status'] = 'paid'
-
-    # Extract session data
+    
+    # 4. Extract session data
     email = session.get('email')
     index = session.get('index_number')
     program = session.get('program_type')
@@ -1135,8 +1141,8 @@ def verify_payment():
     raw_grades = session.get('raw_grades', {})
     grades = normalize_mongo_grades(raw_grades)
     cluster_points = session.get('cluster_points', {}) if program == 'degree' else {}
-
-    # Run eligibility logic
+    
+    # 5. Run eligibility logic based on program type
     if program == 'degree':
         results = run_degree_eligibility(grades, cluster_points)
     elif program == 'diploma':
@@ -1149,30 +1155,24 @@ def verify_payment():
         results = run_artisan_eligibility(grades)
     else:
         return "Invalid program type."
-
+    
+    # 6. Prepare qualified courses data for results page
     data_id = str(uuid.uuid4())
     cluster_name_map = {doc['number']: doc['name'] for doc in clusters_collection.find()}
-
     qualified_courses_data[data_id] = {
         'qualified_courses': results,
         'cluster_name_map': cluster_name_map
     }
     session['pdf_data_id'] = data_id  # optional: pass to frontend
-
-    # -----------------------------
-    # REFERRAL LOGIC STARTS HERE
-    # -----------------------------
-    # Capture referrer from session
-    referrer_code = session.get("referrer")  # from ?ref=CODE
-
-    # Generate new user's own referral code
+    
+    # 7. Generate new user's own referral code
     new_user_referral_code = "CC" + str(uuid.uuid4())[-6:]
-
+    
     # Prevent self-referral
     if referrer_code == new_user_referral_code:
         referrer_code = None
-
-    # Build payment document
+    
+    # 8. Build payment document
     doc = {
         "email": email,
         "index_number": index,
@@ -1187,14 +1187,14 @@ def verify_payment():
         "referral_balance": 0,
         "referral_count": 0
     }
-
+    
     if program == 'degree' and cluster_points:
         doc["cluster_points"] = {str(k): v for k, v in cluster_points.items()}
-
-    # Insert payment document
+    
+    # 9. Insert payment document
     payments_collection.insert_one(doc)
-
-    # Insert eligibility results
+    
+    # 10. Insert eligibility results
     results_collection.insert_one({
         "email": email,
         "index_number": index,
@@ -1202,29 +1202,28 @@ def verify_payment():
         "results": results,
         "generated_at": datetime.utcnow()
     })
-
-    # -----------------------------
-    # REWARD REFERRER IF APPLICABLE
-    # -----------------------------
+    
+    # 11. Reward referrer if applicable
     if referrer_code:
         referrer = payments_collection.find_one({"referral_code": referrer_code})
         if referrer:
-            # Increment referrer's balance and count
+            # Increment referrer's balance and count (KSh 30 per referral)
             payments_collection.update_one(
                 {"_id": referrer["_id"]},
-                {"$inc": {"referral_balance": 30, "referral_count": 1}}  # KSh 50 per referral
+                {"$inc": {"referral_balance": 30, "referral_count": 1}}
             )
             # Mark this new user's referral as rewarded
             payments_collection.update_one(
                 {"_id": doc["_id"]},
                 {"$set": {"referral_rewarded": True}}
             )
-
+    
+    # 12. Debug print and return results
     print("Session at verify_payment:", dict(session))
-
+    
     # Store results in session for rendering
     session['results'] = results
-
+    
     return redirect(url_for('unified_results'))
 @app.route('/referral_dashboard', methods=['GET', 'POST'])
 def referral_dashboard():
@@ -2808,6 +2807,201 @@ def logout():
     flash('You have been successfully logged out.', 'success')
     # Redirect to home page or login page
     return redirect(url_for('home'))  # or redirect to your home route
+
+
+@app.route('/verify_manual', methods=['POST'])
+def verify_manual():
+    """
+    Manual verification of Paystack payment by reference code.
+    Handles cases where payment was successful but data wasn't saved.
+    """
+    data = request.json
+    ref = data.get("reference")
+    email = data.get("email")
+    index = data.get("index_number")
+    
+    if not ref or not email or not index:
+        return jsonify({"status": "error", "message": "Reference, email, and index number are required."})
+
+    # 1. Check if reference already exists in DB
+    existing_payment = payments_collection.find_one({"paystack_ref": ref})
+    if existing_payment:
+        return jsonify({"status": "error", "message": "This payment reference has already been used."})
+
+    # 2. Verify with Paystack
+    headers = {"Authorization": f"Bearer {PAYSTACK_SECRET_KEY}"}
+    response = requests.get(f"https://api.paystack.co/transaction/verify/{ref}", headers=headers)
+    paystack_data = response.json()
+
+    if not paystack_data.get("status") or paystack_data["data"]["status"] != "success":
+        return jsonify({"status": "error", "message": "Payment verification failed. Check your reference code."})
+
+    # 3. Payment verified — now get the program type and grades
+    amount = paystack_data["data"]["amount"] / 100  # Paystack stores in kobo
+    
+    # Try to get existing data from database first (if user already submitted grades)
+    existing_user = payments_collection.find_one({
+        "email": email,
+        "index_number": index
+    })
+    
+    # Determine program type from existing record or from session
+    program = None
+    raw_grades = {}
+    cluster_points = {}
+    
+    if existing_user:
+        # Use data from existing record
+        program = existing_user.get("program_type")
+        raw_grades = existing_user.get("grades", {})
+        cluster_points = existing_user.get("cluster_points", {}) if program == 'degree' else {}
+        
+        # Check if this user already has results
+        existing_results = results_collection.find_one({
+            "email": email,
+            "index_number": index
+        })
+        
+        if existing_results:
+            # User already has results, just update payment info
+            payments_collection.update_one(
+                {"_id": existing_user["_id"]},
+                {
+                    "$set": {
+                        "paystack_ref": ref,
+                        "paid_at": datetime.utcnow(),
+                        "payment_status": "paid"
+                    }
+                }
+            )
+            session['results'] = existing_results.get("results")
+            session['payment_status'] = 'paid'
+            session['program_type'] = program
+            
+            return jsonify({
+                "status": "success", 
+                "redirect": url_for("unified_results")
+            })
+    else:
+        # No existing data - get from session (if available)
+        program = session.get("program_type")
+        raw_grades = session.get('raw_grades', {})
+        cluster_points = session.get('cluster_points', {}) if program == 'degree' else {}
+    
+    if not program:
+        return jsonify({
+            "status": "error", 
+            "message": "Program type not found. Please submit your grades first before verifying payment."
+        })
+
+    # 4. Normalize grades
+    grades = normalize_mongo_grades(raw_grades)
+    
+    # 5. Run eligibility logic based on program type
+    if program == 'degree':
+        results = run_degree_eligibility(grades, cluster_points)
+    elif program == 'diploma':
+        results = run_diploma_eligibility(grades)
+    elif program == 'certificate':
+        results = run_certificate_eligibility(grades)
+    elif program == 'kmtc':
+        results = run_kmtc_eligibility(grades)
+    elif program == 'artisan':
+        results = run_artisan_eligibility(grades)
+    else:
+        return jsonify({"status": "error", "message": "Invalid program type."})
+    
+    # 6. Generate user's own referral code
+    new_user_referral_code = "CC" + str(uuid.uuid4())[-6:]
+    
+    # Get referrer code from session if available
+    referrer_code = session.get("referrer")
+    
+    # Prevent self-referral
+    if referrer_code == new_user_referral_code:
+        referrer_code = None
+    
+    # 7. Prepare payment document
+    doc = {
+        "email": email,
+        "index_number": index,
+        "program_type": program,
+        "amount": amount,
+        "paystack_ref": ref,
+        "paid_at": datetime.utcnow(),
+        "grades": grades,
+        "referral_code": new_user_referral_code,
+        "referred_by": referrer_code,
+        "referral_rewarded": False,
+        "referral_balance": 0,
+        "referral_count": 0
+    }
+    
+    if program == 'degree' and cluster_points:
+        doc["cluster_points"] = {str(k): v for k, v in cluster_points.items()}
+    
+    # 8. Insert or update payment document
+    if existing_user:
+        payments_collection.update_one(
+            {"_id": existing_user["_id"]},
+            {"$set": doc}
+        )
+    else:
+        payments_collection.insert_one(doc)
+    
+    # 9. Store results in DB (update if exists, insert if not)
+    results_collection.update_one(
+        {
+            "email": email,
+            "index_number": index,
+            "program_type": program
+        },
+        {
+            "$set": {
+                "results": results,
+                "generated_at": datetime.utcnow()
+            }
+        },
+        upsert=True
+    )
+    
+    # 10. Reward referrer if applicable
+    if referrer_code:
+        referrer = payments_collection.find_one({"referral_code": referrer_code})
+        if referrer and not existing_user:  # Only reward for new users
+            # Increment referrer's balance and count
+            payments_collection.update_one(
+                {"_id": referrer["_id"]},
+                {"$inc": {"referral_balance": 30, "referral_count": 1}}
+            )
+            # Mark this new user's referral as rewarded
+            payments_collection.update_one(
+                {"_id": doc["_id"]},
+                {"$set": {"referral_rewarded": True}}
+            )
+    
+    # 11. Store in session for rendering
+    session['payment_status'] = 'paid'
+    session['results'] = results
+    session['program_type'] = program
+    session['email'] = email
+    session['index_number'] = index
+    session['raw_grades'] = raw_grades
+    
+    # 12. Prepare qualified courses data for results page
+    data_id = str(uuid.uuid4())
+    cluster_name_map = {doc['number']: doc['name'] for doc in clusters_collection.find()}
+    qualified_courses_data[data_id] = {
+        'qualified_courses': results,
+        'cluster_name_map': cluster_name_map,
+        'program_type': program
+    }
+    session['pdf_data_id'] = data_id
+    
+    return jsonify({
+        "status": "success", 
+        "redirect": url_for("unified_results")
+    })
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True)

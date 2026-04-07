@@ -1,21 +1,25 @@
-from cryptography.hazmat.primitives.asymmetric import ec
-from cryptography.hazmat.primitives import serialization
-import base64
+from pymongo import MongoClient
 
-# Generate key pair
-private_key = ec.generate_private_key(ec.SECP256R1())
-private_bytes = private_key.private_bytes(
-    serialization.Encoding.PEM,
-    serialization.PrivateFormat.PKCS8,
-    serialization.NoEncryption()
-)
-public_key = private_key.public_key()
-public_bytes = public_key.public_bytes(
-    serialization.Encoding.X962,
-    serialization.PublicFormat.UncompressedPoint
+client = MongoClient("mongodb+srv://David:David@cluster0.nb9xn9p.mongodb.net/?appName=Cluster0")
+db = client["course_checker"]
+courses = db["courses"]
+
+# Geography → History (16 → 14)
+courses.update_many(
+    {"cluster": 16},
+    {"$set": {"cluster": 14}}
 )
 
-print("Private Key (PEM):")
-print(private_bytes.decode())
-print("\nPublic Key (Base64 URL-safe):")
-print(base64.urlsafe_b64encode(public_bytes).decode())
+# Religion → Cluster 18 (20 → 18)
+courses.update_many(
+    {"cluster": 20},
+    {"$set": {"cluster": 18}}
+)
+
+# Education → Cluster 17 (19 → 17)
+courses.update_many(
+    {"cluster": 19},
+    {"$set": {"cluster": 17}}
+)
+
+print("Cluster merges completed ✅")
