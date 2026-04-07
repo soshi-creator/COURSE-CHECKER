@@ -2,214 +2,405 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>View Paid Results</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=yes">
+    <title>View Paid Results - KUCCPS Course Checker</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
     <style>
         :root {
-            --primary-color: #3498db;
+            --primary-color: #0d6efd;
+            --primary-dark: #0b5ed7;
             --secondary-color: #2c3e50;
             --accent-color: #e74c3c;
-            --light-color: #ecf0f1;
-            --dark-color: #2c3e50;
+            --light-color: #f0f4f8;
+            --dark-color: #1e2f3e;
+            --success-color: #198754;
+            --border-radius-card: 24px;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
         
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f8f9fa;
-            color: #333;
-            line-height: 1.6;
+            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #e9eef3 100%);
+            color: #1a2c3e;
+            line-height: 1.5;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
         }
         
+        /* Custom Navbar Overrides (clean & mobile-first) */
         .navbar {
             background-color: var(--secondary-color);
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            padding: 0.75rem 1rem;
         }
         
         .navbar-brand {
             font-weight: 700;
-            color: var(--light-color) !important;
+            font-size: 1.35rem;
+            color: white !important;
+            letter-spacing: -0.3px;
         }
         
         .navbar-nav .nav-link {
-            color: var(--light-color) !important;
+            color: rgba(255,255,255,0.9) !important;
             font-weight: 500;
-            transition: color 0.3s;
+            font-size: 0.95rem;
+            transition: all 0.2s;
         }
         
         .navbar-nav .nav-link:hover {
             color: var(--primary-color) !important;
+            opacity: 1;
         }
         
+        /* main container — compact but spacious */
         .container {
-            max-width: 800px;
-            margin-top: 30px;
+            max-width: 650px;
+            margin-left: auto;
+            margin-right: auto;
+            padding-left: 16px;
+            padding-right: 16px;
+            flex: 1;
         }
         
-        .form-container {
-            background-color: white;
-            border-radius: 10px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
-            padding: 30px;
-            margin-bottom: 30px;
-        }
-        
+        /* page title: visible & elegant */
         .page-title {
-            color: var(--secondary-color);
-            margin-bottom: 25px;
-            font-weight: 700;
+            font-size: 1.85rem;
+            font-weight: 800;
             text-align: center;
+            margin-top: 1.2rem;
+            margin-bottom: 1.5rem;
+            color: #0a2b3e;
+            letter-spacing: -0.4px;
             position: relative;
-            padding-bottom: 15px;
+            display: inline-block;
+            width: 100%;
         }
         
         .page-title:after {
             content: '';
-            position: absolute;
-            bottom: 0;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 80px;
+            display: block;
+            width: 70px;
             height: 4px;
-            background-color: var(--primary-color);
-            border-radius: 2px;
+            background: var(--primary-color);
+            border-radius: 4px;
+            margin: 10px auto 0;
+        }
+        
+        /* form card — crisp, touch-friendly */
+        .form-container {
+            background: white;
+            border-radius: var(--border-radius-card);
+            box-shadow: 0 12px 28px rgba(0,0,0,0.05), 0 2px 4px rgba(0,0,0,0.02);
+            padding: 1.8rem 1.5rem;
+            margin-bottom: 1.5rem;
+            transition: transform 0.1s ease;
         }
         
         .form-group {
-            margin-bottom: 20px;
+            margin-bottom: 1.4rem;
         }
         
         .form-label {
-            font-weight: 600;
+            font-weight: 700;
             color: var(--dark-color);
-            margin-bottom: 8px;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 6px;
         }
         
-        .form-control {
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            padding: 10px 15px;
-            transition: all 0.3s;
+        .form-label i {
+            color: var(--primary-color);
+            font-size: 1rem;
         }
         
-        .form-control:focus {
+        .form-control, .form-select {
+            border: 1.5px solid #e2e8f0;
+            border-radius: 18px;
+            padding: 12px 16px;
+            font-size: 16px;  /* prevents zoom on mobile */
+            transition: all 0.2s;
+            background-color: #ffffff;
+            width: 100%;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+        
+        .form-control:focus, .form-select:focus {
             border-color: var(--primary-color);
-            box-shadow: 0 0 0 0.2rem rgba(52, 152, 219, 0.25);
+            box-shadow: 0 0 0 4px rgba(13, 110, 253, 0.15);
+            outline: none;
         }
         
+        /* select custom arrow */
+        .form-select {
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 1rem center;
+            background-size: 16px 12px;
+        }
+        
+        /* primary button — large tap target */
         .btn-primary {
             background-color: var(--primary-color);
-            border-color: var(--primary-color);
-            padding: 10px 25px;
-            font-weight: 600;
-            border-radius: 5px;
-            transition: all 0.3s;
+            border: none;
+            border-radius: 40px;
+            padding: 14px 20px;
+            font-weight: 700;
+            font-size: 1rem;
             width: 100%;
-            margin-top: 10px;
+            transition: all 0.2s;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 0.5rem;
         }
         
-        .btn-primary:hover {
-            background-color: #2980b9;
-            border-color: #2980b9;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        .btn-primary:active {
+            transform: scale(0.97);
+            background-color: var(--primary-dark);
         }
         
+        /* info section — helpful & visible */
         .info-section {
-            background-color: var(--light-color);
-            border-radius: 10px;
-            padding: 20px;
-            margin-top: 30px;
+            background: white;
+            border-radius: 24px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            border: 1px solid rgba(0,0,0,0.03);
+            box-shadow: 0 5px 12px rgba(0,0,0,0.03);
         }
         
         .info-title {
-            color: var(--secondary-color);
-            font-weight: 600;
-            margin-bottom: 15px;
+            font-size: 1.25rem;
+            font-weight: 800;
+            color: #0a4b6e;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-left: 4px solid var(--primary-color);
+            padding-left: 12px;
         }
         
         .info-list {
-            list-style-type: none;
+            list-style: none;
             padding-left: 0;
+            margin-bottom: 0;
         }
         
         .info-list li {
-            margin-bottom: 10px;
-            padding-left: 25px;
+            margin-bottom: 12px;
+            padding-left: 28px;
             position: relative;
+            font-size: 0.9rem;
+            color: #2c3e50;
         }
         
         .info-list li:before {
             content: '✓';
             position: absolute;
             left: 0;
-            color: var(--primary-color);
-            font-weight: bold;
+            color: var(--success-color);
+            font-weight: 800;
+            font-size: 1rem;
         }
         
+        /* footer stays down */
         footer {
-            background-color: var(--secondary-color);
-            color: var(--light-color);
-            padding: 20px 0;
-            margin-top: 50px;
+            background-color: #0a2b3e;
+            color: #cbd5e6;
+            padding: 1.2rem 1rem;
             text-align: center;
+            font-size: 0.75rem;
+            margin-top: 1rem;
         }
         
-        @media (max-width: 768px) {
+        footer p {
+            margin-bottom: 0.2rem;
+        }
+        
+        /* validation / alert extras */
+        .alert-custom {
+            background: #fef9e3;
+            border-radius: 18px;
+            padding: 0.75rem 1rem;
+            font-size: 0.8rem;
+            margin-top: 1rem;
+            border-left: 4px solid #ffc107;
+        }
+        
+        /* MOBILE FIRST: adjustments to make verify/view visible without extra scroll */
+        @media (max-width: 576px) {
             .container {
-                padding: 0 15px;
+                padding-left: 12px;
+                padding-right: 12px;
+            }
+            
+            .page-title {
+                font-size: 1.6rem;
+                margin-top: 0.8rem;
+                margin-bottom: 1rem;
             }
             
             .form-container {
-                padding: 20px;
+                padding: 1.4rem 1.2rem;
+                border-radius: 28px;
             }
+            
+            .form-control, .form-select {
+                padding: 12px 14px;
+                font-size: 16px;
+            }
+            
+            .btn-primary {
+                padding: 13px 16px;
+            }
+            
+            .info-section {
+                padding: 1.2rem;
+            }
+            
+            .info-title {
+                font-size: 1.15rem;
+            }
+            
+            .info-list li {
+                font-size: 0.85rem;
+                margin-bottom: 10px;
+            }
+        }
+        
+        /* extra touch for very small devices (<=380px) */
+        @media (max-width: 380px) {
+            .form-container {
+                padding: 1.2rem;
+            }
+            
+            .page-title {
+                font-size: 1.45rem;
+            }
+        }
+        
+        /* loading spinner inline */
+        .spinner-sm {
+            width: 1.2rem;
+            height: 1.2rem;
+            border-width: 0.15em;
+        }
+        
+        /* remove outline on tap for mobile */
+        .btn:focus-visible, .form-control:focus-visible {
+            outline: none;
+        }
+        
+        /* smooth scroll behavior */
+        html {
+            scroll-behavior: smooth;
+        }
+        
+        /* highlight field if needed */
+        .is-invalid-custom {
+            border-color: #dc3545 !important;
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12' width='12' height='12' fill='none' stroke='%23dc3545'%3e%3ccircle cx='6' cy='6' r='4.5'/%3e%3cpath stroke-linejoin='round' d='M5.8 3.6h.4L6 6.5z'/%3e%3ccircle cx='6' cy='8.2' r='.6' fill='%23dc3545' stroke='none'/%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 1rem center;
+            background-size: 18px 18px;
         }
     </style>
 </head>
 <body>
+
     <!-- Navigation Bar -->
-     {% include 'navbar.html' %}
+    {% include 'navbar.html' ignore missing %}
 
-
-    <!-- Main Content -->
+    <!-- Main Content: compact, and everything visible above fold on most phones -->
     <div class="container">
-        <h1 class="page-title">View Your Paid Results</h1>
+        <h1 class="page-title">
+            <i class="bi bi-receipt me-2" style="font-size: 1.8rem;"></i> 
+            View Paid Results
+        </h1>
         
         <div class="form-container">
-            <form method="POST" action="{{ url_for('view_paid_results') }}">
+            <form method="POST" action="{{ url_for('view_paid_results') }}" id="viewResultsForm">
+                <!-- Index Number Field -->
                 <div class="form-group">
-                    <label for="index_number" class="form-label">Index Number</label>
-                    <input type="text" name="index_number" class="form-control" placeholder="Enter your index number" required>
+                    <label for="index_number" class="form-label">
+                        <i class="bi bi-journal-bookmark-fill"></i> Index Number
+                    </label>
+                    <input type="text" 
+                           name="index_number" 
+                           id="index_number" 
+                           class="form-control" 
+                           placeholder="e.g., 123456/2025" 
+                           required
+                           autocomplete="off">
+                    <div class="form-text text-muted small mt-1">
+                        <i class="bi bi-info-circle"></i> Format: digits/year (e.g., 123456/2025)
+                    </div>
                 </div>
                 
+                <!-- Email Field -->
                 <div class="form-group">
-                    <label for="email" class="form-label">Email Used During Payment</label>
-                    <input type="email" name="email" class="form-control" placeholder="Enter your email address" required>
+                    <label for="email" class="form-label">
+                        <i class="bi bi-envelope-fill"></i> Email Used During Payment
+                    </label>
+                    <input type="email" 
+                           name="email" 
+                           id="email" 
+                           class="form-control" 
+                           placeholder="your@email.com" 
+                           required
+                           autocomplete="email">
                 </div>
                 
+                <!-- Program Type Select -->
                 <div class="form-group">
-                    <label for="program_type" class="form-label">Program Type</label>
-                    <select name="program_type" class="form-control" required>
-                        <option value="" disabled selected>Select your program type</option>
-                        <option value="degree">Degree</option>
-                        <option value="diploma">Diploma</option>
-                        <option value="certificate">Certificate</option>
-                        <option value="kmtc">KMTC</option>
-                        <option value="artisan">Artisan</option>
+                    <label for="program_type" class="form-label">
+                        <i class="bi bi-mortarboard-fill"></i> Program Type
+                    </label>
+                    <select name="program_type" id="program_type" class="form-select" required>
+                        <option value="" disabled selected>— Select your program type —</option>
+                        <option value="degree">🎓 Degree</option>
+                        <option value="diploma">📘 Diploma</option>
+                        <option value="certificate">📜 Certificate</option>
+                        <option value="kmtc">🏥 KMTC</option>
+                        <option value="artisan">🔧 Artisan</option>
                     </select>
                 </div>
                 
-                <button type="submit" class="btn btn-primary">View My Paid Results</button>
+                <button type="submit" class="btn-primary" id="submitBtn">
+                    <i class="bi bi-eye-fill"></i> View My Paid Results
+                </button>
+                
+                <!-- hidden validation message area -->
+                <div id="formFeedback" class="alert-custom" style="display: none;"></div>
             </form>
         </div>
         
+        <!-- Information section: helpful, non-intrusive -->
         <div class="info-section">
-            <h3 class="info-title">Important Information</h3>
+            <h3 class="info-title">
+                <i class="bi bi-info-square-fill" style="color: #0d6efd;"></i> 
+                Important Information
+            </h3>
             <ul class="info-list">
-                <li>Ensure that you have completed the payment process before attempting to view results.</li>
-                <li>Use the same email address that you provided during the payment process.</li>
-                <li>If you encounter any issues, please contact the administration office.</li>
-                <li>Results are typically available within 24 hours after payment confirmation.</li>
+                <li>Ensure you have completed payment before attempting to view results.</li>
+                <li>Use the <strong>same email address</strong> you provided during payment.</li>
+                <li>Results appear instantly after successful verification.</li>
+                <li>If you face issues, contact: kuccpshelpdesk.ke@gmail.com</li>
+                <li>Payment receipts are sent to your email — keep it handy.</li>
             </ul>
         </div>
     </div>
@@ -223,5 +414,226 @@
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        (function() {
+            // DOM elements
+            const form = document.getElementById('viewResultsForm');
+            const submitBtn = document.getElementById('submitBtn');
+            const indexInput = document.getElementById('index_number');
+            const emailInput = document.getElementById('email');
+            const programSelect = document.getElementById('program_type');
+            const feedbackDiv = document.getElementById('formFeedback');
+            
+            // Helper: show inline feedback message
+            function showFeedback(message, isError = true) {
+                if (!feedbackDiv) return;
+                feedbackDiv.style.display = 'block';
+                feedbackDiv.innerHTML = isError 
+                    ? `<i class="bi bi-exclamation-triangle-fill me-1"></i> ${message}`
+                    : `<i class="bi bi-check-circle-fill me-1"></i> ${message}`;
+                feedbackDiv.style.backgroundColor = isError ? '#fee2e2' : '#e0f2e7';
+                feedbackDiv.style.borderLeftColor = isError ? '#dc3545' : '#198754';
+                feedbackDiv.style.color = isError ? '#b91c1c' : '#0a5c36';
+                // auto hide after 5 sec if success info
+                if (!isError) {
+                    setTimeout(() => {
+                        if (feedbackDiv.style.display === 'block') {
+                            feedbackDiv.style.display = 'none';
+                        }
+                    }, 4000);
+                }
+            }
+            
+            function hideFeedback() {
+                if (feedbackDiv) feedbackDiv.style.display = 'none';
+            }
+            
+            // Real-time index validation (basic pattern)
+            function isValidIndexNumber(value) {
+                const pattern = /^\d{6,15}\/\d{4}$/;
+                if (!pattern.test(value)) return false;
+                const parts = value.split('/');
+                const year = parseInt(parts[1], 10);
+                const currentYear = new Date().getFullYear();
+                return year >= 2000 && year <= currentYear + 1;
+            }
+            
+            function isValidEmail(email) {
+                const emailRegex = /^[^\s@]+@([^\s@.,]+\.)+[^\s@]{2,}$/;
+                return emailRegex.test(email);
+            }
+            
+            // Real-time visual styling without bootstrap's is-invalid (custom but friendly)
+            function validateFieldOnInput() {
+                // Index number
+                if (indexInput.value.trim() !== '') {
+                    if (!isValidIndexNumber(indexInput.value)) {
+                        indexInput.classList.add('is-invalid-custom');
+                        indexInput.style.borderColor = '#dc3545';
+                    } else {
+                        indexInput.classList.remove('is-invalid-custom');
+                        indexInput.style.borderColor = '#e2e8f0';
+                    }
+                } else {
+                    indexInput.classList.remove('is-invalid-custom');
+                    indexInput.style.borderColor = '#e2e8f0';
+                }
+                
+                // Email
+                if (emailInput.value.trim() !== '') {
+                    if (!isValidEmail(emailInput.value)) {
+                        emailInput.classList.add('is-invalid-custom');
+                        emailInput.style.borderColor = '#dc3545';
+                    } else {
+                        emailInput.classList.remove('is-invalid-custom');
+                        emailInput.style.borderColor = '#e2e8f0';
+                    }
+                } else {
+                    emailInput.classList.remove('is-invalid-custom');
+                    emailInput.style.borderColor = '#e2e8f0';
+                }
+                
+                // Program select: highlight if not selected but touched
+                if (programSelect.value === "") {
+                    programSelect.style.borderColor = '#dc3545';
+                } else {
+                    programSelect.style.borderColor = '#e2e8f0';
+                }
+            }
+            
+            indexInput.addEventListener('input', validateFieldOnInput);
+            emailInput.addEventListener('input', validateFieldOnInput);
+            programSelect.addEventListener('change', function() {
+                if (programSelect.value !== "") {
+                    programSelect.style.borderColor = '#e2e8f0';
+                } else {
+                    programSelect.style.borderColor = '#dc3545';
+                }
+            });
+            
+            // Form submission with validation and loading state (mobile friendly)
+            form.addEventListener('submit', async function(event) {
+                event.preventDefault();
+                event.stopPropagation();
+                
+                // Reset border styles
+                hideFeedback();
+                
+                let isValid = true;
+                let errorMsg = '';
+                
+                const indexVal = indexInput.value.trim();
+                const emailVal = emailInput.value.trim();
+                const programVal = programSelect.value;
+                
+                // Index validation
+                if (!indexVal) {
+                    isValid = false;
+                    errorMsg = 'Index number is required.';
+                    indexInput.style.borderColor = '#dc3545';
+                    indexInput.focus();
+                } else if (!isValidIndexNumber(indexVal)) {
+                    isValid = false;
+                    errorMsg = 'Index number format: 6-15 digits followed by / and year (e.g., 123456/2025).';
+                    indexInput.style.borderColor = '#dc3545';
+                    indexInput.focus();
+                } else {
+                    indexInput.style.borderColor = '#e2e8f0';
+                }
+                
+                // Email validation (if index valid or still collect errors)
+                if (isValid && !emailVal) {
+                    isValid = false;
+                    errorMsg = 'Email address is required.';
+                    emailInput.style.borderColor = '#dc3545';
+                    if (!indexInput.style.borderColor || indexInput.style.borderColor !== '#dc3545') emailInput.focus();
+                } else if (isValid && emailVal && !isValidEmail(emailVal)) {
+                    isValid = false;
+                    errorMsg = 'Please enter a valid email address (e.g., name@example.com).';
+                    emailInput.style.borderColor = '#dc3545';
+                    emailInput.focus();
+                } else {
+                    emailInput.style.borderColor = '#e2e8f0';
+                }
+                
+                // Program type validation
+                if (isValid && (!programVal || programVal === "")) {
+                    isValid = false;
+                    errorMsg = 'Please select a program type.';
+                    programSelect.style.borderColor = '#dc3545';
+                    programSelect.focus();
+                } else {
+                    programSelect.style.borderColor = '#e2e8f0';
+                }
+                
+                if (!isValid) {
+                    showFeedback(errorMsg, true);
+                    // scroll to error message for better UX
+                    setTimeout(() => {
+                        feedbackDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                    }, 100);
+                    return;
+                }
+                
+                // If validation passes, show loading & submit form
+                const originalBtnHTML = submitBtn.innerHTML;
+                submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm spinner-sm me-2" role="status" aria-hidden="true"></span> Verifying...';
+                submitBtn.disabled = true;
+                
+                try {
+                    // Since the form action is server-side, we submit natively after small delay
+                    // but we keep the loading feedback.
+                    // However, to avoid double submission, we trigger actual form submit.
+                    // We also set a timeout to re-enable if something blocks (safety)
+                    const timeoutId = setTimeout(() => {
+                        if (submitBtn.disabled) {
+                            submitBtn.disabled = false;
+                            submitBtn.innerHTML = originalBtnHTML;
+                            showFeedback('Request timed out. Please check your connection and try again.', true);
+                        }
+                    }, 15000);
+                    
+                    // Perform an optional fetch pre-check? But we trust backend. We'll just submit.
+                    // But we can submit the form programmatically.
+                    form.submit();
+                    
+                    // Clear timeout after submission (but submit will unload page, this is just fallback)
+                    clearTimeout(timeoutId);
+                } catch (err) {
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = originalBtnHTML;
+                    showFeedback('Network error. Please try again.', true);
+                }
+            });
+            
+            // Live hints: improve placeholder rotation for index number to guide users (optional)
+            const exampleIndexes = ['123456/2025', '9876543/2024', '1234567890/2023'];
+            let idx = 0;
+            if (indexInput) {
+                setInterval(() => {
+                    if (!indexInput.value || indexInput.value === '') {
+                        indexInput.placeholder = exampleIndexes[idx % exampleIndexes.length];
+                        idx++;
+                    }
+                }, 2800);
+            }
+            
+            // Clear error styling when user starts typing on problematic fields
+            const clearErrorStyle = (field, selectFlag = false) => {
+                if (selectFlag) {
+                    if (programSelect.value !== "") programSelect.style.borderColor = '#e2e8f0';
+                    else programSelect.style.borderColor = '#e2e8f0'; // neutral
+                } else {
+                    field.style.borderColor = '#e2e8f0';
+                    field.classList.remove('is-invalid-custom');
+                }
+                hideFeedback();
+            };
+            
+            indexInput.addEventListener('focus', () => clearErrorStyle(indexInput));
+            emailInput.addEventListener('focus', () => clearErrorStyle(emailInput));
+            programSelect.addEventListener('focus', () => clearErrorStyle(programSelect, true));
+        })();
+    </script>
 </body>
 </html>

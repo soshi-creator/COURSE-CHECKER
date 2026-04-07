@@ -2,22 +2,90 @@
 <html lang="en">
 <head>
     <!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-BB3KSJB812"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-
-  gtag('config', 'G-BB3KSJB812');
-</script>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-BB3KSJB812"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-BB3KSJB812');
+    </script>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=yes">
     <title>Payment - KUCCPS Course Checker</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
-    <link rel="stylesheet" href="{{ url_for('static', filename='payment.css') }}">
     <style>
-        /* Additional validation styling */
+        /* -------------------------------
+           GLOBAL RESETS & TYPOGRAPHY
+        ------------------------------- */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #f4f7fc;
+            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        .main-wrapper {
+            flex: 1;
+        }
+
+        .container {
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+            padding-left: 16px;
+            padding-right: 16px;
+        }
+
+        .page-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            text-align: center;
+            margin-top: 1.25rem;
+            margin-bottom: 1rem;
+            color: #0a2b3e;
+            letter-spacing: -0.3px;
+        }
+
+        .form-container {
+            background: white;
+            border-radius: 28px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.05);
+        }
+
+        .form-label {
+            font-weight: 600;
+            font-size: 0.9rem;
+            margin-bottom: 0.3rem;
+            color: #1e2f3e;
+        }
+
+        .form-control {
+            border-radius: 14px;
+            border: 1px solid #ced8e2;
+            padding: 12px 14px;
+            font-size: 16px; /* Prevents zoom on iOS */
+            transition: 0.2s;
+            background-color: #fff;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+
+        .form-control:focus {
+            border-color: #0d6efd;
+            box-shadow: 0 0 0 0.2rem rgba(13,110,253,0.2);
+            outline: none;
+        }
+
         .is-invalid {
             border-color: #dc3545 !important;
             background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12' width='12' height='12' fill='none' stroke='%23dc3545'%3e%3ccircle cx='6' cy='6' r='4.5'/%3e%3cpath stroke-linejoin='round' d='M5.8 3.6h.4L6 6.5z'/%3e%3ccircle cx='6' cy='8.2' r='.6' fill='%23dc3545' stroke='none'/%3e%3c/svg%3e");
@@ -25,7 +93,7 @@
             background-position: right calc(0.375em + 0.1875rem) center;
             background-size: calc(0.75em + 0.375rem) calc(0.75em + 0.375rem);
         }
-        
+
         .is-valid {
             border-color: #198754 !important;
             background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3e%3cpath fill='%23198754' d='M2.3 6.73L.6 4.53c-.4-1.04.46-1.4 1.1-.8l1.1 1.4 3.4-3.8c.6-.63 1.6-.27 1.2.7l-4 4.6c-.43.5-.8.4-1.1.1z'/%3e%3c/svg%3e");
@@ -33,54 +101,254 @@
             background-position: right calc(0.375em + 0.1875rem) center;
             background-size: calc(0.75em + 0.375rem) calc(0.75em + 0.375rem);
         }
-        .verify-payment-box {
-    background: #f8f9fa;
-    padding: 20px;
-    border-radius: 10px;
-}
-        
+
         .invalid-feedback {
-            display: none;
-            width: 100%;
+            font-size: 0.75rem;
             margin-top: 0.25rem;
-            font-size: 0.875em;
             color: #dc3545;
+            display: none;
         }
-        
+
         .form-text {
-            font-size: 0.875rem;
+            font-size: 0.7rem;
             color: #6c757d;
             margin-top: 0.25rem;
+        }
+
+        .btn-primary {
+            background: linear-gradient(105deg, #0b5ed7, #0a58ca);
+            border: none;
+            border-radius: 40px;
+            padding: 12px 0;
+            font-weight: 600;
+            font-size: 1rem;
+            width: 100%;
+            transition: all 0.2s;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+        }
+
+        .btn-primary:active {
+            transform: scale(0.97);
+        }
+
+        /* VERIFY SECTION - FIXED FOR MOBILE TOUCH */
+        .verify-payment-box {
+            background: #f0f4f9;
+            border-radius: 24px;
+            padding: 1.5rem 1rem;
+            margin-top: 1.25rem;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+            border: 1px solid #e2e8f0;
+        }
+
+        .verify-payment-box h5 {
+            font-size: 1.3rem;
+            font-weight: 700;
+            margin-bottom: 0.75rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            color: #1e3a5f;
+        }
+
+        .verify-payment-box p {
+            font-size: 0.85rem;
+            margin-bottom: 1rem;
+        }
+
+        /* FIXED: Better mobile input group - no flexbox gap issues */
+        .verify-input-wrapper {
+            display: block;
+            width: 100%;
+        }
+
+        .verify-input-field {
+            width: 100%;
+            padding: 14px 16px;
+            font-size: 16px;
+            border: 2px solid #cbd5e1;
+            border-radius: 60px;
+            margin-bottom: 12px;
+            transition: all 0.2s;
+            background: white;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+
+        .verify-input-field:focus {
+            outline: none;
+            border-color: #198754;
+            box-shadow: 0 0 0 3px rgba(25, 135, 84, 0.1);
+        }
+
+        .verify-button {
+            width: 100%;
+            padding: 14px 20px;
+            font-size: 16px;
+            font-weight: 600;
+            background-color: #198754;
+            color: white;
+            border: none;
+            border-radius: 60px;
+            cursor: pointer;
+            transition: all 0.2s;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .verify-button:active {
+            transform: scale(0.97);
+            background-color: #146c43;
+        }
+
+        .verify-button:disabled {
+            opacity: 0.7;
+            transform: none;
+        }
+
+        #verifyMessage {
+            font-size: 0.8rem;
+            margin-top: 12px;
+            font-weight: 500;
+            min-height: 40px;
+        }
+
+        .payment-info {
+            background: white;
+            border-radius: 24px;
+            padding: 1.3rem 1.2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 5px 12px rgba(0,0,0,0.03);
+            border: 1px solid #eef2f6;
+        }
+
+        .info-title {
+            font-size: 1.2rem;
+            font-weight: 700;
+            margin-bottom: 0.8rem;
+            color: #0c4e6e;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .info-list {
+            padding-left: 1.2rem;
+            margin-bottom: 0;
+        }
+
+        .info-list li {
+            margin-bottom: 8px;
+            font-size: 0.85rem;
+            color: #2c3e50;
+        }
+
+        footer {
+            background-color: #0a2b3e;
+            color: #cddfe7;
+            text-align: center;
+            padding: 1.2rem 1rem;
+            font-size: 0.75rem;
+            margin-top: 1.5rem;
+        }
+
+        footer p {
+            margin-bottom: 0.2rem;
+        }
+
+        .alert-info {
+            border-radius: 20px;
+            background-color: #e7f1ff;
+            border: none;
+            font-size: 0.8rem;
+            margin-top: 1rem;
+        }
+
+        hr {
+            margin: 1rem 0;
+        }
+
+        /* Touch-friendly improvements */
+        button, .btn, .verify-button {
+            cursor: pointer;
+            touch-action: manipulation;
+        }
+
+        input, textarea, select {
+            font-size: 16px !important; /* Prevents iOS zoom on focus */
+        }
+
+        /* Mobile-specific fixes */
+        @media (max-width: 576px) {
+            .container {
+                padding-left: 12px;
+                padding-right: 12px;
+            }
+            .form-container {
+                padding: 1.2rem;
+            }
+            .page-title {
+                font-size: 1.6rem;
+                margin-top: 0.8rem;
+                margin-bottom: 0.8rem;
+            }
+            .verify-payment-box {
+                margin-top: 1rem;
+                padding: 1.2rem;
+            }
+            .verify-payment-box h5 {
+                font-size: 1.2rem;
+            }
+            .verify-input-field {
+                padding: 14px 16px;
+                margin-bottom: 12px;
+            }
+            .verify-button {
+                padding: 14px 20px;
+            }
+            .btn-primary {
+                padding: 11px 0;
+            }
+        }
+
+        @media (max-width: 380px) {
+            .form-container {
+                padding: 1rem;
+            }
+            .verify-payment-box h5 {
+                font-size: 1.1rem;
+            }
         }
     </style>
 </head>
 <body>
-    <!-- Navigation Bar -->
-    {% include 'navbar.html' %}
 
+<div class="main-wrapper">
+    {% include 'navbar.html' ignore missing %}
 
-    <!-- Main Content -->
     <div class="container">
-        <h1 class="page-title">Complete Your Payment</h1>
+        <h1 class="page-title"><i class="bi bi-shield-check me-2"></i>Complete Payment</h1>
         
         <div class="form-container">
-            <p class="text-muted mb-4 text-center">
+            <p class="text-muted mb-4 text-center" style="font-size: 0.9rem;">
                 Please verify your details and proceed to payment to access your course eligibility results.
             </p>
 
             <form method="POST" id="paymentForm" novalidate>
-                <div class="form-group">
+                <div class="form-group mb-3">
                     <label for="program_type" class="form-label">Program Type</label>
-                    <input type="text" name="program_type" class="form-control" value="{{ program_type }}" readonly>
+                    <input type="text" name="program_type" class="form-control" value="{{ program_type }}" readonly style="background:#eef2f6;">
                 </div>
                 
                 <div class="form-group mb-3">
                     <label for="email" class="form-label">Email Address *</label>
                     <input type="email" name="email" id="email" class="form-control" 
-                           placeholder="example@email.com" required
-                           pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$">
+                           placeholder="student@example.com" required
+                           pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$"
+                           autocomplete="email">
                     <div class="form-text">
-                        Please enter a valid email address (e.g., john.doe@gmail.com)
+                        <i class="bi bi-envelope"></i> Please enter a valid email address (e.g., john.doe@gmail.com)
                     </div>
                     <div class="invalid-feedback" id="emailError">
                         Please enter a valid email address (e.g., john.doe@gmail.com)
@@ -91,9 +359,10 @@
                     <label for="index_number" class="form-label">Index Number *</label>
                     <input type="text" name="index_number" id="index_number" class="form-control" 
                            placeholder="123456/2025" required
-                           pattern="^\d{6,15}/\d{4}$">
+                           pattern="^\d{6,15}/\d{4}$"
+                           autocomplete="off">
                     <div class="form-text">
-                        Format: 6-15 digits, slash, and 4-digit year (e.g., 123456/2025, 12345678901234/2024)
+                        <i class="bi bi-journal-bookmark-fill"></i> Format: digits/year (e.g., 123456/2025)
                     </div>
                     <div class="invalid-feedback" id="indexError">
                         Please enter index number in the format: digits/year (e.g., 123456/2025)
@@ -106,241 +375,238 @@
                 
                 <div class="alert alert-info mt-3">
                     <i class="bi bi-info-circle me-2"></i>
-                    <strong>Important:</strong> Ensure your details are correct before proceeding. 
-                    
+                    <strong>Important:</strong> Double-check your details before payment.
                 </div>
             </form>
+
             <hr class="my-4">
 
-<div class="verify-payment-box text-center">
-    <h5 class="mb-3">
-        <i class="bi bi-check-circle me-2 text-success"></i>
-        Already Paid?
-    </h5>
-
-    <p class="text-muted small">
-        If you completed payment but didn’t receive results, enter your Paystack reference below.
-    </p>
-
-    <div class="input-group mb-3">
-        <input type="text" id="paymentReference" class="form-control" 
-               placeholder="Enter Paystack Reference (e.g. PSK_XXXXXX)">
-        <button class="btn btn-success" onclick="verifyPayment()" id="verifyBtn">
-            Verify Payment
-        </button>
-    </div>
-
-    <div id="verifyMessage" class="small"></div>
-</div>
+            <!-- VERIFY PAYMENT SECTION - COMPLETELY REDESIGNED FOR MOBILE TOUCH -->
+            <div class="verify-payment-box">
+                <h5>
+                    <i class="bi bi-check-circle-fill text-success"></i>
+                    Already Paid?
+                </h5>
+                <p class="text-muted small">
+                    If you completed payment but didn't receive results, verify below.
+                </p>
+                
+                <div class="verify-input-wrapper">
+                    <input type="text" id="paymentReference" class="verify-input-field" 
+                           placeholder="Paystack Reference (e.g., opn_1A2b3C4d)"
+                           autocomplete="off"
+                           autocapitalize="none">
+                    
+                    <button class="verify-button" onclick="verifyPayment()" id="verifyBtn">
+                        <i class="bi bi-search me-2"></i> Verify Payment
+                    </button>
+                </div>
+                
+                <div id="verifyMessage"></div>
+                
+                <div class="form-text mt-2">
+                    <i class="bi bi-question-circle"></i> Find reference in your payment receipt or email
+                </div>
+            </div>
         </div>
         
         <div class="payment-info">
-            <h3 class="info-title">Payment Information</h3>
+            <h3 class="info-title"><i class="bi bi-safe2-fill"></i> Payment Information</h3>
             <ul class="info-list">
-                <li>Payment is required to access detailed course eligibility results</li>
-                <li>You will be redirected to a secure payment gateway</li>
-                <li>We accept M-Pesa and credit/debit card payments</li>
-                <li>Your results will be available immediately after successful payment</li>
-                <li>If you encounter any issues, please contact our support team</li>
+                <li><i class="bi bi-check2-circle text-success me-1"></i> One-time fee unlocks detailed course eligibility</li>
+                <li><i class="bi bi-lock-fill me-1"></i> Secured by Paystack – M-Pesa & cards accepted</li>
+                <li><i class="bi bi-hourglass-split me-1"></i> Results available immediately after payment</li>
+                <li><i class="bi bi-headset me-1"></i> Support: kuccpshelpdesk.ke@gmail.com | +254708188840</li>
             </ul>
         </div>
     </div>
+</div>
 
-    <!-- Footer -->
-    <footer>
-        <div class="container">
-            <p>&copy; 2026 KUCCPS Course Eligibility Checker. All rights reserved.</p>
-            <p class="mb-0">Contact: kuccpshelpdesk.ke@gmail.com | Phone: +254708188840</p>
-        </div>
-    </footer>
+<footer>
+    <div class="container">
+        <p>&copy; 2026 KUCCPS Course Eligibility Checker. All rights reserved.</p>
+        <p class="mb-0">Contact: kuccpshelpdesk.ke@gmail.com | Phone: +254708188840</p>
+    </div>
+</footer>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const form = document.getElementById('paymentForm');
-            const emailInput = document.getElementById('email');
-            const indexInput = document.getElementById('index_number');
-            const submitBtn = document.getElementById('submitBtn');
-            const emailError = document.getElementById('emailError');
-            const indexError = document.getElementById('indexError');
-            
-            // Email validation function
-            function validateEmail(email) {
-                const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-                return emailRegex.test(email);
-            }
-            
-            // Index number validation function
-            function validateIndexNumber(index) {
-                const indexRegex = /^\d{6,15}\/\d{4}$/;
-                if (!indexRegex.test(index)) {
-                    return false;
-                }
-                
-                // Extract year and validate it's reasonable
-                const parts = index.split('/');
-                const year = parseInt(parts[1]);
-                const currentYear = new Date().getFullYear();
-                
-                // Year should be between 2000 and current year + 1
-                return year >= 2000 && year <= currentYear + 1;
-            }
-            
-            // Real-time validation for email
-            emailInput.addEventListener('input', function() {
-                if (validateEmail(this.value)) {
-                    this.classList.remove('is-invalid');
-                    this.classList.add('is-valid');
-                    emailError.style.display = 'none';
-                } else {
-                    this.classList.remove('is-valid');
-                    if (this.value.trim() !== '') {
-                        this.classList.add('is-invalid');
-                        emailError.style.display = 'block';
-                    } else {
-                        this.classList.remove('is-invalid');
-                        emailError.style.display = 'none';
-                    }
-                }
-            });
-            
-            // Real-time validation for index number
-            indexInput.addEventListener('input', function() {
-                if (validateIndexNumber(this.value)) {
-                    this.classList.remove('is-invalid');
-                    this.classList.add('is-valid');
-                    indexError.style.display = 'none';
-                } else {
-                    this.classList.remove('is-valid');
-                    if (this.value.trim() !== '') {
-                        this.classList.add('is-invalid');
-                        indexError.style.display = 'block';
-                    } else {
-                        this.classList.remove('is-invalid');
-                        indexError.style.display = 'none';
-                    }
-                }
-            });
-            
-            // Form submission validation
-            form.addEventListener('submit', function(event) {
-                event.preventDefault();
-                event.stopPropagation();
-                
-                let isValid = true;
-                
-                // Validate email
-                if (!validateEmail(emailInput.value)) {
-                    emailInput.classList.add('is-invalid');
-                    emailError.style.display = 'block';
-                    isValid = false;
-                } else {
-                    emailInput.classList.remove('is-invalid');
-                    emailInput.classList.add('is-valid');
-                    emailError.style.display = 'none';
-                }
-                
-                // Validate index number
-                if (!validateIndexNumber(indexInput.value)) {
-                    indexInput.classList.add('is-invalid');
-                    indexError.style.display = 'block';
-                    isValid = false;
-                } else {
-                    indexInput.classList.remove('is-invalid');
-                    indexInput.classList.add('is-valid');
-                    indexError.style.display = 'none';
-                }
-                
-                // If valid, show loading and submit
-                if (isValid) {
-                    submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span> Processing...';
-                    submitBtn.disabled = true;
-                    
-                    // Simulate processing delay
-                    setTimeout(() => {
-                        form.submit();
-                    }, 1500);
-                } else {
-                    // Scroll to first error
-                    const firstError = document.querySelector('.is-invalid');
-                    if (firstError) {
-                        firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                        firstError.focus();
-                    }
-                }
-            });
-            
-            // Clear validation on focus
-            emailInput.addEventListener('focus', function() {
-                this.classList.remove('is-invalid', 'is-valid');
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.getElementById('paymentForm');
+        const emailInput = document.getElementById('email');
+        const indexInput = document.getElementById('index_number');
+        const submitBtn = document.getElementById('submitBtn');
+        const emailError = document.getElementById('emailError');
+        const indexError = document.getElementById('indexError');
+        
+        function validateEmail(email) {
+            const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+            return emailRegex.test(email);
+        }
+        
+        function validateIndexNumber(index) {
+            const indexRegex = /^\d{6,15}\/\d{4}$/;
+            if (!indexRegex.test(index)) return false;
+            const parts = index.split('/');
+            const year = parseInt(parts[1]);
+            const currentYear = new Date().getFullYear();
+            return year >= 2000 && year <= currentYear + 1;
+        }
+        
+        emailInput.addEventListener('input', function() {
+            if (validateEmail(this.value)) {
+                this.classList.remove('is-invalid');
+                this.classList.add('is-valid');
                 emailError.style.display = 'none';
-            });
-            
-            indexInput.addEventListener('focus', function() {
-                this.classList.remove('is-invalid', 'is-valid');
+            } else {
+                this.classList.remove('is-valid');
+                if (this.value.trim() !== '') {
+                    this.classList.add('is-invalid');
+                    emailError.style.display = 'block';
+                } else {
+                    this.classList.remove('is-invalid');
+                    emailError.style.display = 'none';
+                }
+            }
+        });
+        
+        indexInput.addEventListener('input', function() {
+            if (validateIndexNumber(this.value)) {
+                this.classList.remove('is-invalid');
+                this.classList.add('is-valid');
                 indexError.style.display = 'none';
-            });
+            } else {
+                this.classList.remove('is-valid');
+                if (this.value.trim() !== '') {
+                    this.classList.add('is-invalid');
+                    indexError.style.display = 'block';
+                } else {
+                    this.classList.remove('is-invalid');
+                    indexError.style.display = 'none';
+                }
+            }
+        });
+        
+        form.addEventListener('submit', function(event) {
+            event.preventDefault();
+            event.stopPropagation();
             
-            // Add examples for placeholder text
-            const examples = [
-                '123456/2025',
-                '12345678/2024',
-                '1234567890/2023'
-            ];
+            let isValid = true;
             
-            let exampleIndex = 0;
-            setInterval(() => {
+            if (!validateEmail(emailInput.value)) {
+                emailInput.classList.add('is-invalid');
+                emailError.style.display = 'block';
+                isValid = false;
+            } else {
+                emailInput.classList.remove('is-invalid');
+                emailInput.classList.add('is-valid');
+                emailError.style.display = 'none';
+            }
+            
+            if (!validateIndexNumber(indexInput.value)) {
+                indexInput.classList.add('is-invalid');
+                indexError.style.display = 'block';
+                isValid = false;
+            } else {
+                indexInput.classList.remove('is-invalid');
+                indexInput.classList.add('is-valid');
+                indexError.style.display = 'none';
+            }
+            
+            if (isValid) {
+                submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span> Processing...';
+                submitBtn.disabled = true;
+                setTimeout(() => {
+                    form.submit();
+                }, 1200);
+            } else {
+                const firstError = document.querySelector('.is-invalid');
+                if (firstError) {
+                    firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    firstError.focus();
+                }
+            }
+        });
+        
+        emailInput.addEventListener('focus', function() {
+            this.classList.remove('is-invalid', 'is-valid');
+            emailError.style.display = 'none';
+        });
+        
+        indexInput.addEventListener('focus', function() {
+            this.classList.remove('is-invalid', 'is-valid');
+            indexError.style.display = 'none';
+        });
+        
+        const examples = ['123456/2025', '9876543/2024', '1234567890/2023'];
+        let exampleIndex = 0;
+        setInterval(() => {
+            if (indexInput && !indexInput.value) {
                 indexInput.placeholder = examples[exampleIndex];
                 exampleIndex = (exampleIndex + 1) % examples.length;
-            }, 3000);
-        });
-        async function verifyPayment() {
-    const ref = document.getElementById("paymentReference").value.trim();
-    const email = document.getElementById("email").value.trim();
-    const index = document.getElementById("index_number").value.trim();
+            }
+        }, 2800);
+    });
 
-    const button = document.getElementById("verifyBtn");
-    const message = document.getElementById("verifyMessage");
+    async function verifyPayment() {
+        const ref = document.getElementById("paymentReference").value.trim();
+        const email = document.getElementById("email").value.trim();
+        const index = document.getElementById("index_number").value.trim();
+        const button = document.getElementById("verifyBtn");
+        const messageDiv = document.getElementById("verifyMessage");
 
-    if (!ref || !email || !index) {
-        message.innerHTML = "<span class='text-danger'>Fill email, index number and reference</span>";
-        return;
-    }
-
-    button.innerHTML = "<span class='spinner-border spinner-border-sm'></span>";
-    button.disabled = true;
-
-    try {
-        const res = await fetch("/verify_manual", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                reference: ref,
-                email: email,
-                index_number: index
-            })
-        });
-
-        const data = await res.json();
-
-        if (data.status === "success") {
-            message.innerHTML = "<span class='text-success'>Verified! Loading results...</span>";
-            setTimeout(() => {
-                window.location.href = data.redirect;
-            }, 1200);
-        } else {
-            message.innerHTML = "<span class='text-danger'>" + data.message + "</span>";
+        if (!ref || !email || !index) {
+            messageDiv.innerHTML = "<span class='text-danger'><i class='bi bi-exclamation-triangle-fill me-1'></i> Please fill in email, index number, and reference</span>";
+            return;
         }
 
-    } catch (err) {
-        message.innerHTML = "<span class='text-danger'>Network error</span>";
-    }
+        const emailRegex = /^[^\s@]+@([^\s@.,]+\.)+[^\s@]{2,}$/;
+        if (!emailRegex.test(email)) {
+            messageDiv.innerHTML = "<span class='text-danger'><i class='bi bi-envelope-x me-1'></i> Please enter a valid email address</span>";
+            return;
+        }
+        
+        const idxPattern = /^\d{6,15}\/\d{4}$/;
+        if (!idxPattern.test(index)) {
+            messageDiv.innerHTML = "<span class='text-danger'><i class='bi bi-file-text me-1'></i> Index number must be format: digits/year (e.g., 123456/2025)</span>";
+            return;
+        }
 
-    button.innerHTML = "Verify Payment";
-    button.disabled = false;
-}
-    </script>
+        const originalText = button.innerHTML;
+        button.innerHTML = "<span class='spinner-border spinner-border-sm me-2'></span> Verifying...";
+        button.disabled = true;
+        messageDiv.innerHTML = "";
+
+        try {
+            const response = await fetch("/verify_manual", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    reference: ref,
+                    email: email,
+                    index_number: index
+                })
+            });
+
+            const data = await response.json();
+
+            if (data.status === "success") {
+                messageDiv.innerHTML = "<span class='text-success'><i class='bi bi-check-circle-fill me-1'></i> Verified! Redirecting to results...</span>";
+                setTimeout(() => {
+                    window.location.href = data.redirect;
+                }, 1200);
+            } else {
+                const errorMsg = data.message || "Verification failed. Please check your reference or contact support.";
+                messageDiv.innerHTML = `<span class='text-danger'><i class='bi bi-x-circle-fill me-1'></i> ${errorMsg}</span>`;
+            }
+        } catch (err) {
+            console.error(err);
+            messageDiv.innerHTML = "<span class='text-danger'><i class='bi bi-wifi-off me-1'></i> Network error. Please check your connection and try again.</span>";
+        } finally {
+            button.innerHTML = originalText;
+            button.disabled = false;
+        }
+    }
+</script>
 </body>
 </html>
