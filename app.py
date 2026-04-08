@@ -1096,7 +1096,7 @@ def payment_page():
 
         # Determine amount
         already_paid_for = existing.get('program_type') if existing else None
-        amount = 199 if not already_paid_for else 99
+        amount = 1 if not already_paid_for else 1
         session['amount'] = amount
 
         # Initiate Paystack
@@ -1115,12 +1115,11 @@ def payment_page():
     referrer_code = session.get("referrer")  # from ?ref=CODE
 @app.route('/verify_payment')
 def verify_payment():
-    # 1. Get and validate payment reference
     ref = request.args.get('reference')
     if not ref:
         return "Missing payment reference."
     
-    # 2. Verify with Paystack
+    # Verify with Paystack
     headers = {
         "Authorization": f"Bearer {PAYSTACK_SECRET_KEY}"
     }
@@ -1130,10 +1129,10 @@ def verify_payment():
     if not data.get('status') or data['data']['status'] != 'success':
         return "Payment verification failed."
     
-    # 3. Mark session as paid
+    # Mark session as paid
     session['payment_status'] = 'paid'
     
-    # 4. Extract session data
+    # Extract session data
     email = session.get('email')
     index = session.get('index_number')
     program = session.get('program_type')
@@ -1141,8 +1140,8 @@ def verify_payment():
     raw_grades = session.get('raw_grades', {})
     grades = normalize_mongo_grades(raw_grades)
     cluster_points = session.get('cluster_points', {}) if program == 'degree' else {}
-    
-    # 5. Run eligibility logic based on program type
+    referrer_code = session.get('referrer_code')
+    # Run eligibility logic
     if program == 'degree':
         results = run_degree_eligibility(grades, cluster_points)
     elif program == 'diploma':
@@ -1156,7 +1155,6 @@ def verify_payment():
     else:
         return "Invalid program type."
     
-    # 6. Prepare qualified courses data for results page
     data_id = str(uuid.uuid4())
     cluster_name_map = {doc['number']: doc['name'] for doc in clusters_collection.find()}
     qualified_courses_data[data_id] = {
@@ -1165,14 +1163,15 @@ def verify_payment():
     }
     session['pdf_data_id'] = data_id  # optional: pass to frontend
     
-    # 7. Generate new user's own referral code
+    # -----------------------------
+    # Generate new user's own referral code
     new_user_referral_code = "CC" + str(uuid.uuid4())[-6:]
     
     # Prevent self-referral
     if referrer_code == new_user_referral_code:
         referrer_code = None
     
-    # 8. Build payment document
+    # Build payment document
     doc = {
         "email": email,
         "index_number": index,
@@ -1191,10 +1190,10 @@ def verify_payment():
     if program == 'degree' and cluster_points:
         doc["cluster_points"] = {str(k): v for k, v in cluster_points.items()}
     
-    # 9. Insert payment document
+    # Insert payment document
     payments_collection.insert_one(doc)
     
-    # 10. Insert eligibility results
+    # Insert eligibility results
     results_collection.insert_one({
         "email": email,
         "index_number": index,
@@ -1203,14 +1202,16 @@ def verify_payment():
         "generated_at": datetime.utcnow()
     })
     
-    # 11. Reward referrer if applicable
+    # -----------------------------
+    # REWARD REFERRER IF APPLICABLE
+    # -----------------------------
     if referrer_code:
         referrer = payments_collection.find_one({"referral_code": referrer_code})
         if referrer:
-            # Increment referrer's balance and count (KSh 30 per referral)
+            # Increment referrer's balance and count
             payments_collection.update_one(
                 {"_id": referrer["_id"]},
-                {"$inc": {"referral_balance": 30, "referral_count": 1}}
+                {"$inc": {"referral_balance": 30, "referral_count": 1}}  # KSh 50 per referral
             )
             # Mark this new user's referral as rewarded
             payments_collection.update_one(
@@ -1218,12 +1219,10 @@ def verify_payment():
                 {"$set": {"referral_rewarded": True}}
             )
     
-    # 12. Debug print and return results
     print("Session at verify_payment:", dict(session))
     
     # Store results in session for rendering
     session['results'] = results
-    
     return redirect(url_for('unified_results'))
 @app.route('/referral_dashboard', methods=['GET', 'POST'])
 def referral_dashboard():
