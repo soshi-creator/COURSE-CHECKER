@@ -52,7 +52,7 @@ if 'push_subscriptions' not in db.list_collection_names():
 else:
     print("ℹ️ push_subscriptions collection already exists")
 # === END ADDITION ===
-courses_collection = db['courses']
+courses_collection = db['degree']
 institutions_collection = db['institutions']
 counters_collection = db['counters']
 clusters_collection = db['clusters']
@@ -98,36 +98,36 @@ withdrawals_collection.create_index([("status", 1)])
 
 SUBJECT_ALIASES = {
     "English": ["Eng", "ENG", "eng", "English", "english"],
-    "Kiswahili": ["Kisw", "KIS", "kisw", "Kiswahili", "kiswahili"],
-    "Mathematics": ["Math", "MAT", "math", "Mathematics", "mathematics", "Mat A", "MAT A", "mat a", "MAT B", "mat b", "Mat B", "Math A", "Math B"],
-    "Biology": ["Bio", "BIO", "bio", "Biology", "biology"],
-    "Chemistry": ["Chem", "CHE", "chem", "Chemistry", "chemistry"],
+    "Kiswahili": ["Kisw", "KIS", "kisw", "Kiswahili", "kiswahili", "Kis"],
+    "Mathematics": ["Math", "MAT", "math", "Mathematics", "mathematics", "Mat A", "MAT A", "mat a", "MAT B", "mat b", "Mat B", "Math A", "Math B", "Mata", "Matb"],
+    "Biology": ["Bio", "BIO", "bio", "Biology", "biology", "Bsc"],
+    "Chemistry": ["Chem", "CHE", "chem", "Chemistry", "chemistry", "Che"],
     "Physics": ["Phys", "PHY", "phys", "Physics", "physics"],
     "Geography": ["Geo", "GEO", "geo", "Geography", "geography"],
     "History": ["Hist", "HAG", "His", "HIS", "hist", "history", "hag", "Hag", "HIST"],
     "Christian Religious Education": ["CRE", "Cre", "cre", "Christian Religious Education"],
     "Islamic Religious Education": ["IRE", "Ire", "ire", "Islamic Religious Education"],
     "Hindu Religious Education": ["HRE", "Hre", "hre", "Hindu Religious Education"],
-    "Agriculture": ["Agri", "AGR", "agri", "Agriculture", "agriculture"],
-    "Computer Studies": ["Comp", "COMP", "comp", "Computer", "Computer Studies"],
-    "Art and Design": ["Art", "ART", "art", "Art and Design", "Design", "design"],
-    "Woodwork": ["Wood", "WOOD", "wood", "Woodwork"],
-    "HomeScience": ["Home", "HOME", "home", "Home Science", "HomeScience", "HSC"],
-    "Business Studies": ["BST", "BUS", "bst", "Business", "Business Studies", "business"],
+    "Agriculture": ["Agri", "AGR", "agri", "Agriculture", "agriculture", "Agr"],
+    "Computer Studies": ["Comp", "COMP", "comp", "Computer", "Computer Studies", "Cmp"],
+    "Art and Design": ["Art", "ART", "art", "Art and Design", "Design", "design", "Ard"],
+    "Woodwork": ["Wood", "WOOD", "wood", "Woodwork", "Ww"],
+    "HomeScience": ["Home", "HOME", "home", "Home Science", "HomeScience", "HSC", "Hsc"],
+    "Business Studies": ["BST", "BUS", "bst", "Business", "Business Studies", "business", "Bst"],
     "Music": ["Music", "MUC", "music", "Muc"],
-    "Building and Construction": ["Build", "BUILD", "build", "Building", "Construction", "Building and Construction"],
-    "Electricity and Electronics": ["Elec", "ELEC", "elec", "Electricity", "Electronics", "Electricity and Electronics"],
-    "Metalwork": ["Metal", "METAL", "metal", "Metalwork"],
-    "French": ["French", "FRE", "fre", "Fren"],
-    "German": ["German", "GER", "ger"],
-    "Aviation": ["Aviation", "AVT", "avt", "aviation"],
-    "General Science": ["GSC", "Gsc", "gsc", "General Science"],
+    "Building and Construction": ["Build", "BUILD", "build", "Building", "Construction", "Building and Construction", "Bc"],
+    "Electricity and Electronics": ["Elec", "ELEC", "elec", "Electricity", "Electronics", "Electricity and Electronics", "Ect"],
+    "Metalwork": ["Metal", "METAL", "metal", "Metalwork", "Mw"],
+    "French": ["French", "FRE", "fre", "Fren", "Fre"],
+    "German": ["German", "GER", "ger", "Ger"],
+    "Aviation": ["Aviation", "AVT", "avt", "aviation", "Avt"],
+    "General Science": ["GSC", "Gsc", "gsc", "General Science", "Gsc"],
     "Social Education and Ethics": ["SEE", "see", "Social Ethics", "Social Education and Ethics"],
-    "Power Mechanics": ["PM", "pm", "Power Mechanics"],
+    "Power Mechanics": ["PM", "pm", "Power Mechanics", "Pm"],
     "Electricity": ["Elec", "Electricity", "ELEC"],
-    "Drawing and Design": ["DRD", "drd", "Drawing and Design"],
+    "Drawing and Design": ["DRD", "drd", "Drawing and Design", "Drd"],
     "Arabic": ["Arb", "ARB", "arb", "Arabic"],
-    "Sign Language": ["KSL", "ksl", "Kenyan Sign Language"],
+    "Sign Language": ["KSL", "ksl", "Kenyan Sign Language", "Ksl"],
     "Agricultural Education": ["ARD", "ard", "Agricultural Education"],
     "Welding and Fabrication": ["WW", "ww", "Welding"],
     "Metal Work": ["MW", "mw", "Metal Work"],
@@ -135,11 +135,9 @@ SUBJECT_ALIASES = {
     "Electricity Technology": ["ECT", "ect", "Electricity Technology"],
     "Aviation Technology": ["AVT", "avt", "Aviation Technology"],
     "Computer": ["CMP", "cmp", "Computer"],
-    "Christian Religious Education": ["CRE", "cre", "Christian Religious Education"],
-    "Islamic Religious Education": ["IRE", "ire", "Islamic Religious Education"],
-    "Hindu Religious Education": ["HRE", "hre", "Hindu Religious Education"],
-    "Business": ["BST", "bst", "Business"],
-    "Music": ["MUC", "muc", "Music"]
+    # Additional aliases extracted from JSON:
+    "Physical Education": ["Psc"],
+    "Home Economics": ["Hsc"]
 }
 subject_aliases = {}
 for canonical, aliases in SUBJECT_ALIASES.items():
@@ -795,49 +793,69 @@ def edit_course(course_id):
     if request.method == 'POST':
         name = request.form.get('name')
         cluster = int(request.form.get('cluster'))
-
-        # Institutions
+        
+        # Get existing course data as fallback
+        existing_course = courses_collection.find_one({'_id': ObjectId(course_id)})
+        
+        # Institutions - preserve existing if not provided in form
         institutions = []
         names = request.form.getlist('institution_names[]')
         codes = request.form.getlist('program_codes[]')
         cutoffs = request.form.getlist('cutoffs[]')
-
-        for n, c, cutoff in zip(names, codes, cutoffs):
-            institutions.append({
-                'name': n,
-                'program_code': c,
-                'cutoff': float(cutoff)
-            })
-
-        # Requirements
+        
+        # Only process institutions if form data was submitted
+        if names and names[0]:  # Check if there's at least one non-empty institution name
+            for n, c, cutoff in zip(names, codes, cutoffs):
+                if n:  # Only add if institution name is provided
+                    institutions.append({
+                        'name': n,
+                        'program_code': c,
+                        'cutoff': float(cutoff) if cutoff else 0.0
+                    })
+        else:
+            # Keep existing institutions if no new data provided
+            institutions = existing_course.get('institutions', [])
+        
+        # Requirements - preserve existing if not provided in form
         requirements = []
         subjects = request.form.getlist('subjects[]')
         min_grades = request.form.getlist('min_grades[]')
-
-        for s, g in zip(subjects, min_grades):
-            requirements.append({
-                'subject': s,
-                'minGrade': g
-            })
-
+        
+        # Only process requirements if form data was submitted
+        if subjects and subjects[0]:  # Check if there's at least one non-empty subject
+            for s, g in zip(subjects, min_grades):
+                if s:  # Only add if subject is provided
+                    requirements.append({
+                        'subject': s,
+                        'minGrade': g
+                    })
+        else:
+            # Keep existing requirements if no new data provided
+            requirements = existing_course.get('requirements', [])
+        
+        # Prepare update data - only include fields that were actually submitted
+        update_data = {
+            'name': name,
+            'cluster': cluster,
+            'institutions': institutions,
+            'requirements': requirements
+        }
+        
+        # Remove any None values from update_data
+        update_data = {k: v for k, v in update_data.items() if v is not None}
+        
         # Update DB
         courses_collection.update_one(
             {'_id': ObjectId(course_id)},
-            {'$set': {
-                'name': name,
-                'cluster': cluster,
-                'institutions': institutions,
-                'requirements': requirements
-            }}
+            {'$set': update_data}
         )
-
+        
         flash("Course updated successfully!", "success")
         return redirect(url_for('list_courses'))
-
+    
     # Show the edit form
     institutions = list(db.institutions.find())
     return render_template('admin/edit_course.html', course=course, institutions=institutions)
-
 
 
 from collections import defaultdict
