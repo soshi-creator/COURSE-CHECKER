@@ -102,7 +102,7 @@ SUBJECT_ALIASES = {
     "Mathematics": ["Math", "MAT", "math", "Mathematics", "mathematics", "Mat A", "MAT A", "mat a", "MAT B", "mat b", "Mat B", "Math A", "Math B", "Mata", "Matb"],
     "Biology": ["Bio", "BIO", "bio", "Biology", "biology", "Bsc"],
     "Chemistry": ["Chem", "CHE", "chem", "Chemistry", "chemistry", "Che"],
-    "Physics": ["Phys", "PHY", "phys", "Physics", "physics"],
+    "Physics": ["Phys", "PHY", "phys", "Physics", "physics", "Phy"],
     "Geography": ["Geo", "GEO", "geo", "Geography", "geography"],
     "History": ["Hist", "HAG", "His", "HIS", "hist", "history", "hag", "Hag", "HIST"],
     "Christian Religious Education": ["CRE", "Cre", "cre", "Christian Religious Education"],
