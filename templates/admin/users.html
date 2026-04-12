@@ -1,0 +1,109 @@
+{% extends "admin/base_admin.html" %}
+
+{% block title %}Manage Users - Admin{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Manage Users</h1>
+        <div>
+            <span class="badge bg-primary">Total: {{ total_users }} users</span>
+            <a href="{{ url_for('admin_stats', admin_key=request.args.get('admin_key')) }}" class="btn btn-info ms-2">
+                <i class="bi bi-graph-up"></i> Stats
+            </a>
+        </div>
+    </div>
+    
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Email</th>
+                            <th>Index Number</th>
+                            <th>Program</th>
+                            <th>Paid At</th>
+                            <th>Results</th>
+                            <th>Referral Balance</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for user in users %}
+                        <tr>
+                            <td>{{ user.email }}</td>
+                            <td>{{ user.index_number }}</td>
+                            <td>
+                                <span class="badge {% if user.program_type == 'degree' %}bg-primary{% elif user.program_type == 'diploma' %}bg-success{% elif user.program_type == 'certificate' %}bg-info{% else %}bg-secondary{% endif %}">
+                                    {{ user.program_type|upper }}
+                                </span>
+                            </td>
+                            <td>{{ user.paid_at.strftime('%Y-%m-%d %H:%M') if user.paid_at else 'N/A' }}</td>
+                            <td>
+                                {% if user.has_results %}
+                                    <span class="badge bg-success">{{ user.results_count }} courses</span>
+                                {% else %}
+                                    <span class="badge bg-warning">No results</span>
+                                {% endif %}
+                            </td>
+                            <td>KES {{ "%.2f"|format(user.referral_balance|default(0)) }}</td>
+                            <td>
+                                <a href="{{ url_for('admin_user_detail', user_id=user._id, admin_key=request.args.get('admin_key')) }}" 
+                                   class="btn btn-sm btn-info">
+                                    <i class="bi bi-eye"></i> View
+                                </a>
+                                <a href="{{ url_for('admin_edit_user', user_id=user._id, admin_key=request.args.get('admin_key')) }}" 
+                                   class="btn btn-sm btn-warning">
+                                    <i class="bi bi-pencil"></i> Edit
+                                </a>
+                                <button class="btn btn-sm btn-danger" onclick="deleteUser('{{ user._id }}')">
+                                    <i class="bi bi-trash"></i> Delete
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Pagination -->
+            {% if total_pages > 1 %}
+            <nav>
+                <ul class="pagination justify-content-center">
+                    {% for p in range(1, total_pages + 1) %}
+                    <li class="page-item {% if p == page %}active{% endif %}">
+                        <a class="page-link" href="{{ url_for('admin_users', page=p, admin_key=request.args.get('admin_key')) }}">{{ p }}</a>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </nav>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+function deleteUser(userId) {
+    if (confirm('Are you sure? This will delete all user data including results and withdrawals.')) {
+        fetch(`{{ url_for('admin_delete_user', user_id='') }}${userId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: new URLSearchParams({
+                'admin_key': '{{ request.args.get("admin_key") }}'
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Error: ' + data.error);
+            }
+        });
+    }
+}
+</script>
+{% endblock %}

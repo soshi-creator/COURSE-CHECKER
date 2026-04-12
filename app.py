@@ -96,6 +96,21 @@ referral_users_collection.create_index([("referral_code", 1)], unique=True)
 withdrawals_collection.create_index([("user_id", 1), ("created_at", -1)])
 withdrawals_collection.create_index([("status", 1)])
 
+# Create indexes to avoid sorting memory issues
+try:
+    # Create index on generated_at for faster sorting
+    results_collection.create_index([("generated_at", -1)])
+    print("✅ Created index on results.generated_at")
+except Exception as e:
+    print(f"Note: results.generated_at index may already exist: {e}")
+
+try:
+    # Create index on paid_at for users sorting
+    payments_collection.create_index([("paid_at", -1)])
+    print("✅ Created index on payments.paid_at")
+except Exception as e:
+    print(f"Note: payments.paid_at index may already exist: {e}")
+
 SUBJECT_ALIASES = {
     "English": ["Eng", "ENG", "eng", "English", "english"],
     "Kiswahili": ["Kisw", "KIS", "kisw", "Kiswahili", "kiswahili", "Kis"],
@@ -1127,39 +1142,101 @@ def payment_page():
 
     return render_template('payment.html', program_type=program_type)
 
-    # REFERRAL LOGIC STARTS HERE
-    # -----------------------------
-    # Capture referrer from session
-    referrer_code = session.get("referrer")  # from ?ref=CODE
+
 @app.route('/verify_payment')
 def verify_payment():
     ref = request.args.get('reference')
     if not ref:
         return "Missing payment reference."
     
+    # Store reference in session
+    session['processing_ref'] = ref
+    
+    # Redirect to processing page
+    return redirect(url_for('payment_processing', reference=ref))
+
+@app.route('/payment-processing')
+def payment_processing():
+    """Intermediate page showing payment processing status"""
+    ref = request.args.get('reference')
+    
+    if ref:
+        session['processing_ref'] = ref
+    
+    program_type = session.get('program_type', 'degree')
+    
+    return render_template('payment_processing.html', 
+                         reference=ref,
+                         program_type=program_type)
+
+@app.route('/api/check-payment-status', methods=['GET'])
+def check_payment_status():
+    """Simple endpoint to check if payment has been processed"""
+    ref = session.get('processing_ref')
+    
+    if not ref:
+        return jsonify({'status': 'error', 'message': 'No reference found'})
+    
+    # Check if payment already processed
+    existing = payments_collection.find_one({'paystack_ref': ref})
+    
+    if existing:
+        # Check if results exist
+        results_exist = results_collection.find_one({
+            'email': existing['email'],
+            'index_number': existing['index_number']
+        })
+        
+        if results_exist:
+            return jsonify({
+                'status': 'complete',
+                'redirect': url_for('unified_results')
+            })
+    
+    # If not processed yet, process it now (synchronously but with loading page)
+    # This will still take 5 seconds but user sees loading screen
+    return jsonify({'status': 'processing'})
+
+@app.route('/api/process-payment', methods=['POST'])
+def process_payment():
+    """Process the payment and return results"""
+    ref = session.get('processing_ref')
+    
+    if not ref:
+        return jsonify({'status': 'error', 'message': 'No reference found'})
+    
+    # Check if already processed
+    existing = payments_collection.find_one({'paystack_ref': ref})
+    if existing:
+        results_exist = results_collection.find_one({
+            'email': existing['email'],
+            'index_number': existing['index_number']
+        })
+        if results_exist:
+            return jsonify({
+                'status': 'complete',
+                'redirect': url_for('unified_results')
+            })
+    
     # Verify with Paystack
-    headers = {
-        "Authorization": f"Bearer {PAYSTACK_SECRET_KEY}"
-    }
+    headers = {"Authorization": f"Bearer {PAYSTACK_SECRET_KEY}"}
     response = requests.get(f"https://api.paystack.co/transaction/verify/{ref}", headers=headers)
     data = response.json()
     
     if not data.get('status') or data['data']['status'] != 'success':
-        return "Payment verification failed."
+        return jsonify({'status': 'failed', 'message': 'Payment verification failed'})
     
-    # Mark session as paid
-    session['payment_status'] = 'paid'
-    
-    # Extract session data
+    # Get session data
     email = session.get('email')
     index = session.get('index_number')
     program = session.get('program_type')
-    amount = session.get('amount')
+    amount = session.get('amount', 199)
     raw_grades = session.get('raw_grades', {})
     grades = normalize_mongo_grades(raw_grades)
     cluster_points = session.get('cluster_points', {}) if program == 'degree' else {}
-    referrer_code = session.get('referrer_code')
-    # Run eligibility logic
+    referrer_code = session.get('referrer')
+    
+    # Run eligibility (this takes 5 seconds but user sees loading)
     if program == 'degree':
         results = run_degree_eligibility(grades, cluster_points)
     elif program == 'diploma':
@@ -1171,25 +1248,11 @@ def verify_payment():
     elif program == 'artisan':
         results = run_artisan_eligibility(grades)
     else:
-        return "Invalid program type."
+        results = []
     
-    data_id = str(uuid.uuid4())
-    cluster_name_map = {doc['number']: doc['name'] for doc in clusters_collection.find()}
-    qualified_courses_data[data_id] = {
-        'qualified_courses': results,
-        'cluster_name_map': cluster_name_map
-    }
-    session['pdf_data_id'] = data_id  # optional: pass to frontend
-    
-    # -----------------------------
-    # Generate new user's own referral code
+    # Save to database
     new_user_referral_code = "CC" + str(uuid.uuid4())[-6:]
     
-    # Prevent self-referral
-    if referrer_code == new_user_referral_code:
-        referrer_code = None
-    
-    # Build payment document
     doc = {
         "email": email,
         "index_number": index,
@@ -1208,10 +1271,8 @@ def verify_payment():
     if program == 'degree' and cluster_points:
         doc["cluster_points"] = {str(k): v for k, v in cluster_points.items()}
     
-    # Insert payment document
     payments_collection.insert_one(doc)
     
-    # Insert eligibility results
     results_collection.insert_one({
         "email": email,
         "index_number": index,
@@ -1220,28 +1281,25 @@ def verify_payment():
         "generated_at": datetime.utcnow()
     })
     
-    # -----------------------------
-    # REWARD REFERRER IF APPLICABLE
-    # -----------------------------
-    if referrer_code:
-        referrer = payments_collection.find_one({"referral_code": referrer_code})
-        if referrer:
-            # Increment referrer's balance and count
-            payments_collection.update_one(
-                {"_id": referrer["_id"]},
-                {"$inc": {"referral_balance": 30, "referral_count": 1}}  # KSh 50 per referral
-            )
-            # Mark this new user's referral as rewarded
-            payments_collection.update_one(
-                {"_id": doc["_id"]},
-                {"$set": {"referral_rewarded": True}}
-            )
-    
-    print("Session at verify_payment:", dict(session))
-    
-    # Store results in session for rendering
+    # Store in session
+    session['payment_status'] = 'paid'
     session['results'] = results
-    return redirect(url_for('unified_results'))
+    
+    # Generate PDF data ID
+    data_id = str(uuid.uuid4())
+    cluster_name_map = {doc['number']: doc['name'] for doc in clusters_collection.find()}
+    qualified_courses_data[data_id] = {
+        'qualified_courses': results,
+        'cluster_name_map': cluster_name_map,
+        'program_type': program
+    }
+    session['pdf_data_id'] = data_id
+    
+    return jsonify({
+        'status': 'complete',
+        'redirect': url_for('unified_results')
+    })
+
 @app.route('/referral_dashboard', methods=['GET', 'POST'])
 def referral_dashboard():
     if request.method == 'POST':
@@ -2625,7 +2683,7 @@ def request_withdrawal():
 def admin_withdrawals():
     # Simple admin check (you can enhance this)
     admin_key = request.args.get('key')
-    if admin_key != os.getenv('kuccps-admin-2026'):
+    if admin_key != os.getenv('ADMIN_KEY','kuccps-admin-2026'):
         return "Unauthorized", 401
     
     page = int(request.args.get('page', 1))
@@ -2644,7 +2702,7 @@ def admin_withdrawals():
 @app.route('/admin/withdrawals/complete', methods=['POST'])
 def complete_withdrawal():
     admin_key = request.json.get('admin_key')
-    if admin_key != os.getenv('kuccps-admin-2026'):
+    if admin_key != os.getenv('ADMIN_KEY', 'kuccps-admin-2026'):
         return jsonify({'success': False, 'message': 'Unauthorized'}), 403
 
     # Normalize ID
@@ -2701,7 +2759,7 @@ def complete_withdrawal():
 @app.route('/admin/withdrawals/reject', methods=['POST'])
 def reject_withdrawal():
     admin_key = request.json.get('admin_key')
-    if admin_key != os.getenv('kuccps-admin-2026'):
+    if admin_key != os.getenv('ADMIN_KEY', 'kuccps-admin-2026'):
         return jsonify({'success': False, 'message': 'Unauthorized'}), 403
 
     withdrawal_id = request.json.get('withdrawal_id', '').strip().upper()
@@ -2747,7 +2805,7 @@ def reject_withdrawal():
 @app.route('/admin/withdrawals/export')
 def export_withdrawals_csv():
     admin_key = request.args.get('key')
-    if admin_key != os.getenv('kuccps-admin-2026'):
+    if admin_key != os.getenv('ADMIN_KEY', 'kuccps-admin-2026'):
         return "Unauthorized", 401
     
     withdrawals = list(withdrawals_collection.find().sort('created_at', -1))
@@ -3019,6 +3077,432 @@ def verify_manual():
         "status": "success", 
         "redirect": url_for("unified_results")
     })
+
+
+# ==================== ADMIN USER MANAGEMENT ROUTES ====================
+
+@app.route('/admin/users')
+def admin_users():
+    """Admin page to view all paid users"""
+    admin_key = request.args.get('admin_key')
+    if admin_key != os.getenv('ADMIN_KEY', 'kuccps-admin-2026'):
+        return "Unauthorized", 401
+    
+    page = int(request.args.get('page', 1))
+    per_page = 50
+    skip = (page - 1) * per_page
+    
+    # Get all paid users with pagination
+    total_users = payments_collection.count_documents({})
+    
+    # FIX: Add allow_disk_use(True)
+    users = list(payments_collection.find()
+                .sort('paid_at', -1)
+                .skip(skip)
+                .limit(per_page)
+                .allow_disk_use(True))
+    
+    # Get results for each user
+    for user in users:
+        user['_id'] = str(user['_id'])
+        user_results = results_collection.find_one({
+            'email': user['email'],
+            'index_number': user['index_number'],
+            'program_type': user['program_type']
+        })
+        user['has_results'] = bool(user_results)
+        if user_results:
+            user['results_count'] = len(user_results.get('results', []))
+        else:
+            user['results_count'] = 0
+    
+    total_pages = (total_users + per_page - 1) // per_page
+    
+    return render_template('admin/users.html',
+                         users=users,
+                         page=page,
+                         total_pages=total_pages,
+                         total_users=total_users)
+
+@app.route('/admin/user/<user_id>')
+def admin_user_detail(user_id):
+    """View single user details"""
+    admin_key = request.args.get('admin_key')
+    if admin_key != os.getenv('ADMIN_KEY', 'kuccps-admin-2026'):
+        return "Unauthorized", 401
+    
+    user = payments_collection.find_one({'_id': ObjectId(user_id)})
+    if not user:
+        flash('User not found', 'error')
+        return redirect(url_for('admin_users'))
+    
+    user['_id'] = str(user['_id'])
+    
+    # Get user results
+    results = results_collection.find_one({
+        'email': user['email'],
+        'index_number': user['index_number'],
+        'program_type': user['program_type']
+    })
+    
+    # Get withdrawal history
+    withdrawals = list(withdrawals_collection.find({
+        'user_email': user['email'],
+        'user_index': user['index_number']
+    }).sort('created_at', -1))
+    
+    for w in withdrawals:
+        w['_id'] = str(w['_id'])
+    
+    return render_template('admin/user_detail.html',
+                         user=user,
+                         results=results,
+                         withdrawals=withdrawals)
+
+@app.route('/admin/user/edit/<user_id>', methods=['GET', 'POST'])
+def admin_edit_user(user_id):
+    """Edit user details"""
+    admin_key = request.args.get('admin_key') if request.method == 'GET' else request.form.get('admin_key')
+    if admin_key != os.getenv('ADMIN_KEY', 'kuccps-admin-2026'):
+        return "Unauthorized", 401
+    
+    user = payments_collection.find_one({'_id': ObjectId(user_id)})
+    if not user:
+        flash('User not found', 'error')
+        return redirect(url_for('admin_users'))
+    
+    if request.method == 'POST':
+        # Update user fields
+        update_data = {
+            'email': request.form.get('email'),
+            'index_number': request.form.get('index_number'),
+            'program_type': request.form.get('program_type'),
+            'referral_balance': float(request.form.get('referral_balance', 0)),
+            'referral_count': int(request.form.get('referral_count', 0)),
+            'updated_at': datetime.utcnow()
+        }
+        
+        # Update grades if provided
+        grades = {}
+        for key, value in request.form.items():
+            if key.startswith('grade_'):
+                subject = key[6:]
+                if value:
+                    grades[subject] = value
+        
+        if grades:
+            update_data['grades'] = grades
+        
+        payments_collection.update_one(
+            {'_id': ObjectId(user_id)},
+            {'$set': update_data}
+        )
+        
+        flash('User updated successfully', 'success')
+        return redirect(url_for('admin_user_detail', user_id=user_id, admin_key=admin_key))
+    
+    user['_id'] = str(user['_id'])
+    return render_template('admin/edit_user.html', user=user)
+
+@app.route('/admin/user/delete/<user_id>', methods=['POST'])
+def admin_delete_user(user_id):
+    """Delete user and all associated data"""
+    admin_key = request.form.get('admin_key')
+    if admin_key != os.getenv('ADMIN_KEY', 'kuccps-admin-2026'):
+        return jsonify({'success': False, 'error': 'Unauthorized'}), 401
+    
+    user = payments_collection.find_one({'_id': ObjectId(user_id)})
+    if not user:
+        return jsonify({'success': False, 'error': 'User not found'}), 404
+    
+    # Delete user's results
+    results_collection.delete_many({
+        'email': user['email'],
+        'index_number': user['index_number']
+    })
+    
+    # Delete user's withdrawals
+    withdrawals_collection.delete_many({
+        'user_email': user['email'],
+        'user_index': user['index_number']
+    })
+    
+    # Delete user's transactions
+    referral_transactions_collection.delete_many({
+        'user_email': user['email'],
+        'user_index': user['index_number']
+    })
+    
+    # Delete user's basket
+    basket = baskets_collection.find_one({'email': user['email'], 'index_number': user['index_number']})
+    if basket:
+        basket_items_collection.delete_many({'basket_id': basket.get('basket_id')})
+        baskets_collection.delete_one({'_id': basket['_id']})
+    
+    # Delete the user
+    payments_collection.delete_one({'_id': ObjectId(user_id)})
+    
+    return jsonify({'success': True, 'message': 'User deleted successfully'})
+
+# ==================== ADMIN RESULTS MANAGEMENT ROUTES ====================
+
+@app.route('/admin/results')
+def admin_results():
+    """Admin page to view all results"""
+    admin_key = request.args.get('admin_key')
+    if admin_key != os.getenv('ADMIN_KEY', 'kuccps-admin-2026'):
+        return "Unauthorized", 401
+    
+    page = int(request.args.get('page', 1))
+    per_page = 50
+    skip = (page - 1) * per_page
+    
+    total_results = results_collection.count_documents({})
+    
+    # FIX: Add allow_disk_use(True) to handle large sorting
+    results_list = list(results_collection.find()
+                       .sort('generated_at', -1)
+                       .skip(skip)
+                       .limit(per_page)
+                       .allow_disk_use(True))  # <- This is the fix
+    
+    for result in results_list:
+        result['_id'] = str(result['_id'])
+        result['courses_count'] = len(result.get('results', []))
+        
+        # Get user payment info
+        user = payments_collection.find_one({
+            'email': result['email'],
+            'index_number': result['index_number']
+        })
+        if user:
+            result['paid_amount'] = user.get('amount', 'N/A')
+    
+    total_pages = (total_results + per_page - 1) // per_page
+    
+    return render_template('admin/results.html',
+                         results=results_list,
+                         page=page,
+                         total_pages=total_pages,
+                         total_results=total_results)
+
+@app.route('/admin/result/<result_id>')
+def admin_view_result(result_id):
+    """View single result details"""
+    admin_key = request.args.get('admin_key')
+    if admin_key != os.getenv('ADMIN_KEY', 'kuccps-admin-2026'):
+        return "Unauthorized", 401
+    
+    result = results_collection.find_one({'_id': ObjectId(result_id)})
+    if not result:
+        flash('Result not found', 'error')
+        return redirect(url_for('admin_results'))
+    
+    result['_id'] = str(result['_id'])
+    
+    # Get user info
+    user = payments_collection.find_one({
+        'email': result['email'],
+        'index_number': result['index_number']
+    })
+    
+    return render_template('admin/view_result.html',
+                         result=result,
+                         user=user)
+
+@app.route('/admin/result/regenerate/<result_id>', methods=['POST'])
+def admin_regenerate_result(result_id):
+    """Regenerate results for a user based on current data"""
+    admin_key = request.form.get('admin_key')
+    if admin_key != os.getenv('ADMIN_KEY', 'kuccps-admin-2026'):
+        return jsonify({'success': False, 'error': 'Unauthorized'}), 401
+    
+    old_result = results_collection.find_one({'_id': ObjectId(result_id)})
+    if not old_result:
+        return jsonify({'success': False, 'error': 'Result not found'}), 404
+    
+    # Get user data
+    user = payments_collection.find_one({
+        'email': old_result['email'],
+        'index_number': old_result['index_number']
+    })
+    
+    if not user:
+        return jsonify({'success': False, 'error': 'User not found'}), 404
+    
+    program_type = user.get('program_type')
+    grades = user.get('grades', {})
+    cluster_points = user.get('cluster_points', {})
+    
+    # Convert cluster_points back to int keys if needed
+    if cluster_points and isinstance(cluster_points, dict):
+        cluster_points = {int(k): v for k, v in cluster_points.items()}
+    
+    # Run eligibility logic again
+    if program_type == 'degree':
+        new_results = run_degree_eligibility(grades, cluster_points)
+    elif program_type == 'diploma':
+        new_results = run_diploma_eligibility(grades)
+    elif program_type == 'certificate':
+        new_results = run_certificate_eligibility(grades)
+    elif program_type == 'kmtc':
+        new_results = run_kmtc_eligibility(grades)
+    elif program_type == 'artisan':
+        new_results = run_artisan_eligibility(grades)
+    else:
+        return jsonify({'success': False, 'error': 'Invalid program type'}), 400
+    
+    # Update the result
+    results_collection.update_one(
+        {'_id': ObjectId(result_id)},
+        {
+            '$set': {
+                'results': new_results,
+                'regenerated_at': datetime.utcnow(),
+                'regenerated_by': 'admin',
+                'previous_results': old_result.get('results')  # Keep old results for audit
+            }
+        }
+    )
+    
+    return jsonify({
+        'success': True,
+        'message': 'Results regenerated successfully',
+        'courses_count': len(new_results) if isinstance(new_results, list) else 
+                        sum(len(cluster.get('courses', [])) for cluster in new_results)
+    })
+
+@app.route('/admin/result/delete/<result_id>', methods=['POST'])
+def admin_delete_result(result_id):
+    """Delete a result record"""
+    admin_key = request.form.get('admin_key')
+    if admin_key != os.getenv('ADMIN_KEY', 'kuccps-admin-2026'):
+        return jsonify({'success': False, 'error': 'Unauthorized'}), 401
+    
+    result = results_collection.find_one({'_id': ObjectId(result_id)})
+    if not result:
+        return jsonify({'success': False, 'error': 'Result not found'}), 404
+    
+    results_collection.delete_one({'_id': ObjectId(result_id)})
+    
+    return jsonify({'success': True, 'message': 'Result deleted successfully'})
+
+# ==================== BULK OPERATIONS ====================
+
+@app.route('/admin/bulk-regenerate', methods=['POST'])
+def admin_bulk_regenerate():
+    """Regenerate results for all users or filtered users"""
+    admin_key = request.form.get('admin_key')
+    if admin_key != os.getenv('ADMIN_KEY', 'kuccps-admin-2026'):
+        return jsonify({'success': False, 'error': 'Unauthorized'}), 401
+    
+    program_type = request.form.get('program_type', 'all')
+    date_from = request.form.get('date_from')
+    date_to = request.form.get('date_to')
+    
+    # Build query
+    query = {}
+    if program_type != 'all':
+        query['program_type'] = program_type
+    
+    # Get all users matching criteria
+    users = list(payments_collection.find(query))
+    
+    regenerated_count = 0
+    errors = []
+    
+    for user in users:
+        try:
+            grades = user.get('grades', {})
+            cluster_points = user.get('cluster_points', {})
+            if cluster_points and isinstance(cluster_points, dict):
+                cluster_points = {int(k): v for k, v in cluster_points.items()}
+            
+            user_program = user.get('program_type')
+            
+            if user_program == 'degree':
+                new_results = run_degree_eligibility(grades, cluster_points)
+            elif user_program == 'diploma':
+                new_results = run_diploma_eligibility(grades)
+            elif user_program == 'certificate':
+                new_results = run_certificate_eligibility(grades)
+            elif user_program == 'kmtc':
+                new_results = run_kmtc_eligibility(grades)
+            elif user_program == 'artisan':
+                new_results = run_artisan_eligibility(grades)
+            else:
+                continue
+            
+            # Update or insert results
+            results_collection.update_one(
+                {
+                    'email': user['email'],
+                    'index_number': user['index_number'],
+                    'program_type': user_program
+                },
+                {
+                    '$set': {
+                        'results': new_results,
+                        'regenerated_at': datetime.utcnow(),
+                        'regenerated_by': 'admin_bulk'
+                    }
+                },
+                upsert=True
+            )
+            regenerated_count += 1
+            
+        except Exception as e:
+            errors.append(f"{user.get('email')}: {str(e)}")
+    
+    return jsonify({
+        'success': True,
+        'regenerated_count': regenerated_count,
+        'errors': errors,
+        'message': f'Regenerated {regenerated_count} results'
+    })
+
+# ==================== ADMIN STATISTICS ====================
+
+@app.route('/admin/stats')
+def admin_stats():
+    """Admin statistics dashboard"""
+    admin_key = request.args.get('admin_key')
+    if admin_key != os.getenv('ADMIN_KEY', 'kuccps-admin-2026'):
+        return "Unauthorized", 401
+    
+    stats = {
+        'total_users': payments_collection.count_documents({}),
+        'total_degree_users': payments_collection.count_documents({'program_type': 'degree'}),
+        'total_diploma_users': payments_collection.count_documents({'program_type': 'diploma'}),
+        'total_certificate_users': payments_collection.count_documents({'program_type': 'certificate'}),
+        'total_kmtc_users': payments_collection.count_documents({'program_type': 'kmtc'}),
+        'total_artisan_users': payments_collection.count_documents({'program_type': 'artisan'}),
+        'total_results': results_collection.count_documents({}),
+        'total_withdrawals': withdrawals_collection.count_documents({}),
+        'pending_withdrawals': withdrawals_collection.count_documents({'status': 'Pending'}),
+        'total_referral_earnings': payments_collection.aggregate([
+            {'$group': {'_id': None, 'total': {'$sum': '$referral_balance'}}}
+        ]).__next__().get('total', 0),
+        'total_revenue': payments_collection.aggregate([
+            {'$group': {'_id': None, 'total': {'$sum': '$amount'}}}
+        ]).__next__().get('total', 0)
+    }
+    
+    # Get daily signups for last 30 days
+    from datetime import timedelta
+    thirty_days_ago = datetime.utcnow() - timedelta(days=30)
+    daily_signups = list(payments_collection.aggregate([
+        {'$match': {'paid_at': {'$gte': thirty_days_ago}}},
+        {'$group': {
+            '_id': {'$dateToString': {'format': '%Y-%m-%d', 'date': '$paid_at'}},
+            'count': {'$sum': 1}
+        }},
+        {'$sort': {'_id': 1}}
+    ]))
+    
+    return render_template('admin/stats.html',
+                         stats=stats,
+                         daily_signups=daily_signups)
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True)
