@@ -1427,15 +1427,20 @@
             </div>
             
             <div class="action-buttons">
-                {% if pdf_data_id %}
-                <a href="/download-pdf/{{ pdf_data_id }}" class="btn action-btn action-btn-primary">
-                    <i class="bi bi-download"></i> Download PDF
-                </a>
-                {% endif %}
-                <button onclick="shareResults()" class="btn action-btn action-btn-outline">
-                    <i class="bi bi-share"></i> Share Results
-                </button>
-            </div>
+    {% if email and index_number and program_type %}
+    <a href="/download-pdf/from-db?email={{ email|urlencode }}&index={{ index_number|urlencode }}&program={{ program_type|urlencode }}" 
+       class="btn action-btn action-btn-primary">
+        <i class="bi bi-download"></i> Download PDF
+    </a>
+    {% elif pdf_data_id %}
+    <a href="/download-pdf/{{ pdf_data_id }}" class="btn action-btn action-btn-primary">
+        <i class="bi bi-download"></i> Download PDF
+    </a>
+    {% endif %}
+    <button onclick="shareResults()" class="btn action-btn action-btn-outline">
+        <i class="bi bi-share"></i> Share Results
+    </button>
+</div>
         </div>
 
         <!-- Results Content -->

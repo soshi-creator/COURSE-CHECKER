@@ -502,15 +502,254 @@ def run_degree_eligibility(grades, cluster_points):
 
 @app.route('/download-pdf/<data_id>')
 def download_pdf(data_id):
-    # Ensure data exists
-    if data_id not in qualified_courses_data:
-        return "Reload page. Data not found. Please generate the courses list again.", 404
+    """Download PDF from database results instead of session"""
     
-    data = qualified_courses_data[data_id]
-    qualified_courses = data['qualified_courses']
-    cluster_name_map = data.get('cluster_name_map', {})
-    program_type = data.get('program_type', 'degree')  # store program_type when saving
+    # Try to get results from database first
+    email = request.args.get('email')
+    index_number = request.args.get('index')
+    program_type = request.args.get('program_type')
     
+    # If not in URL, try to get from session
+    if not email:
+        email = session.get('email')
+    if not index_number:
+        index_number = session.get('index_number')
+    if not program_type:
+        program_type = session.get('program_type')
+    
+    # Fetch from database
+    if email and index_number and program_type:
+        # Get user results from database
+        result_doc = results_collection.find_one({
+            'email': email,
+            'index_number': index_number,
+            'program_type': program_type
+        })
+        
+        if result_doc and 'results' in result_doc:
+            results = result_doc['results']
+            program_type = result_doc.get('program_type', program_type)
+            
+            # Get cluster name mapping
+            cluster_name_map = {doc['number']: doc['name'] for doc in clusters_collection.find()}
+            
+            # Generate PDF
+            buffer = BytesIO()
+            doc = SimpleDocTemplate(buffer, pagesize=letter, topMargin=0.5*inch)
+            
+            # Styles
+            styles = getSampleStyleSheet()
+            title_style = ParagraphStyle('CustomTitle', parent=styles['Heading1'],
+                                         fontSize=16, spaceAfter=12, alignment=1,
+                                         textColor=colors.darkblue)
+            table_style = ParagraphStyle('TableStyle', parent=styles['Normal'],
+                                         fontSize=9, leading=11, wordWrap='LTR')
+            header_style = ParagraphStyle('HeaderStyle', parent=styles['Normal'],
+                                          fontSize=10, textColor=colors.white, alignment=1)
+            
+            content = [Paragraph("QUALIFIED COURSES REPORT", title_style), Spacer(1, 0.3*inch)]
+            
+            if not results:
+                content.append(Paragraph("No qualified courses found.", styles['Normal']))
+            else:
+                # DEGREE → clustered with cutoff
+                if program_type == 'degree':
+                    grouped_courses = defaultdict(list)
+                    for cluster in results:
+                        cluster_label = cluster.get('label', 'Unknown')
+                        for course in cluster.get('courses', []):
+                            grouped_courses[cluster_label].append(course)
+                    
+                    for cluster_label, courses in grouped_courses.items():
+                        content.append(Paragraph(f"<b>{cluster_label}</b>", styles['Heading2']))
+                        content.append(Spacer(1, 0.1*inch))
+                        
+                        table_data = [[
+                            Paragraph('<b>Program Code</b>', header_style),
+                            Paragraph('<b>Course Name</b>', header_style),
+                            Paragraph('<b>Institution</b>', header_style),
+                            Paragraph('<b>Cutoff</b>', header_style)
+                        ]]
+                        
+                        for course in sorted(courses, key=lambda x: x.get('program_code', '')):
+                            cutoff_value = f"{course.get('cutoff', 0):.3f}" if course.get('cutoff') is not None else "N/A"
+                            table_data.append([
+                                Paragraph(str(course.get('program_code', 'N/A')), table_style),
+                                Paragraph(str(course.get('name', 'N/A')), table_style),
+                                Paragraph(str(course.get('institution', 'N/A')), table_style),
+                                Paragraph(cutoff_value, table_style)
+                            ])
+                        
+                        table = Table(table_data, repeatRows=1)
+                        table.setStyle(TableStyle([
+                            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#2c3e50')),
+                            ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+                            ('ALIGN', (0, 0), (-1, 0), 'CENTER'),
+                            ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+                            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                            ('FONTSIZE', (0, 0), (-1, 0), 10),
+                            ('BOTTOMPADDING', (0, 0), (-1, 0), 8),
+                            ('TOPPADDING', (0, 0), (-1, 0), 6),
+                            ('BACKGROUND', (0, 1), (-1, -1), colors.white),
+                            ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
+                            ('FONTSIZE', (0, 1), (-1, -1), 9),
+                            ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+                            ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.HexColor('#f8f9fa')]),
+                            ('LEFTPADDING', (0, 0), (-1, -1), 4),
+                            ('RIGHTPADDING', (0, 0), (-1, -1), 4),
+                            ('TOPPADDING', (0, 1), (-1, -1), 3),
+                            ('BOTTOMPADDING', (0, 1), (-1, -1), 3),
+                            ('ALIGN', (0, 1), (0, -1), 'LEFT'),
+                            ('ALIGN', (1, 1), (1, -1), 'LEFT'),
+                            ('ALIGN', (2, 1), (2, -1), 'LEFT'),
+                            ('ALIGN', (3, 1), (3, -1), 'CENTER'),
+                        ]))
+                        content.append(table)
+                        content.append(Spacer(1, 0.3*inch))
+                
+                # DIPLOMA / CERTIFICATE / ARTISAN → clustered, no cutoff
+                elif program_type in ['diploma', 'certificate', 'artisan']:
+                    grouped_courses = defaultdict(list)
+                    for cluster in results:
+                        cluster_label = cluster.get('label', 'Unknown')
+                        for course in cluster.get('courses', []):
+                            grouped_courses[cluster_label].append(course)
+                    
+                    for cluster_label, courses in grouped_courses.items():
+                        content.append(Paragraph(f"<b>{cluster_label}</b>", styles['Heading2']))
+                        content.append(Spacer(1, 0.1*inch))
+                        
+                        table_data = [[
+                            Paragraph('<b>Program Code</b>', header_style),
+                            Paragraph('<b>Course Name</b>', header_style),
+                            Paragraph('<b>Institution</b>', header_style)
+                        ]]
+                        
+                        for course in sorted(courses, key=lambda x: x.get('program_code', '')):
+                            table_data.append([
+                                Paragraph(str(course.get('program_code', 'N/A')), table_style),
+                                Paragraph(str(course.get('name', 'N/A')), table_style),
+                                Paragraph(str(course.get('institution', 'N/A')), table_style)
+                            ])
+                        
+                        table = Table(table_data, repeatRows=1)
+                        table.setStyle(TableStyle([
+                            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#2c3e50')),
+                            ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+                            ('ALIGN', (0, 0), (-1, 0), 'CENTER'),
+                            ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+                            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                            ('FONTSIZE', (0, 0), (-1, 0), 10),
+                            ('BOTTOMPADDING', (0, 0), (-1, 0), 8),
+                            ('TOPPADDING', (0, 0), (-1, 0), 6),
+                            ('BACKGROUND', (0, 1), (-1, -1), colors.white),
+                            ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
+                            ('FONTSIZE', (0, 1), (-1, -1), 9),
+                            ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+                            ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.HexColor('#f8f9fa')]),
+                            ('LEFTPADDING', (0, 0), (-1, -1), 4),
+                            ('RIGHTPADDING', (0, 0), (-1, -1), 4),
+                            ('TOPPADDING', (0, 1), (-1, -1), 3),
+                            ('BOTTOMPADDING', (0, 1), (-1, -1), 3),
+                            ('ALIGN', (0, 1), (0, -1), 'LEFT'),
+                            ('ALIGN', (1, 1), (1, -1), 'LEFT'),
+                            ('ALIGN', (2, 1), (2, -1), 'LEFT'),
+                        ]))
+                        content.append(table)
+                        content.append(Spacer(1, 0.3*inch))
+                
+                # KMTC → flat alphabetical list
+                elif program_type == 'kmtc':
+                    table_data = [[
+                        Paragraph('<b>Program Code</b>', header_style),
+                        Paragraph('<b>Course Name</b>', header_style),
+                        Paragraph('<b>Institution</b>', header_style),
+                        Paragraph('<b>Requirements</b>', header_style)
+                    ]]
+                    
+                    for course in sorted(results, key=lambda x: x.get('name', '')):
+                        reqs = ", ".join([f"{r.get('subject', '')} ≥ {r.get('minGrade', '')}" for r in course.get('requirements', [])])
+                        table_data.append([
+                            Paragraph(str(course.get('program_code', 'N/A')), table_style),
+                            Paragraph(str(course.get('name', 'N/A')), table_style),
+                            Paragraph(str(course.get('institution', 'N/A')), table_style),
+                            Paragraph(reqs, table_style)
+                        ])
+                    
+                    table = Table(table_data, repeatRows=1)
+                    table.setStyle(TableStyle([
+                        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#2c3e50')),
+                        ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+                        ('ALIGN', (0, 0), (-1, 0), 'CENTER'),
+                        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+                        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                        ('FONTSIZE', (0, 0), (-1, 0), 10),
+                        ('BOTTOMPADDING', (0, 0), (-1, 0), 8),
+                        ('TOPPADDING', (0, 0), (-1, 0), 6),
+                        ('BACKGROUND', (0, 1), (-1, -1), colors.white),
+                        ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
+                        ('FONTSIZE', (0, 1), (-1, -1), 9),
+                        ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+                        ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.HexColor('#f8f9fa')]),
+                        ('LEFTPADDING', (0, 0), (-1, -1), 4),
+                        ('RIGHTPADDING', (0, 0), (-1, -1), 4),
+                        ('TOPPADDING', (0, 1), (-1, -1), 3),
+                        ('BOTTOMPADDING', (0, 1), (-1, -1), 3),
+                        ('ALIGN', (0, 1), (0, -1), 'LEFT'),
+                        ('ALIGN', (1, 1), (1, -1), 'LEFT'),
+                        ('ALIGN', (2, 1), (2, -1), 'LEFT'),
+                        ('ALIGN', (3, 1), (3, -1), 'CENTER'),
+                    ]))
+                    content.append(table)
+                    content.append(Spacer(1, 0.3*inch))
+            
+            # Build PDF
+            doc.build(content)
+            buffer.seek(0)
+            
+            return send_file(buffer,
+                           as_attachment=True,
+                           download_name=f'{program_type}_courses_report.pdf',
+                           mimetype='application/pdf')
+    
+    # Fallback to session data if database not found
+    if data_id in qualified_courses_data:
+        data = qualified_courses_data[data_id]
+        qualified_courses = data['qualified_courses']
+        cluster_name_map = data.get('cluster_name_map', {})
+        program_type = data.get('program_type', 'degree')
+        
+        # ... (rest of your existing PDF generation code for session data)
+        # (keep your existing PDF generation code here as fallback)
+        
+    else:
+        return "Results not found. Please generate the courses list again.", 404
+
+# ---------- Admin Routes ----------
+
+@app.route('/download-pdf/from-db')
+def download_pdf_from_db():
+    """Download PDF directly from database results"""
+    email = request.args.get('email')
+    index_number = request.args.get('index')
+    program_type = request.args.get('program')
+    
+    if not email or not index_number or not program_type:
+        return "Missing required parameters", 400
+    
+    # Fetch from database
+    result_doc = results_collection.find_one({
+        'email': email,
+        'index_number': index_number,
+        'program_type': program_type
+    })
+    
+    if not result_doc or 'results' not in result_doc:
+        return "Results not found. Please regenerate your results.", 404
+    
+    results = result_doc['results']
+    
+    # Generate PDF
     buffer = BytesIO()
     doc = SimpleDocTemplate(buffer, pagesize=letter, topMargin=0.5*inch)
     
@@ -526,13 +765,13 @@ def download_pdf(data_id):
     
     content = [Paragraph("QUALIFIED COURSES REPORT", title_style), Spacer(1, 0.3*inch)]
     
-    if not qualified_courses:
+    if not results:
         content.append(Paragraph("No qualified courses found.", styles['Normal']))
     else:
         # DEGREE → clustered with cutoff
         if program_type == 'degree':
             grouped_courses = defaultdict(list)
-            for cluster in qualified_courses:
+            for cluster in results:
                 cluster_label = cluster.get('label', 'Unknown')
                 for course in cluster.get('courses', []):
                     grouped_courses[cluster_label].append(course)
@@ -548,8 +787,8 @@ def download_pdf(data_id):
                     Paragraph('<b>Cutoff</b>', header_style)
                 ]]
                 
-                for course in sorted(courses, key=lambda x: x['program_code']):
-                    cutoff_value = f"{course['cutoff']:.3f}" if course.get('cutoff') is not None else "N/A"
+                for course in sorted(courses, key=lambda x: x.get('program_code', '')):
+                    cutoff_value = f"{course.get('cutoff', 0):.3f}" if course.get('cutoff') is not None else "N/A"
                     table_data.append([
                         Paragraph(str(course.get('program_code', 'N/A')), table_style),
                         Paragraph(str(course.get('name', 'N/A')), table_style),
@@ -559,35 +798,35 @@ def download_pdf(data_id):
                 
                 table = Table(table_data, repeatRows=1)
                 table.setStyle(TableStyle([
-                 ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#2c3e50')),
-                 ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
-                ('ALIGN', (0, 0), (-1, 0), 'CENTER'),
-                ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-                ('FONTSIZE', (0, 0), (-1, 0), 10),
-                ('BOTTOMPADDING', (0, 0), (-1, 0), 8),
-                ('TOPPADDING', (0, 0), (-1, 0), 6),
-                ('BACKGROUND', (0, 1), (-1, -1), colors.white),
-                ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
-                ('FONTSIZE', (0, 1), (-1, -1), 9),
-                ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
-                ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.HexColor('#f8f9fa')]),
-                ('LEFTPADDING', (0, 0), (-1, -1), 4),
-                ('RIGHTPADDING', (0, 0), (-1, -1), 4),
-                ('TOPPADDING', (0, 1), (-1, -1), 3),
-                ('BOTTOMPADDING', (0, 1), (-1, -1), 3),
-                ('ALIGN', (0, 1), (0, -1), 'LEFT'),
-                ('ALIGN', (1, 1), (1, -1), 'LEFT'),
-                ('ALIGN', (2, 1), (2, -1), 'LEFT'),
-                ('ALIGN', (3, 1), (3, -1), 'CENTER'),
-                    ]))  # keep your styling
+                    ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#2c3e50')),
+                    ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+                    ('ALIGN', (0, 0), (-1, 0), 'CENTER'),
+                    ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+                    ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                    ('FONTSIZE', (0, 0), (-1, 0), 10),
+                    ('BOTTOMPADDING', (0, 0), (-1, 0), 8),
+                    ('TOPPADDING', (0, 0), (-1, 0), 6),
+                    ('BACKGROUND', (0, 1), (-1, -1), colors.white),
+                    ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
+                    ('FONTSIZE', (0, 1), (-1, -1), 9),
+                    ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+                    ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.HexColor('#f8f9fa')]),
+                    ('LEFTPADDING', (0, 0), (-1, -1), 4),
+                    ('RIGHTPADDING', (0, 0), (-1, -1), 4),
+                    ('TOPPADDING', (0, 1), (-1, -1), 3),
+                    ('BOTTOMPADDING', (0, 1), (-1, -1), 3),
+                    ('ALIGN', (0, 1), (0, -1), 'LEFT'),
+                    ('ALIGN', (1, 1), (1, -1), 'LEFT'),
+                    ('ALIGN', (2, 1), (2, -1), 'LEFT'),
+                    ('ALIGN', (3, 1), (3, -1), 'CENTER'),
+                ]))
                 content.append(table)
                 content.append(Spacer(1, 0.3*inch))
         
-        # DIPLOMA / CERTIFICATE → clustered, no cutoff
-        elif program_type in ['diploma', 'certificate']:
+        # DIPLOMA / CERTIFICATE / ARTISAN → clustered, no cutoff
+        elif program_type in ['diploma', 'certificate', 'artisan']:
             grouped_courses = defaultdict(list)
-            for cluster in qualified_courses:
+            for cluster in results:
                 cluster_label = cluster.get('label', 'Unknown')
                 for course in cluster.get('courses', []):
                     grouped_courses[cluster_label].append(course)
@@ -602,7 +841,7 @@ def download_pdf(data_id):
                     Paragraph('<b>Institution</b>', header_style)
                 ]]
                 
-                for course in sorted(courses, key=lambda x: x['program_code']):
+                for course in sorted(courses, key=lambda x: x.get('program_code', '')):
                     table_data.append([
                         Paragraph(str(course.get('program_code', 'N/A')), table_style),
                         Paragraph(str(course.get('name', 'N/A')), table_style),
@@ -611,54 +850,52 @@ def download_pdf(data_id):
                 
                 table = Table(table_data, repeatRows=1)
                 table.setStyle(TableStyle([
-                 ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#2c3e50')),
-                 ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
-                ('ALIGN', (0, 0), (-1, 0), 'CENTER'),
-                ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-                ('FONTSIZE', (0, 0), (-1, 0), 10),
-                ('BOTTOMPADDING', (0, 0), (-1, 0), 8),
-                ('TOPPADDING', (0, 0), (-1, 0), 6),
-                ('BACKGROUND', (0, 1), (-1, -1), colors.white),
-                ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
-                ('FONTSIZE', (0, 1), (-1, -1), 9),
-                ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
-                ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.HexColor('#f8f9fa')]),
-                ('LEFTPADDING', (0, 0), (-1, -1), 4),
-                ('RIGHTPADDING', (0, 0), (-1, -1), 4),
-                ('TOPPADDING', (0, 1), (-1, -1), 3),
-                ('BOTTOMPADDING', (0, 1), (-1, -1), 3),
-                ('ALIGN', (0, 1), (0, -1), 'LEFT'),
-                ('ALIGN', (1, 1), (1, -1), 'LEFT'),
-                ('ALIGN', (2, 1), (2, -1), 'LEFT'),
-                ('ALIGN', (3, 1), (3, -1), 'CENTER'),
-                    ]))  # keep your styling
+                    ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#2c3e50')),
+                    ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+                    ('ALIGN', (0, 0), (-1, 0), 'CENTER'),
+                    ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+                    ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                    ('FONTSIZE', (0, 0), (-1, 0), 10),
+                    ('BOTTOMPADDING', (0, 0), (-1, 0), 8),
+                    ('TOPPADDING', (0, 0), (-1, 0), 6),
+                    ('BACKGROUND', (0, 1), (-1, -1), colors.white),
+                    ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
+                    ('FONTSIZE', (0, 1), (-1, -1), 9),
+                    ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+                    ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.HexColor('#f8f9fa')]),
+                    ('LEFTPADDING', (0, 0), (-1, -1), 4),
+                    ('RIGHTPADDING', (0, 0), (-1, -1), 4),
+                    ('TOPPADDING', (0, 1), (-1, -1), 3),
+                    ('BOTTOMPADDING', (0, 1), (-1, -1), 3),
+                    ('ALIGN', (0, 1), (0, -1), 'LEFT'),
+                    ('ALIGN', (1, 1), (1, -1), 'LEFT'),
+                    ('ALIGN', (2, 1), (2, -1), 'LEFT'),
+                ]))
                 content.append(table)
                 content.append(Spacer(1, 0.3*inch))
         
-        # KMTC → flat alphabetical list, no clusters, no cutoff
-        if program_type == 'kmtc':
+        # KMTC → flat alphabetical list
+        elif program_type == 'kmtc':
             table_data = [[
                 Paragraph('<b>Program Code</b>', header_style),
                 Paragraph('<b>Course Name</b>', header_style),
                 Paragraph('<b>Institution</b>', header_style),
                 Paragraph('<b>Requirements</b>', header_style)
-           ]]
-
-            for course in sorted(qualified_courses, key=lambda x: x['name']):
-                reqs = ", ".join([f"{r['subject']} ≥ {r['minGrade']}" for r in course.get('requirements', [])])
+            ]]
+            
+            for course in sorted(results, key=lambda x: x.get('name', '')):
+                reqs = ", ".join([f"{r.get('subject', '')} ≥ {r.get('minGrade', '')}" for r in course.get('requirements', [])])
                 table_data.append([
-                   Paragraph(str(course.get('program_code', 'N/A')), table_style),
+                    Paragraph(str(course.get('program_code', 'N/A')), table_style),
                     Paragraph(str(course.get('name', 'N/A')), table_style),
                     Paragraph(str(course.get('institution', 'N/A')), table_style),
                     Paragraph(reqs, table_style)
-               ])
-
+                ])
             
             table = Table(table_data, repeatRows=1)
             table.setStyle(TableStyle([
-                 ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#2c3e50')),
-                 ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+                ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#2c3e50')),
+                ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
                 ('ALIGN', (0, 0), (-1, 0), 'CENTER'),
                 ('VALIGN', (0, 0), (-1, -1), 'TOP'),
                 ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
@@ -678,7 +915,7 @@ def download_pdf(data_id):
                 ('ALIGN', (1, 1), (1, -1), 'LEFT'),
                 ('ALIGN', (2, 1), (2, -1), 'LEFT'),
                 ('ALIGN', (3, 1), (3, -1), 'CENTER'),
-                    ]))  # keep your styling
+            ]))
             content.append(table)
             content.append(Spacer(1, 0.3*inch))
     
@@ -686,17 +923,10 @@ def download_pdf(data_id):
     doc.build(content)
     buffer.seek(0)
     
-    # Clean up stored data
-    if data_id in qualified_courses_data:
-        del qualified_courses_data[data_id]
-    
     return send_file(buffer,
-                     as_attachment=True,
-                     download_name='qualified_courses_report.pdf',
-                     mimetype='application/pdf')
-
-# ---------- Admin Routes ----------
-
+                   as_attachment=True,
+                   download_name=f'{program_type}_courses_report.pdf',
+                   mimetype='application/pdf')
 @app.route('/admin')
 def admin_dashboard():
     return render_template('admin/dashboard.html')
