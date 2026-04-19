@@ -423,6 +423,83 @@ def artisan_form():
 def user_guide():
     return render_template('userguide.html')
 
+def check_requirement(req, grades):
+    """
+    Check if a student meets a single requirement.
+    
+    Supports formats:
+    1. Simple OR: {"subject": "Mata/Matb/Bst", "minGrade": "C+"}
+    2. Complex OR with diff grades: {"type": "or", "conditions": [{"subject": "Bio", "minGrade": "C"}, ...]}
+    3. Complex AND with diff grades: {"type": "and", "conditions": [{"subject": "Bio", "minGrade": "C"}, ...]}
+    4. Single subject: {"subject": "Math", "minGrade": "C+"}
+    5. Old condition format: {"condition": [{"subject": "Bio", "minGrade": "C"}, ...]}  # Kept for backward compatibility
+    """
+    
+    # Case 1: New OR format with different grades
+    if req.get('type') == 'or' and 'conditions' in req:
+        for condition in req['conditions']:
+            subject = condition.get('subject', '').strip()
+            required_grade = condition.get('minGrade', '')
+            student_grade = resolve_grade_from_alias(grades, subject)
+            student_points = grade_to_points(student_grade)
+            required_points = grade_to_points(required_grade)
+            
+            if student_points >= required_points:
+                return True
+        return False
+    
+    # Case 2: New AND format with different grades
+    elif req.get('type') == 'and' and 'conditions' in req:
+        for condition in req['conditions']:
+            subject = condition.get('subject', '').strip()
+            required_grade = condition.get('minGrade', '')
+            student_grade = resolve_grade_from_alias(grades, subject)
+            student_points = grade_to_points(student_grade)
+            required_points = grade_to_points(required_grade)
+            
+            if student_points < required_points:
+                return False
+        return True
+    
+    # Case 3: Old condition format (backward compatibility)
+    elif 'condition' in req:
+        for cond in req['condition']:
+            subject = cond.get('subject', '').strip()
+            required_grade = cond.get('minGrade', '')
+            student_grade = resolve_grade_from_alias(grades, subject)
+            student_points = grade_to_points(student_grade)
+            required_points = grade_to_points(required_grade)
+            
+            if student_points >= required_points:
+                return True
+        return False
+    
+    # Case 4: Multi subject with same grade (simple OR)
+    elif 'subject' in req and '/' in req.get('subject', ''):
+        subjects = req['subject'].split('/')
+        required_grade = req.get('minGrade', '')
+        required_points = grade_to_points(required_grade)
+        
+        for subject in subjects:
+            student_grade = resolve_grade_from_alias(grades, subject.strip())
+            student_points = grade_to_points(student_grade)
+            if student_points >= required_points:
+                return True
+        return False
+    
+    # Case 5: Single subject
+    elif 'subject' in req:
+        subject = req.get('subject', '').strip()
+        required_grade = req.get('minGrade', '')
+        student_grade = resolve_grade_from_alias(grades, subject)
+        student_points = grade_to_points(student_grade)
+        required_points = grade_to_points(required_grade)
+        return student_points >= required_points
+    
+    # Unknown format - assume requirement is met
+    return True
+
+
 def run_degree_eligibility(grades, cluster_points):
     qualified = []
 
@@ -438,41 +515,9 @@ def run_degree_eligibility(grades, cluster_points):
 
             meets_all = True
             for req in requirements:
-                if 'condition' in req:
-                    condition_met = False
-                    for cond in req['condition']:
-                        alias = cond['subject'].strip()
-                        grade = resolve_grade_from_alias(grades, alias)
-                        score = grade_to_points(grade)
-                        if score >= grade_to_points(cond['minGrade']):
-                            condition_met = True
-                            break
-                    if not condition_met:
-                        meets_all = False
-                        break
-                elif req.get('type') == 'multi':
-                    pool = req['subject_pool']
-                    min_points = grade_to_points(req['minGrade'])
-                    required_count = req.get('requiredCount', 2)
-                    passed = 0
-                    for alias in pool:
-                        grade = resolve_grade_from_alias(grades, alias)
-                        score = grade_to_points(grade)
-                        if score >= min_points:
-                            passed += 1
-                    if passed < required_count:
-                        meets_all = False
-                        break
-                else:
-                    req_subject = req.get('subject')
-                    req_min = grade_to_points(req.get('minGrade'))
-                    scores = []
-                    for alias in req_subject.split('/'):
-                        grade = resolve_grade_from_alias(grades, alias)
-                        scores.append(grade_to_points(grade))
-                    if max(scores) < req_min:
-                        meets_all = False
-                        break
+                if not check_requirement(req, grades):
+                    meets_all = False
+                    break
 
             if meets_all:
                 qualified.append({
@@ -484,14 +529,14 @@ def run_degree_eligibility(grades, cluster_points):
                     'cutoff': inst_cutoff
                 })
 
+    # ... rest of your function (clustering, etc.) stays the same
     cluster_name_map = {doc['number']: doc['name'] for doc in clusters_collection.find()}
     grouped = defaultdict(list)
     for item in qualified:
         grouped[item['cluster']].append(item)
 
-    # ✅ Sort clusters numerically
     named_clusters = []
-    for cluster_num in sorted(grouped.keys()):  # <--- this ensures Cluster 1 first
+    for cluster_num in sorted(grouped.keys()):
         items = grouped[cluster_num]
         named_clusters.append({
             'label': f"Cluster {cluster_num}: {cluster_name_map.get(cluster_num, 'Unknown')}",
