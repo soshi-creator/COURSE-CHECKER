@@ -50,6 +50,101 @@
             padding: 0;
             overflow-x: hidden;
         }
+        /* Requirements List - Theme Aligned */
+.requirements-list {
+    margin-top: 15px;
+    padding-top: 12px;
+    border-top: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.requirements-list h6 {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--secondary-color);
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.requirements-list ul {
+    margin: 0;
+    padding-left: 0;
+    list-style: none;
+}
+
+.requirements-list li {
+    margin-bottom: 8px;
+    font-size: 0.82rem;
+    line-height: 1.4;
+    background: var(--light-color);
+    padding: 8px 12px;
+    border-radius: 8px;
+}
+
+/* Requirement types using theme colors */
+.requirements-list .req-single {
+    color: var(--success-color);
+}
+
+.requirements-list .req-or {
+    color: var(--warning-color);
+}
+
+.requirements-list .req-and {
+    color: var(--primary-color);
+}
+
+.requirements-list .subjects-list {
+    font-weight: 600;
+    color: var(--secondary-color);
+}
+
+.requirements-list .req-grade {
+    font-weight: 700;
+    color: var(--warning-color);
+    margin-left: 4px;
+}
+
+.requirements-list .or-badge {
+    display: inline-block;
+    font-size: 0.7rem;
+    font-weight: 600;
+    padding: 2px 6px;
+    border-radius: 12px;
+    background: var(--warning-color);
+    color: white;
+    margin: 0 2px;
+}
+
+.requirements-list .and-badge {
+    display: inline-block;
+    font-size: 0.7rem;
+    font-weight: 600;
+    padding: 2px 6px;
+    border-radius: 12px;
+    background: var(--primary-color);
+    color: white;
+    margin: 0 2px;
+}
+
+.requirements-list i {
+    margin-right: 4px;
+    color: var(--primary-color);
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+    .requirements-list li {
+        padding: 6px 10px;
+        font-size: 0.78rem;
+    }
+    
+    .requirements-list .subjects-list {
+        display: inline;
+        word-break: break-word;
+    }
+}
         /* Add this rule for collapsed state */
 .cluster-header .collapse-icon {
     transform: rotate(-180deg);
@@ -1528,38 +1623,77 @@
         {% for req in course.requirements %}
         <li>
             {% if req.type == 'or' and req.conditions %}
-                <!-- OR condition with multiple subjects -->
-                {{ req.conditions|map(attribute='subject')|join(' OR ') }}
-                (minimum: 
+                {# Check if all conditions have same grade #}
+                {% set first_grade = req.conditions[0].minGrade %}
+                {% set same_grade = true %}
                 {% for cond in req.conditions %}
-                    {{ cond.subject }} ≥ {{ cond.minGrade }}{% if not loop.last %} OR {% endif %}
-                {% endfor %})
-                
-            {% elif req.type == 'and' and req.conditions %}
-                <!-- AND condition with multiple subjects -->
-                {{ req.conditions|map(attribute='subject')|join(' AND ') }}
-                (minimum: 
-                {% for cond in req.conditions %}
-                    {{ cond.subject }} ≥ {{ cond.minGrade }}{% if not loop.last %} AND {% endif %}
-                {% endfor %})
-                
-            {% elif req.subject and '/' in req.subject %}
-                <!-- Multiple subjects with same grade (simple OR) -->
-                {{ req.subject.replace('/', ' OR ') }}: ≥ {{ req.minGrade }}
-                
-            {% elif req.subject %}
-                <!-- Single subject requirement -->
-                {{ req.subject }}: ≥ {{ req.minGrade }}
-                
-            {% elif req.condition %}
-                <!-- Old format (backward compatibility) -->
-                {% for cond in req.condition %}
-                    {{ cond.subject }}: ≥ {{ cond.minGrade }}{% if not loop.last %} OR {% endif %}
+                    {% if cond.minGrade != first_grade %}
+                        {% set same_grade = false %}
+                    {% endif %}
                 {% endfor %}
                 
+                {% if same_grade %}
+                    {# Same grade - show as "Any ONE of: Subject1, Subject2, Subject3 ≥ Grade" #}
+                    <span class="req-or-compact">
+                        <i class="bi bi-arrow-left-right"></i> Any ONE of:
+                        <span class="subjects-list">{{ req.conditions|map(attribute='subject')|join(', ') }}</span>
+                        <span class="req-grade">≥ {{ first_grade }}</span>
+                    </span>
+                {% else %}
+                    {# Different grades - show as "OR" list #}
+                    <span class="req-or-mixed">
+                        {% for cond in req.conditions %}
+                            <span class="req-item">{{ cond.subject }} ≥ {{ cond.minGrade }}</span>{% if not loop.last %} <span class="or-badge">OR</span> {% endif %}
+                        {% endfor %}
+                    </span>
+                {% endif %}
+                
+            {% elif req.type == 'and' and req.conditions %}
+                <span class="req-and">
+                    {% for cond in req.conditions %}
+                        <span class="req-item">{{ cond.subject }} ≥ {{ cond.minGrade }}</span>{% if not loop.last %} <span class="and-badge">AND</span> {% endif %}
+                    {% endfor %}
+                </span>
+                
+            {% elif req.subject and '/' in req.subject %}
+                {# Multiple subjects with slash - show as "Any ONE of:" #}
+                <span class="req-or-compact">
+                    <i class="bi bi-arrow-left-right"></i> Any ONE of:
+                    <span class="subjects-list">{{ req.subject.replace('/', ', ') }}</span>
+                    <span class="req-grade">≥ {{ req.minGrade }}</span>
+                </span>
+                
+            {% elif req.subject %}
+                <span class="req-single">
+                    <i class="bi bi-check-circle-fill"></i> {{ req.subject }} ≥ {{ req.minGrade }}
+                </span>
+                
+            {% elif req.condition %}
+                {# Old format - treat as OR #}
+                {% set first_grade = req.condition[0].minGrade %}
+                {% set same_grade = true %}
+                {% for cond in req.condition %}
+                    {% if cond.minGrade != first_grade %}
+                        {% set same_grade = false %}
+                    {% endif %}
+                {% endfor %}
+                
+                {% if same_grade %}
+                    <span class="req-or-compact">
+                        <i class="bi bi-arrow-left-right"></i> Any ONE of:
+                        <span class="subjects-list">{{ req.condition|map(attribute='subject')|join(', ') }}</span>
+                        <span class="req-grade">≥ {{ first_grade }}</span>
+                    </span>
+                {% else %}
+                    <span class="req-or-mixed">
+                        {% for cond in req.condition %}
+                            <span class="req-item">{{ cond.subject }} ≥ {{ cond.minGrade }}</span>{% if not loop.last %} <span class="or-badge">OR</span> {% endif %}
+                        {% endfor %}
+                    </span>
+                {% endif %}
+                
             {% else %}
-                <!-- Unknown format -->
-                {{ req }}
+                <span class="req-unknown">{{ req }}</span>
             {% endif %}
         </li>
         {% endfor %}
@@ -1630,52 +1764,90 @@
                             {% endif %}
                         </div>
 
-                        {% if course.requirements %}
+ {% if course.requirements %}
 <div class="requirements-list">
     <h6><i class="bi bi-list-check"></i> Requirements:</h6>
     <ul>
         {% for req in course.requirements %}
         <li>
             {% if req.type == 'or' and req.conditions %}
-                <!-- OR condition with multiple subjects -->
-                {{ req.conditions|map(attribute='subject')|join(' OR ') }}
-                (minimum: 
+                {# Check if all conditions have same grade #}
+                {% set first_grade = req.conditions[0].minGrade %}
+                {% set same_grade = true %}
                 {% for cond in req.conditions %}
-                    {{ cond.subject }} ≥ {{ cond.minGrade }}{% if not loop.last %} OR {% endif %}
-                {% endfor %})
-                
-            {% elif req.type == 'and' and req.conditions %}
-                <!-- AND condition with multiple subjects -->
-                {{ req.conditions|map(attribute='subject')|join(' AND ') }}
-                (minimum: 
-                {% for cond in req.conditions %}
-                    {{ cond.subject }} ≥ {{ cond.minGrade }}{% if not loop.last %} AND {% endif %}
-                {% endfor %})
-                
-            {% elif req.subject and '/' in req.subject %}
-                <!-- Multiple subjects with same grade (simple OR) -->
-                {{ req.subject.replace('/', ' OR ') }}: ≥ {{ req.minGrade }}
-                
-            {% elif req.subject %}
-                <!-- Single subject requirement -->
-                {{ req.subject }}: ≥ {{ req.minGrade }}
-                
-            {% elif req.condition %}
-                <!-- Old format (backward compatibility) -->
-                {% for cond in req.condition %}
-                    {{ cond.subject }}: ≥ {{ cond.minGrade }}{% if not loop.last %} OR {% endif %}
+                    {% if cond.minGrade != first_grade %}
+                        {% set same_grade = false %}
+                    {% endif %}
                 {% endfor %}
                 
+                {% if same_grade %}
+                    {# Same grade - show as "Any ONE of: Subject1, Subject2, Subject3 ≥ Grade" #}
+                    <span class="req-or-compact">
+                        <i class="bi bi-arrow-left-right"></i> Any ONE of:
+                        <span class="subjects-list">{{ req.conditions|map(attribute='subject')|join(', ') }}</span>
+                        <span class="req-grade">≥ {{ first_grade }}</span>
+                    </span>
+                {% else %}
+                    {# Different grades - show as "OR" list #}
+                    <span class="req-or-mixed">
+                        {% for cond in req.conditions %}
+                            <span class="req-item">{{ cond.subject }} ≥ {{ cond.minGrade }}</span>{% if not loop.last %} <span class="or-badge">OR</span> {% endif %}
+                        {% endfor %}
+                    </span>
+                {% endif %}
+                
+            {% elif req.type == 'and' and req.conditions %}
+                <span class="req-and">
+                    {% for cond in req.conditions %}
+                        <span class="req-item">{{ cond.subject }} ≥ {{ cond.minGrade }}</span>{% if not loop.last %} <span class="and-badge">AND</span> {% endif %}
+                    {% endfor %}
+                </span>
+                
+            {% elif req.subject and '/' in req.subject %}
+                {# Multiple subjects with slash - show as "Any ONE of:" #}
+                <span class="req-or-compact">
+                    <i class="bi bi-arrow-left-right"></i> Any ONE of:
+                    <span class="subjects-list">{{ req.subject.replace('/', ', ') }}</span>
+                    <span class="req-grade">≥ {{ req.minGrade }}</span>
+                </span>
+                
+            {% elif req.subject %}
+                <span class="req-single">
+                    <i class="bi bi-check-circle-fill"></i> {{ req.subject }} ≥ {{ req.minGrade }}
+                </span>
+                
+            {% elif req.condition %}
+                {# Old format - treat as OR #}
+                {% set first_grade = req.condition[0].minGrade %}
+                {% set same_grade = true %}
+                {% for cond in req.condition %}
+                    {% if cond.minGrade != first_grade %}
+                        {% set same_grade = false %}
+                    {% endif %}
+                {% endfor %}
+                
+                {% if same_grade %}
+                    <span class="req-or-compact">
+                        <i class="bi bi-arrow-left-right"></i> Any ONE of:
+                        <span class="subjects-list">{{ req.condition|map(attribute='subject')|join(', ') }}</span>
+                        <span class="req-grade">≥ {{ first_grade }}</span>
+                    </span>
+                {% else %}
+                    <span class="req-or-mixed">
+                        {% for cond in req.condition %}
+                            <span class="req-item">{{ cond.subject }} ≥ {{ cond.minGrade }}</span>{% if not loop.last %} <span class="or-badge">OR</span> {% endif %}
+                        {% endfor %}
+                    </span>
+                {% endif %}
+                
             {% else %}
-                <!-- Unknown format -->
-                {{ req }}
+                <span class="req-unknown">{{ req }}</span>
             {% endif %}
         </li>
         {% endfor %}
     </ul>
 </div>
 {% endif %}
-
                         <div class="course-actions">
                             <button class="btn course-btn course-btn-primary basket-btn"
                                     onclick="addToBasket(
