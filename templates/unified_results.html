@@ -1522,23 +1522,50 @@
                                     </div>
 
                                     {% if course.requirements %}
-                                    <div class="requirements-list">
-                                        <h6><i class="bi bi-list-check"></i> Requirements:</h6>
-                                        <ul>
-                                            {% for req in course.requirements %}
-                                            <li>
-                                                {% if req.subject %}
-                                                    {{ req.subject }}: {{ req.minGrade }}
-                                                {% elif req.condition %}
-                                                    {% for cond in req.condition %}
-                                                        {{ cond.subject }}: {{ cond.minGrade }}{% if not loop.last %} OR {% endif %}
-                                                    {% endfor %}
-                                                {% endif %}
-                                            </li>
-                                            {% endfor %}
-                                        </ul>
-                                    </div>
-                                    {% endif %}
+<div class="requirements-list">
+    <h6><i class="bi bi-list-check"></i> Requirements:</h6>
+    <ul>
+        {% for req in course.requirements %}
+        <li>
+            {% if req.type == 'or' and req.conditions %}
+                <!-- OR condition with multiple subjects -->
+                {{ req.conditions|map(attribute='subject')|join(' OR ') }}
+                (minimum: 
+                {% for cond in req.conditions %}
+                    {{ cond.subject }} ≥ {{ cond.minGrade }}{% if not loop.last %} OR {% endif %}
+                {% endfor %})
+                
+            {% elif req.type == 'and' and req.conditions %}
+                <!-- AND condition with multiple subjects -->
+                {{ req.conditions|map(attribute='subject')|join(' AND ') }}
+                (minimum: 
+                {% for cond in req.conditions %}
+                    {{ cond.subject }} ≥ {{ cond.minGrade }}{% if not loop.last %} AND {% endif %}
+                {% endfor %})
+                
+            {% elif req.subject and '/' in req.subject %}
+                <!-- Multiple subjects with same grade (simple OR) -->
+                {{ req.subject.replace('/', ' OR ') }}: ≥ {{ req.minGrade }}
+                
+            {% elif req.subject %}
+                <!-- Single subject requirement -->
+                {{ req.subject }}: ≥ {{ req.minGrade }}
+                
+            {% elif req.condition %}
+                <!-- Old format (backward compatibility) -->
+                {% for cond in req.condition %}
+                    {{ cond.subject }}: ≥ {{ cond.minGrade }}{% if not loop.last %} OR {% endif %}
+                {% endfor %}
+                
+            {% else %}
+                <!-- Unknown format -->
+                {{ req }}
+            {% endif %}
+        </li>
+        {% endfor %}
+    </ul>
+</div>
+{% endif %}
 
                                     <div class="course-actions">
                                         <button class="btn course-btn course-btn-primary basket-btn"
@@ -1604,15 +1631,50 @@
                         </div>
 
                         {% if course.requirements %}
-                        <div class="requirements-list">
-                            <h6><i class="bi bi-list-check"></i> Requirements:</h6>
-                            <ul>
-                                {% for req in course.requirements %}
-                                <li>{{ req.subject }}: {{ req.minGrade }}</li>
-                                {% endfor %}
-                            </ul>
-                        </div>
-                        {% endif %}
+<div class="requirements-list">
+    <h6><i class="bi bi-list-check"></i> Requirements:</h6>
+    <ul>
+        {% for req in course.requirements %}
+        <li>
+            {% if req.type == 'or' and req.conditions %}
+                <!-- OR condition with multiple subjects -->
+                {{ req.conditions|map(attribute='subject')|join(' OR ') }}
+                (minimum: 
+                {% for cond in req.conditions %}
+                    {{ cond.subject }} ≥ {{ cond.minGrade }}{% if not loop.last %} OR {% endif %}
+                {% endfor %})
+                
+            {% elif req.type == 'and' and req.conditions %}
+                <!-- AND condition with multiple subjects -->
+                {{ req.conditions|map(attribute='subject')|join(' AND ') }}
+                (minimum: 
+                {% for cond in req.conditions %}
+                    {{ cond.subject }} ≥ {{ cond.minGrade }}{% if not loop.last %} AND {% endif %}
+                {% endfor %})
+                
+            {% elif req.subject and '/' in req.subject %}
+                <!-- Multiple subjects with same grade (simple OR) -->
+                {{ req.subject.replace('/', ' OR ') }}: ≥ {{ req.minGrade }}
+                
+            {% elif req.subject %}
+                <!-- Single subject requirement -->
+                {{ req.subject }}: ≥ {{ req.minGrade }}
+                
+            {% elif req.condition %}
+                <!-- Old format (backward compatibility) -->
+                {% for cond in req.condition %}
+                    {{ cond.subject }}: ≥ {{ cond.minGrade }}{% if not loop.last %} OR {% endif %}
+                {% endfor %}
+                
+            {% else %}
+                <!-- Unknown format -->
+                {{ req }}
+            {% endif %}
+        </li>
+        {% endfor %}
+    </ul>
+</div>
+{% endif %}
 
                         <div class="course-actions">
                             <button class="btn course-btn course-btn-primary basket-btn"
