@@ -1404,7 +1404,7 @@ def payment_page():
 
         # Determine amount
         already_paid_for = existing.get('program_type') if existing else None
-        amount = 199 if not already_paid_for else 1
+        amount = 199 if not already_paid_for else 99
         session['amount'] = amount
 
         # Initiate Paystack
@@ -3195,13 +3195,13 @@ def verify_manual():
         "index_number": index
     })
     
-    # Determine program type from existing record or from session
-    program = None
-    raw_grades = {}
-    cluster_points = {}
+    # FIX: Always get program type from session first (current selection)
+    program = session.get("program_type")
+    raw_grades = session.get('raw_grades', {})
+    cluster_points = session.get('cluster_points', {}) if program == 'degree' else {}
     
-    if existing_user:
-        # Use data from existing record
+    # If no program in session but user exists, try to use their existing data as fallback
+    if not program and existing_user:
         program = existing_user.get("program_type")
         raw_grades = existing_user.get("grades", {})
         cluster_points = existing_user.get("cluster_points", {}) if program == 'degree' else {}
@@ -3209,12 +3209,12 @@ def verify_manual():
         # Check if this user already has results
         existing_results = results_collection.find_one({
             "email": email,
-            "index_number": index
+            "index_number": index,
+            "program_type": program
         })
         
         if existing_results:
-            # User already has results, just add NEW payment record (don't update existing)
-            # Create a new payment document for this reference
+            # User already has results, just add NEW payment record
             new_payment_doc = {
                 "email": email,
                 "index_number": index,
@@ -3235,11 +3235,6 @@ def verify_manual():
                 "status": "success", 
                 "redirect": url_for("unified_results")
             })
-    else:
-        # No existing data - get from session (if available)
-        program = session.get("program_type")
-        raw_grades = session.get('raw_grades', {})
-        cluster_points = session.get('cluster_points', {}) if program == 'degree' else {}
     
     if not program:
         return jsonify({
@@ -3314,8 +3309,14 @@ def verify_manual():
     
     # 10. Reward referrer if applicable
     if referrer_code:
+        # Check if this is a truly new user (no existing payments at all)
+        is_new_user = payments_collection.count_documents({
+            "email": email,
+            "index_number": index
+        }) == 0
+        
         referrer = payments_collection.find_one({"referral_code": referrer_code})
-        if referrer and not existing_user:  # Only reward for new users
+        if referrer and is_new_user:  # Only reward for first payment ever
             # Increment referrer's balance and count
             payments_collection.update_one(
                 {"_id": referrer["_id"]},
