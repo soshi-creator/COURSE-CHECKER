@@ -3173,7 +3173,7 @@ def verify_manual():
     if not ref or not email or not index:
         return jsonify({"status": "error", "message": "Reference, email, and index number are required."})
 
-    # 1. Check if reference already exists in DB
+    # 1. Check if THIS SPECIFIC reference already exists in DB (BLOCK duplicate reference usage)
     existing_payment = payments_collection.find_one({"paystack_ref": ref})
     if existing_payment:
         return jsonify({"status": "error", "message": "This payment reference has already been used."})
@@ -3189,7 +3189,7 @@ def verify_manual():
     # 3. Payment verified — now get the program type and grades
     amount = paystack_data["data"]["amount"] / 100  # Paystack stores in kobo
     
-    # Try to get existing data from database first (if user already submitted grades)
+    # Try to get existing user data (without payment reference)
     existing_user = payments_collection.find_one({
         "email": email,
         "index_number": index
@@ -3201,28 +3201,37 @@ def verify_manual():
     cluster_points = {}
     
     if existing_user:
-        # Use data from existing record
+        # IMPORTANT FIX: Use data from existing record BUT DON'T overwrite payment yet
+        # Instead, we'll create a NEW payment record for this program
         program = existing_user.get("program_type")
         raw_grades = existing_user.get("grades", {})
         cluster_points = existing_user.get("cluster_points", {}) if program == 'degree' else {}
         
-        # Check if this user already has results
+        # Check if this user already has results for THIS program
         existing_results = results_collection.find_one({
             "email": email,
-            "index_number": index
+            "index_number": index,
+            "program_type": program  # Match the specific program
         })
         
         if existing_results:
-            # User already has results, just update payment info
+            # User already has results for this program, just update payment info
+            # CRITICAL FIX: Update the specific payment record by reference, not overwriting user doc
             payments_collection.update_one(
-                {"_id": existing_user["_id"]},
+                {"paystack_ref": ref},  # This shouldn't exist yet, but just in case
                 {
                     "$set": {
+                        "email": email,
+                        "index_number": index,
+                        "program_type": program,
+                        "amount": amount,
                         "paystack_ref": ref,
                         "paid_at": datetime.utcnow(),
-                        "payment_status": "paid"
+                        "payment_status": "paid",
+                        "grades": raw_grades
                     }
-                }
+                },
+                upsert=True  # Create new if doesn't exist
             )
             session['results'] = existing_results.get("results")
             session['payment_status'] = 'paid'
@@ -3232,8 +3241,14 @@ def verify_manual():
                 "status": "success", 
                 "redirect": url_for("unified_results")
             })
+        else:
+            # FIX: User exists but for a DIFFERENT program type
+            # Get program from session instead
+            program = session.get("program_type")
+            raw_grades = session.get('raw_grades', {})
+            cluster_points = session.get('cluster_points', {}) if program == 'degree' else {}
     else:
-        # No existing data - get from session (if available)
+        # No existing data - get from session
         program = session.get("program_type")
         raw_grades = session.get('raw_grades', {})
         cluster_points = session.get('cluster_points', {}) if program == 'degree' else {}
@@ -3261,7 +3276,7 @@ def verify_manual():
     else:
         return jsonify({"status": "error", "message": "Invalid program type."})
     
-    # 6. Generate user's own referral code
+    # 6. Generate user's own referral code (only if new user doesn't have one)
     new_user_referral_code = "CC" + str(uuid.uuid4())[-6:]
     
     # Get referrer code from session if available
@@ -3271,7 +3286,21 @@ def verify_manual():
     if referrer_code == new_user_referral_code:
         referrer_code = None
     
-    # 7. Prepare payment document
+    # CRITICAL FIX: Check if this specific combination already has a payment record
+    existing_payment_for_program = payments_collection.find_one({
+        "email": email,
+        "index_number": index,
+        "program_type": program,
+        "payment_status": "paid"
+    })
+    
+    if existing_payment_for_program:
+        return jsonify({
+            "status": "error", 
+            "message": f"You have already paid for {program} program. Please contact support if you need to check another program."
+        })
+    
+    # 7. Prepare payment document - allow multiple payments for same user but different programs
     doc = {
         "email": email,
         "index_number": index,
@@ -3280,24 +3309,19 @@ def verify_manual():
         "paystack_ref": ref,
         "paid_at": datetime.utcnow(),
         "grades": grades,
-        "referral_code": new_user_referral_code,
-        "referred_by": referrer_code,
-        "referral_rewarded": False,
-        "referral_balance": 0,
-        "referral_count": 0
+        "referral_code": new_user_referral_code if not existing_user else existing_user.get("referral_code", new_user_referral_code),
+        "referred_by": referrer_code if not existing_user else existing_user.get("referred_by"),
+        "referral_rewarded": False if not existing_user else existing_user.get("referral_rewarded", False),
+        "referral_balance": 0 if not existing_user else existing_user.get("referral_balance", 0),
+        "referral_count": 0 if not existing_user else existing_user.get("referral_count", 0)
     }
     
     if program == 'degree' and cluster_points:
         doc["cluster_points"] = {str(k): v for k, v in cluster_points.items()}
     
-    # 8. Insert or update payment document
-    if existing_user:
-        payments_collection.update_one(
-            {"_id": existing_user["_id"]},
-            {"$set": doc}
-        )
-    else:
-        payments_collection.insert_one(doc)
+    # 8. Insert new payment record (don't update existing one for different program)
+    # FIX: Always insert as new document to allow multiple programs
+    payments_collection.insert_one(doc)
     
     # 9. Store results in DB (update if exists, insert if not)
     results_collection.update_one(
@@ -3315,10 +3339,10 @@ def verify_manual():
         upsert=True
     )
     
-    # 10. Reward referrer if applicable
-    if referrer_code:
+    # 10. Reward referrer only for first-time users (not previously existing)
+    if referrer_code and not existing_user:
         referrer = payments_collection.find_one({"referral_code": referrer_code})
-        if referrer and not existing_user:  # Only reward for new users
+        if referrer:
             # Increment referrer's balance and count
             payments_collection.update_one(
                 {"_id": referrer["_id"]},
