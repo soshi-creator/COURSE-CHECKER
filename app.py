@@ -26,7 +26,7 @@ from flask_session import Session
 
 
 app = Flask(__name__)
-app.secret_key = "secret123"
+app.secret_key = os.getenv("SECRET_KEY")
 qualified_courses_data = {}
 app.config['SESSION_TYPE'] = 'filesystem'  # or 'mongodb' if you prefer
 app.config['SESSION_PERMANENT'] = False
@@ -1970,7 +1970,7 @@ notifications_collection.create_index([("created_at", -1)])
 def manage_notifications():
     """Admin page to manage notifications"""
     admin_key = request.args.get('admin_key')
-    if admin_key != os.getenv('ADMIN_KEY', 'kuccps-admin-2026'):
+    if admin_key != os.getenv('ADMIN_KEY'):
         return "Unauthorized", 401
 
     notifications = list(notifications_collection.find().sort("created_at", -1))
@@ -1992,7 +1992,7 @@ def manage_notifications():
 def send_notification():
     """Admin endpoint to send a notification with rich formatting support"""
     admin_key = request.form.get('admin_key')
-    if admin_key != os.getenv('ADMIN_KEY', 'kuccps-admin-2026'):
+    if admin_key != os.getenv('ADMIN_KEY'):
         return jsonify({"error": "Unauthorized"}), 401
 
     title = request.form.get('title', '').strip()
@@ -2192,7 +2192,7 @@ def send_notification():
 @app.route('/admin/notification/delete/<notification_id>', methods=['POST'])
 def delete_notification(notification_id):
     admin_key = request.form.get('admin_key')
-    if admin_key != os.getenv('ADMIN_KEY', 'kuccps-admin-2026'):
+    if admin_key != os.getenv('ADMIN_KEY'):
         return jsonify({"error": "Unauthorized"}), 401
 
     result_admin = notifications_collection.delete_one({"_id": notification_id})
@@ -2658,7 +2658,7 @@ from groq import Groq
 
 # Initialize Groq client with FREE API
 # Get your key from: https://console.groq.com/keys
-GROQ_API_KEY = "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"  # ⚠️ Replace with your actual key
+GROQ_API_KEY = os.getenv('GROQ_API_KEY') # ⚠️ Replace with your actual key
 
 # Available Groq models (all FREE):
 # - "llama3-70b-8192"        # Llama 3 70B - Most capable
@@ -2958,7 +2958,7 @@ def request_withdrawal():
 def admin_withdrawals():
     # Simple admin check (you can enhance this)
     admin_key = request.args.get('key')
-    if admin_key != os.getenv('ADMIN_KEY','kuccps-admin-2026'):
+    if admin_key != os.getenv('ADMIN_KEY'):
         return "Unauthorized", 401
     
     page = int(request.args.get('page', 1))
@@ -2977,7 +2977,7 @@ def admin_withdrawals():
 @app.route('/admin/withdrawals/complete', methods=['POST'])
 def complete_withdrawal():
     admin_key = request.json.get('admin_key')
-    if admin_key != os.getenv('ADMIN_KEY', 'kuccps-admin-2026'):
+    if admin_key != os.getenv('ADMIN_KEY'):
         return jsonify({'success': False, 'message': 'Unauthorized'}), 403
 
     # Normalize ID
@@ -3034,7 +3034,7 @@ def complete_withdrawal():
 @app.route('/admin/withdrawals/reject', methods=['POST'])
 def reject_withdrawal():
     admin_key = request.json.get('admin_key')
-    if admin_key != os.getenv('ADMIN_KEY', 'kuccps-admin-2026'):
+    if admin_key != os.getenv('ADMIN_KEY'):
         return jsonify({'success': False, 'message': 'Unauthorized'}), 403
 
     withdrawal_id = request.json.get('withdrawal_id', '').strip().upper()
@@ -3080,7 +3080,7 @@ def reject_withdrawal():
 @app.route('/admin/withdrawals/export')
 def export_withdrawals_csv():
     admin_key = request.args.get('key')
-    if admin_key != os.getenv('ADMIN_KEY', 'kuccps-admin-2026'):
+    if admin_key != os.getenv('ADMIN_KEY'):
         return "Unauthorized", 401
     
     withdrawals = list(withdrawals_collection.find().sort('created_at', -1))
@@ -3358,7 +3358,7 @@ def verify_manual():
 def admin_users():
     """Admin page to view all paid users"""
     admin_key = request.args.get('admin_key')
-    if admin_key != os.getenv('ADMIN_KEY', 'kuccps-admin-2026'):
+    if admin_key != os.getenv('ADMIN_KEY'):
         return "Unauthorized", 401
     
     page = int(request.args.get('page', 1))
@@ -3401,7 +3401,7 @@ def admin_users():
 def admin_user_detail(user_id):
     """View single user details"""
     admin_key = request.args.get('admin_key')
-    if admin_key != os.getenv('ADMIN_KEY', 'kuccps-admin-2026'):
+    if admin_key != os.getenv('ADMIN_KEY'):
         return "Unauthorized", 401
     
     user = payments_collection.find_one({'_id': ObjectId(user_id)})
@@ -3436,7 +3436,7 @@ def admin_user_detail(user_id):
 def admin_edit_user(user_id):
     """Edit user details"""
     admin_key = request.args.get('admin_key') if request.method == 'GET' else request.form.get('admin_key')
-    if admin_key != os.getenv('ADMIN_KEY', 'kuccps-admin-2026'):
+    if admin_key != os.getenv('ADMIN_KEY'):
         return "Unauthorized", 401
     
     user = payments_collection.find_one({'_id': ObjectId(user_id)})
@@ -3481,7 +3481,7 @@ def admin_edit_user(user_id):
 def admin_delete_user(user_id):
     """Delete user and all associated data"""
     admin_key = request.form.get('admin_key')
-    if admin_key != os.getenv('ADMIN_KEY', 'kuccps-admin-2026'):
+    if admin_key != os.getenv('ADMIN_KEY'):
         return jsonify({'success': False, 'error': 'Unauthorized'}), 401
     
     user = payments_collection.find_one({'_id': ObjectId(user_id)})
@@ -3523,7 +3523,7 @@ def admin_delete_user(user_id):
 def admin_results():
     """Admin page to view all results"""
     admin_key = request.args.get('admin_key')
-    if admin_key != os.getenv('ADMIN_KEY', 'kuccps-admin-2026'):
+    if admin_key != os.getenv('ADMIN_KEY'):
         return "Unauthorized", 401
     
     page = int(request.args.get('page', 1))
@@ -3563,7 +3563,7 @@ def admin_results():
 def admin_view_result(result_id):
     """View single result details"""
     admin_key = request.args.get('admin_key')
-    if admin_key != os.getenv('ADMIN_KEY', 'kuccps-admin-2026'):
+    if admin_key != os.getenv('ADMIN_KEY'):
         return "Unauthorized", 401
     
     result = results_collection.find_one({'_id': ObjectId(result_id)})
@@ -3587,7 +3587,7 @@ def admin_view_result(result_id):
 def admin_regenerate_result(result_id):
     """Regenerate results for a user based on current data"""
     admin_key = request.form.get('admin_key')
-    if admin_key != os.getenv('ADMIN_KEY', 'kuccps-admin-2026'):
+    if admin_key != os.getenv('ADMIN_KEY'):
         return jsonify({'success': False, 'error': 'Unauthorized'}), 401
     
     old_result = results_collection.find_one({'_id': ObjectId(result_id)})
@@ -3649,7 +3649,7 @@ def admin_regenerate_result(result_id):
 def admin_delete_result(result_id):
     """Delete a result record"""
     admin_key = request.form.get('admin_key')
-    if admin_key != os.getenv('ADMIN_KEY', 'kuccps-admin-2026'):
+    if admin_key != os.getenv('ADMIN_KEY'):
         return jsonify({'success': False, 'error': 'Unauthorized'}), 401
     
     result = results_collection.find_one({'_id': ObjectId(result_id)})
@@ -3666,7 +3666,7 @@ def admin_delete_result(result_id):
 def admin_bulk_regenerate():
     """Regenerate results for all users or filtered users"""
     admin_key = request.form.get('admin_key')
-    if admin_key != os.getenv('ADMIN_KEY', 'kuccps-admin-2026'):
+    if admin_key != os.getenv('ADMIN_KEY'):
         return jsonify({'success': False, 'error': 'Unauthorized'}), 401
     
     program_type = request.form.get('program_type', 'all')
@@ -3740,7 +3740,7 @@ def admin_bulk_regenerate():
 def admin_stats():
     """Admin statistics dashboard"""
     admin_key = request.args.get('admin_key')
-    if admin_key != os.getenv('ADMIN_KEY', 'kuccps-admin-2026'):
+    if admin_key != os.getenv('ADMIN_KEY'):
         return "Unauthorized", 401
     
     stats = {
