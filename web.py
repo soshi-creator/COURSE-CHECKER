@@ -1,6 +1,6 @@
 from pymongo import MongoClient
-
-client = MongoClient("mongodb+srv://David:David@cluster0.nb9xn9p.mongodb.net/?appName=Cluster0")
+MONGO_URI = os.getenv("MONGO_URI")
+client = MongoClient("MONGO_URI")
 db = client["course_checker"]
 courses = db["courses"]
 
